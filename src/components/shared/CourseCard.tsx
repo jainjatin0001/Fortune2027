@@ -179,7 +179,7 @@ export function CourseCard({ course, className, variant = 'default' }: CourseCar
               <>
                 <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                 <span className="text-sm font-medium" style={{ color: 'var(--color-foreground)' }}>
-                  {(course.reviews.reduce((s, r) => s + r.rating, 0) / course.reviews.length).toFixed(1)}
+                  {(course.reviews.reduce((s: number, r: { rating: number }) => s + r.rating, 0) / course.reviews.length).toFixed(1)}
                 </span>
                 <span className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>
                   ({course.reviews.length})

@@ -2,6 +2,21 @@ import { NextResponse } from 'next/server';
 import { getDbUser, unauthorized } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
+type ProgressEnrollment = {
+  courseId: string;
+  status: string;
+  progress: number;
+  course: { id: string; title: string; category: string; thumbnailUrl: string | null; totalLessons: number };
+  lessonProgress: { isCompleted: boolean }[];
+};
+type ProgressAttempt = {
+  id: string;
+  score: number | null;
+  timeTaken: number | null;
+  completedAt: Date | null;
+  quiz: { id: string; title: string };
+};
+
 export async function GET() {
   try {
     const user = await getDbUser();
@@ -29,19 +44,19 @@ export async function GET() {
     const avgScore =
       quizAttempts.length > 0
         ? Math.round(
-            quizAttempts.reduce((sum, a) => sum + (a.score ?? 0), 0) / quizAttempts.length
+            (quizAttempts as ProgressAttempt[]).reduce((sum: number, a: ProgressAttempt) => sum + (a.score ?? 0), 0) / quizAttempts.length
           )
         : 0;
 
-    const completedCourses = enrollments.filter((e) => e.status === 'COMPLETED').length;
+    const completedCourses = (enrollments as ProgressEnrollment[]).filter((e: ProgressEnrollment) => e.status === 'COMPLETED').length;
 
-    const coursesWithProgress = enrollments.map((e) => ({
+    const coursesWithProgress = (enrollments as ProgressEnrollment[]).map((e: ProgressEnrollment) => ({
       courseId: e.courseId,
       title: e.course.title,
       category: e.course.category,
       thumbnailUrl: e.course.thumbnailUrl,
       progress: e.progress,
-      completedLessons: e.lessonProgress.filter((lp) => lp.isCompleted).length,
+      completedLessons: e.lessonProgress.filter((lp: { isCompleted: boolean }) => lp.isCompleted).length,
       totalLessons: e.course.totalLessons,
     }));
 
@@ -51,7 +66,7 @@ export async function GET() {
       avgScore,
       bookmarkCount,
       courses: coursesWithProgress,
-      recentAttempts: quizAttempts.map((a) => ({
+      recentAttempts: (quizAttempts as ProgressAttempt[]).map((a: ProgressAttempt) => ({
         id: a.id,
         quizTitle: a.quiz.title,
         score: a.score,

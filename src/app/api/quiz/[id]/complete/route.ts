@@ -32,10 +32,10 @@ export async function POST(
       return NextResponse.json({ error: 'Attempt already completed' }, { status: 400 });
     }
 
-    const totalPoints = attempt.quiz.questions.reduce((sum, qq) => sum + qq.question.points, 0);
+    const totalPoints = attempt.quiz.questions.reduce((sum: number, qq: { question: { points: number } }) => sum + qq.question.points, 0);
     const earnedPoints = attempt.answers
-      .filter((a) => a.isCorrect)
-      .reduce((sum, a) => sum + a.question.points, 0);
+      .filter((a: { isCorrect: boolean | null; question: { points: number } }) => a.isCorrect)
+      .reduce((sum: number, a: { isCorrect: boolean | null; question: { points: number } }) => sum + a.question.points, 0);
 
     const score = totalPoints > 0 ? Math.round((earnedPoints / totalPoints) * 100) : 0;
     const passed = score >= attempt.quiz.passingScore;
@@ -57,7 +57,7 @@ export async function POST(
       passed,
       earnedPoints,
       totalPoints,
-      correctAnswers: attempt.answers.filter((a) => a.isCorrect).length,
+      correctAnswers: attempt.answers.filter((a: { isCorrect: boolean | null; question: { points: number } }) => a.isCorrect).length,
       totalQuestions: attempt.quiz.questions.length,
       timeTaken: completed.timeTaken,
     });

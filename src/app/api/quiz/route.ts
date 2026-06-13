@@ -58,16 +58,17 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const questions = quiz.questions.map((qq) => ({
+    type QuizOption = { id: string; content: string; sortOrder: number };
+    type QuizQuestionItem = { question: { id: string; content: string; difficulty: string; points: number; options: QuizOption[] } };
+    const questions = (quiz.questions as QuizQuestionItem[]).map((qq: QuizQuestionItem) => ({
       id: qq.question.id,
       content: qq.question.content,
       difficulty: qq.question.difficulty,
       points: qq.question.points,
-      options: qq.question.options.map((o) => ({
+      options: qq.question.options.map((o: QuizOption) => ({
         id: o.id,
         content: o.content,
         sortOrder: o.sortOrder,
-        // Don't send isCorrect to client
       })),
     }));
 
