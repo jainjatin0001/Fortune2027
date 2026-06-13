@@ -36,9 +36,18 @@ async function getDashboardData(userId: string) {
   return { enrollments, quizAttempts, bookmarkCount };
 }
 
-type DashboardData = Awaited<ReturnType<typeof getDashboardData>>;
-type EnrollmentItem = DashboardData['enrollments'][number];
-type QuizAttemptItem = DashboardData['quizAttempts'][number];
+type EnrollmentItem = {
+  id: string;
+  progress: number;
+  course: { id: string; title: string; category: string; thumbnailUrl: string | null; totalLessons: number };
+  lessonProgress: { isCompleted: boolean }[];
+};
+type QuizAttemptItem = {
+  id: string;
+  score: number | null;
+  completedAt: Date | null;
+  quiz: { title: string };
+};
 
 const CATEGORY_COLOR: Record<string, string> = {
   SAT_PREP: 'var(--color-sat)',
@@ -182,9 +191,9 @@ export default async function DashboardPage() {
 
           {isPremium ? (
             <div className="space-y-5">
-              {enrollments.map((e) => {
+              {enrollments.map((e: EnrollmentItem) => {
                 const color = CATEGORY_COLOR[e.course.category] ?? 'var(--color-primary)';
-                const completedLessons = e.lessonProgress.filter((lp) => lp.isCompleted).length;
+                const completedLessons = e.lessonProgress.filter((lp: { isCompleted: boolean }) => lp.isCompleted).length;
                 return (
                   <div key={e.id}>
                     <div className="flex items-center gap-3 mb-2">
@@ -277,7 +286,7 @@ export default async function DashboardPage() {
 
         {quizAttempts.length > 0 ? (
           <div className="grid sm:grid-cols-3 gap-4">
-            {quizAttempts.map((attempt) => (
+            {quizAttempts.map((attempt: QuizAttemptItem) => (
               <div key={attempt.id} className="p-4 rounded-xl border" style={{ borderColor: 'var(--color-border)' }}>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>
