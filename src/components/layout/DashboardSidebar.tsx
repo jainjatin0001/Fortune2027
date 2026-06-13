@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, BookOpen, BarChart2, Bookmark, Trophy, Brain,
-  Settings, User, Code2, FlaskConical, Play
+  Settings, User, Code2, FlaskConical, Play, GraduationCap
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { APP_NAME } from '@/constants';
@@ -71,6 +71,31 @@ export function DashboardSidebar() {
               )}
             >
               <Icon className="h-4 w-4 shrink-0" />
+              {label}
+            </Link>
+          );
+        })}
+
+        <div className="text-xs font-semibold mt-6 mb-3 px-3 pt-2 border-t" style={{ color: 'var(--color-muted-foreground)', borderColor: 'var(--sidebar-border)' }}>
+          PRACTICE EXAMS
+        </div>
+        {[
+          { icon: GraduationCap, label: 'SAT Practice Exam', href: '/dashboard/sat-exam', color: '#7c3aed' },
+          { icon: GraduationCap, label: 'ACT Practice Exam', href: '/dashboard/act-exam', color: '#0891b2' },
+        ].map(({ icon: Icon, label, href, color }) => {
+          const active = pathname.startsWith(href);
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={cn(
+                'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors',
+                active
+                  ? 'bg-[var(--sidebar-item-active)] text-[var(--sidebar-item-active-text)]'
+                  : 'text-[var(--color-muted-foreground)] hover:bg-[var(--sidebar-item-hover)] hover:text-[var(--color-foreground)]'
+              )}
+            >
+              <Icon className="h-4 w-4 shrink-0" style={{ color: active ? undefined : color }} />
               {label}
             </Link>
           );

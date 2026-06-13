@@ -1,8 +1,9 @@
 import { currentUser } from '@clerk/nextjs/server';
+import { cache } from 'react';
 import { prisma } from './prisma';
 import { NextResponse } from 'next/server';
 
-export async function getDbUser() {
+export const getDbUser = cache(async () => {
   const clerkUser = await currentUser();
   if (!clerkUser) return null;
 
@@ -23,7 +24,7 @@ export async function getDbUser() {
   }
 
   return user;
-}
+});
 
 export async function requireDbUser() {
   const user = await getDbUser();

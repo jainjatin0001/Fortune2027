@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { ArrowRight, Play, FileText, BookOpen } from 'lucide-react';
+import { ArrowRight, Play, FileText, BookOpen, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getDbUser } from '@/lib/auth';
 import { getDemoQuestions } from '@/../data/demo';
@@ -9,10 +9,24 @@ import { getDemoQuestions } from '@/../data/demo';
 export const metadata: Metadata = { title: 'Demo Questions' };
 
 const CATEGORY_COLOR: Record<string, string> = {
-  SAT: '#7c3aed',
-  ACT: '#0891b2',
-  AP: '#b45309',
-  Coding: '#059669',
+  SAT_PREP: '#7c3aed',
+  ACT_PREP: '#0891b2',
+  AP_EXAM: '#b45309',
+  CODING: '#059669',
+};
+
+const CATEGORY_LABEL: Record<string, string> = {
+  SAT_PREP: 'SAT',
+  ACT_PREP: 'ACT',
+  AP_EXAM: 'AP',
+  CODING: 'Coding',
+};
+
+const CATEGORY_LINK: Record<string, string> = {
+  SAT_PREP: '/dashboard/sat-exam',
+  ACT_PREP: '/dashboard/act-exam',
+  AP_EXAM: '/dashboard/demo/quiz',
+  CODING: '/dashboard/demo/quiz',
 };
 
 const DIFFICULTY_COLOR: Record<string, string> = {
@@ -48,19 +62,41 @@ export default async function DemoPage() {
             <Play className="h-5 w-5" />
           </div>
           <h3 className="font-bold text-sm mb-1" style={{ color: 'var(--color-foreground)' }}>Demo Quiz</h3>
-          <p className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>10 questions, timed, with instant feedback</p>
+          <p className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>10 mixed questions, timed, with instant feedback</p>
           <div className="flex items-center gap-1 mt-3 text-xs font-semibold" style={{ color: '#7c3aed' }}>
             Start <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
           </div>
         </Link>
 
-        <Link href="/dashboard/demo/exam" className="card-base p-5 hover:opacity-80 transition-opacity group">
+        <Link href="/dashboard/sat-exam" className="card-base p-5 hover:opacity-80 transition-opacity group">
+          <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-3" style={{ background: '#7c3aed15', color: '#7c3aed' }}>
+            <GraduationCap className="h-5 w-5" />
+          </div>
+          <h3 className="font-bold text-sm mb-1" style={{ color: 'var(--color-foreground)' }}>SAT Practice Exam</h3>
+          <p className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>Timed, section-based with question palette & score report</p>
+          <div className="flex items-center gap-1 mt-3 text-xs font-semibold" style={{ color: '#7c3aed' }}>
+            Start <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
+          </div>
+        </Link>
+
+        <Link href="/dashboard/act-exam" className="card-base p-5 hover:opacity-80 transition-opacity group">
           <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-3" style={{ background: '#0891b215', color: '#0891b2' }}>
+            <GraduationCap className="h-5 w-5" />
+          </div>
+          <h3 className="font-bold text-sm mb-1" style={{ color: 'var(--color-foreground)' }}>ACT Practice Exam</h3>
+          <p className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>English, Math & Science — real exam conditions</p>
+          <div className="flex items-center gap-1 mt-3 text-xs font-semibold" style={{ color: '#0891b2' }}>
+            Start <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
+          </div>
+        </Link>
+
+        <Link href="/dashboard/demo/exam" className="card-base p-5 hover:opacity-80 transition-opacity group">
+          <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-3" style={{ background: '#b4530915', color: '#b45309' }}>
             <FileText className="h-5 w-5" />
           </div>
           <h3 className="font-bold text-sm mb-1" style={{ color: 'var(--color-foreground)' }}>Demo Exam</h3>
-          <p className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>Full exam simulation with score report</p>
-          <div className="flex items-center gap-1 mt-3 text-xs font-semibold" style={{ color: '#0891b2' }}>
+          <p className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>General mixed exam simulation with score report</p>
+          <div className="flex items-center gap-1 mt-3 text-xs font-semibold" style={{ color: '#b45309' }}>
             Start <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
           </div>
         </Link>
@@ -85,15 +121,15 @@ export default async function DemoPage() {
               className="inline-flex items-center justify-center w-6 h-6 rounded text-white text-xs font-bold"
               style={{ background: CATEGORY_COLOR[category] ?? 'var(--color-primary)' }}
             >
-              {category.charAt(0)}
+              {(CATEGORY_LABEL[category] ?? category).charAt(0)}
             </span>
-            {category} Questions
+            {CATEGORY_LABEL[category] ?? category} Questions
           </h2>
           <div className="grid gap-3">
             {qs.map((q, idx) => (
               <Link
                 key={q.id}
-                href="/dashboard/demo/quiz"
+                href={CATEGORY_LINK[category] ?? '/dashboard/demo/quiz'}
                 className="card-base p-5 hover:opacity-80 transition-opacity"
               >
                 <div className="flex items-start gap-4">
