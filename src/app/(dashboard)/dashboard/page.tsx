@@ -36,6 +36,10 @@ async function getDashboardData(userId: string) {
   return { enrollments, quizAttempts, bookmarkCount };
 }
 
+type DashboardData = Awaited<ReturnType<typeof getDashboardData>>;
+type EnrollmentItem = DashboardData['enrollments'][number];
+type QuizAttemptItem = DashboardData['quizAttempts'][number];
+
 const CATEGORY_COLOR: Record<string, string> = {
   SAT_PREP: 'var(--color-sat)',
   ACT_PREP: 'var(--color-act)',
@@ -84,7 +88,7 @@ export default async function DashboardPage() {
   const demoQuestions = getDemoQuestions();
   const avgScore =
     quizAttempts.length > 0
-      ? Math.round(quizAttempts.reduce((s, a) => s + (a.score ?? 0), 0) / quizAttempts.length)
+      ? Math.round(quizAttempts.reduce((s: number, a: QuizAttemptItem) => s + (a.score ?? 0), 0) / quizAttempts.length)
       : 0;
 
   return (
