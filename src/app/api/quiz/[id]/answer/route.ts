@@ -1,0 +1,61 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getDbUser, unauthorized, badRequest } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const user = await getDbUser();
+    if (!user) return unauthorized();
+
+    const { id: attemptId } = await params;
+    const body = await req.json();
+    const { questionId, selectedOptionId, timeTaken } = body;
+
+    if (!questionId || !selectedOptionId) {
+      return badRequest('questionId and selectedOptionId are required');
+    }
+
+    const attempt = await prisma.quizAttempt.findUnique({ where: { id: attemptId } });
+    if (!attempt) return NextResponse.json({ error: 'Attempt not found' }, { status: 404 });
+    if (attempt.userId !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (attempt.status !== 'IN_PROGRESS') return badRequest('Attempt is not in progress');
+
+    const option = await prisma.questionOption.findUnique({
+      where: { id: selectedOptionId },
+      include: { question: { include: { options: { where: { isCorrect: true } } } } },
+    });
+
+    if (!option) return NextResponse.json({ error: 'Option not found' }, { status: 404 });
+
+    const isCorrect = option.isCorrect;
+    const correctOption = option.question.options[0];
+
+    void timeTaken;
+
+    const existingAnswer = await prisma.attemptAnswer.findFirst({
+      where: { attemptId, questionId },
+    });
+
+    if (existingAnswer) {
+      await prisma.attemptAnswer.update({
+        where: { id: existingAnswer.id },
+        data: { selectedOptionId, isCorrect },
+      });
+    } else {
+      await prisma.attemptAnswer.create({
+        data: { attemptId, questionId, selectedOptionId, isCorrect },
+      });
+    }
+
+    return NextResponse.json({
+      isCorrect,
+      correctOptionId: correctOption?.id,
+      explanation: option.question.explanation,
+    });
+  } catch {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
