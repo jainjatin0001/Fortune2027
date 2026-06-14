@@ -25,12 +25,35 @@ enum DifficultyLevel {
   EXPERT
 }
 
-enum ContentType {
+// Generic asset type — drives which fields are populated on LearningAsset
+enum AssetType {
   VIDEO
-  TEXT
-  QUIZ
-  CODING
   PDF
+  ARTICLE
+  QUIZ
+  QUESTION_SET
+}
+
+enum QuestionType {
+  SINGLE_CORRECT
+  MULTIPLE_CORRECT
+  NUMERIC
+  TEXT
+}
+
+// Used on both Question (editorial) and QuestionSet (collection classification)
+enum QuestionSourceType {
+  MCQ
+  PYQ
+  PRACTICE
+  MOCK_TEST
+}
+
+enum QuizType {
+  CHAPTER_TEST
+  PRACTICE
+  DAILY_QUIZ
+  MOCK_TEST
 }
 
 enum EnrollmentStatus {
@@ -38,6 +61,7 @@ enum EnrollmentStatus {
   COMPLETED
   CANCELLED
   PAUSED
+  EXPIRED
 }
 
 enum QuizAttemptStatus {
@@ -46,12 +70,19 @@ enum QuizAttemptStatus {
   ABANDONED
 }
 
-enum NotificationType {
-  INFO
-  SUCCESS
-  WARNING
-  ERROR
-  ANNOUNCEMENT
+// User-submitted difficulty perception — feeds QuestionAnalytics
+enum CommunityDifficulty {
+  EASY
+  MODERATE
+  HARD
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  FAILED
+  REFUNDED
+  CANCELLED
 }
 
 enum PaymentStatus {
@@ -59,6 +90,13 @@ enum PaymentStatus {
   COMPLETED
   FAILED
   REFUNDED
+}
+
+enum PaymentProvider {
+  STRIPE
+  RAZORPAY
+  PAYPAL
+  OTHER
 }
 
 enum CouponType {
@@ -71,6 +109,15 @@ enum SubscriptionStatus {
   CANCELLED
   PAST_DUE
   TRIALING
+  PAUSED
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+  ANNOUNCEMENT
 }
 
 enum AuditAction {
@@ -83,42 +130,61 @@ enum AuditAction {
   UNPUBLISH
 }
 
-enum CourseCategory {
-  SAT_PREP
-  ACT_PREP
-  AP_EXAM
-  HIGH_SCHOOL
-  CODING
-  OTHER
+// PERCENTAGE = 50% off, FIXED = $20 off — reused on both Coupon and Offer
+enum OfferType {
+  PERCENTAGE
+  FIXED
+}
+
+enum FeedbackType {
+  GENERAL
+  BUG_REPORT
+  FEATURE_REQUEST
+  COURSE_FEEDBACK
+  QUESTION_FEEDBACK
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  CONVERTED
+  LOST
 }
 
 // ─────────────────────────────────────────────
-// USER & AUTHENTICATION
+// IDENTITY & ACCESS
 // ─────────────────────────────────────────────
 
 model User {
-  id            String   @id @default(uuid())
-  clerkId       String   @unique
-  email         String   @unique
-  firstName     String
-  lastName      String
-  avatarUrl     String?
-  role          UserRole @default(STUDENT)
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id        String   @id @default(uuid())
+  clerkId   String   @unique
+  email     String   @unique
+  firstName String
+  lastName  String
+  avatarUrl String?
+  role      UserRole @default(STUDENT)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  profile        Profile?
-  enrollments    Enrollment[]
-  quizAttempts   QuizAttempt[]
-  bookmarks      Bookmark[]
-  reviews        Review[]
-  notifications  Notification[]
-  certificates   Certificate[]
-  blogPosts      Blog[]
-  auditLogs      AuditLog[]
-  parentChildren ParentStudent[] @relation("ParentRelation")
-  parentOf       ParentStudent[] @relation("StudentRelation")
+  profile          Profile?
+  enrollments      Enrollment[]
+  quizAttempts     QuizAttempt[]
+  questionAttempts UserQuestionAttempt[]
+  bookmarks        Bookmark[]
+  reviews          Review[]
+  notifications    Notification[]
+  certificates     Certificate[]
+  blogPosts        BlogPost[]
+  auditLogs        AuditLog[]
+  orders           Order[]
+  payments         Payment[]
+  subscriptions    Subscription[]
+  feedbacks        Feedback[]
+  leads            Lead[]
+  parentRelations  ParentStudent[]       @relation("ParentRelation")
+  studentRelations ParentStudent[]       @relation("StudentRelation")
 
   @@index([clerkId])
   @@index([email])
@@ -140,29 +206,31 @@ model Profile {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("profiles")
 }
 
+// Supports parent dashboard — one parent linked to many students
 model ParentStudent {
   id        String   @id @default(uuid())
   parentId  String
   studentId String
   createdAt DateTime @default(now())
 
-  parent    User @relation("ParentRelation", fields: [parentId], references: [id], onDelete: Cascade)
-  student   User @relation("StudentRelation", fields: [studentId], references: [id], onDelete: Cascade)
+  parent  User @relation("ParentRelation", fields: [parentId], references: [id], onDelete: Cascade)
+  student User @relation("StudentRelation", fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([parentId, studentId])
   @@map("parent_students")
 }
 
 // ─────────────────────────────────────────────
-// COURSES & CONTENT
+// CURRICULUM
 // ─────────────────────────────────────────────
 
-model CourseSection {
+// Table (not enum) — adding GRE/GMAT/IELTS is a single INSERT, no migration
+model Program {
   id          String   @id @default(uuid())
   name        String   @unique
   slug        String   @unique
@@ -174,25 +242,82 @@ model CourseSection {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  courses     Course[]
+  subjects Subject[]
+  courses  Course[]
+  exams    Exam[]
+  leads    Lead[]
 
-  @@map("course_sections")
+  @@index([slug])
+  @@map("programs")
 }
 
+// A Program has many Subjects (SAT → Math, Reading, Writing)
+model Subject {
+  id          String   @id @default(uuid())
+  programId   String
+  name        String
+  slug        String   @unique
+  description String?
+  iconUrl     String?
+  color       String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  program      Program       @relation(fields: [programId], references: [id])
+  topics       Topic[]
+  questions    Question[]
+  quizzes      Quiz[]
+  questionSets QuestionSet[]
+
+  @@unique([programId, name])
+  @@index([programId])
+  @@map("subjects")
+}
+
+// Self-referential tree — supports Math → Algebra → Linear Equations → Systems
+model Topic {
+  id            String   @id @default(uuid())
+  subjectId     String
+  parentTopicId String?
+  name          String
+  slug          String   @unique
+  description   String?
+  sortOrder     Int      @default(0)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  subject      Subject   @relation(fields: [subjectId], references: [id])
+  parentTopic  Topic?    @relation("TopicHierarchy", fields: [parentTopicId], references: [id])
+  childTopics  Topic[]   @relation("TopicHierarchy")
+  questions    Question[]
+  questionSets QuestionSet[]
+  quizzes      Quiz[]
+
+  @@index([subjectId])
+  @@index([parentTopicId])
+  @@map("topics")
+}
+
+// ─────────────────────────────────────────────
+// COURSE CATALOG
+// ─────────────────────────────────────────────
+
+// A Course is a sellable product/plan — may contain any mix of content types
 model Course {
   id              String          @id @default(uuid())
-  sectionId       String
+  programId       String
   title           String
   slug            String          @unique
   description     String
   shortDesc       String?
   thumbnailUrl    String?
   previewVideoUrl String?
-  category        CourseCategory
   difficulty      DifficultyLevel @default(MEDIUM)
-  durationHours   Float?
-  totalLessons    Int             @default(0)
-  price           Float           @default(0)
+  price           Decimal         @default(0) @db.Decimal(10, 2)
+  comparePrice    Decimal?        @db.Decimal(10, 2)
   isFree          Boolean         @default(false)
   isPublished     Boolean         @default(false)
   isFeatured      Boolean         @default(false)
@@ -204,32 +329,22 @@ model Course {
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
-  section      CourseSection      @relation(fields: [sectionId], references: [id])
+  program      Program            @relation(fields: [programId], references: [id])
   modules      Module[]
+  instructors  CourseInstructor[]
   enrollments  Enrollment[]
   reviews      Review[]
   bookmarks    Bookmark[]
   certificates Certificate[]
-  instructors  CourseInstructor[]
+  orderItems   OrderItem[]
+  courseOffers CourseOffer[]
+  feedbacks    Feedback[]
+  leads        Lead[]
 
+  @@index([programId])
   @@index([slug])
-  @@index([category])
   @@index([isPublished])
   @@map("courses")
-}
-
-model CourseInstructor {
-  id           String   @id @default(uuid())
-  courseId     String
-  instructorId String
-  isPrimary    Boolean  @default(false)
-  createdAt    DateTime @default(now())
-
-  course       Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  instructor   Instructor @relation(fields: [instructorId], references: [id], onDelete: Cascade)
-
-  @@unique([courseId, instructorId])
-  @@map("course_instructors")
 }
 
 model Instructor {
@@ -246,11 +361,27 @@ model Instructor {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  courses     CourseInstructor[]
+  courses CourseInstructor[]
 
   @@map("instructors")
 }
 
+model CourseInstructor {
+  id           String   @id @default(uuid())
+  courseId     String
+  instructorId String
+  isPrimary    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  course     Course     @relation(fields: [courseId],     references: [id], onDelete: Cascade)
+  instructor Instructor @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, instructorId])
+  @@map("course_instructors")
+}
+
+// A module is an optional grouping inside a Course
+// For flat courses (no explicit sections), use a single unnamed module
 model Module {
   id          String   @id @default(uuid())
   courseId    String
@@ -261,53 +392,274 @@ model Module {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  lessons     Lesson[]
+  course         Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  assets         LearningAsset[]
+  moduleProgress ModuleProgress[]
 
   @@index([courseId])
   @@map("modules")
 }
 
-model Lesson {
-  id            String      @id @default(uuid())
-  moduleId      String
-  title         String
-  slug          String      @unique
-  content       String?
+// The universal content wrapper — assetType drives which fields are used
+// VIDEO: videoUrl, videoDuration, videoProvider
+// PDF:   pdfUrl
+// ARTICLE: articleContent
+// QUIZ: quizId FK → Quiz
+// QUESTION_SET: questionSetId FK → QuestionSet
+model LearningAsset {
+  id          String    @id @default(uuid())
+  moduleId    String
+  title       String
+  description String?
+  assetType   AssetType
+  sortOrder   Int       @default(0)
+  isFree      Boolean   @default(false)
+  isPublished Boolean   @default(false)
+
+  // VIDEO fields
   videoUrl      String?
   videoDuration Int?
-  contentType   ContentType @default(VIDEO)
-  sortOrder     Int         @default(0)
-  isFree        Boolean     @default(false)
-  isPublished   Boolean     @default(false)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  videoProvider String?
 
-  module        Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  progress      LessonProgress[]
+  // PDF field
+  pdfUrl String?
+
+  // ARTICLE field
+  articleContent String?
+
+  // QUIZ reference (nullable FK)
+  quizId String?
+
+  // QUESTION_SET reference (nullable FK)
+  questionSetId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  module      Module       @relation(fields: [moduleId],      references: [id], onDelete: Cascade)
+  quiz        Quiz?        @relation(fields: [quizId],        references: [id])
+  questionSet QuestionSet? @relation(fields: [questionSetId], references: [id])
+  progress    LearningAssetProgress[]
 
   @@index([moduleId])
-  @@map("lessons")
+  @@index([assetType])
+  @@map("learning_assets")
 }
 
 // ─────────────────────────────────────────────
-// ENROLLMENT & PROGRESS
+// ASSESSMENT SYSTEM
 // ─────────────────────────────────────────────
 
+// Universal question bank — one table for ALL programs and question types
+// A question can simultaneously belong to a QuestionSet, a Quiz, and an Exam
+model Question {
+  id           String             @id @default(uuid())
+  subjectId    String
+  topicId      String?
+  statement    String
+  explanation  String?
+  imageUrl     String?
+  difficulty   DifficultyLevel    @default(MEDIUM)
+  questionType QuestionType       @default(SINGLE_CORRECT)
+  sourceType   QuestionSourceType @default(MCQ)
+  points       Int                @default(1)
+  tags         String[]
+  isActive     Boolean            @default(true)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  subject       Subject               @relation(fields: [subjectId], references: [id])
+  topic         Topic?                @relation(fields: [topicId],   references: [id])
+  options       QuestionOption[]
+  quizQuestions QuizQuestion[]
+  setItems      QuestionSetItem[]
+  examQuestions ExamQuestion[]
+  userAttempts  UserQuestionAttempt[]
+  analytics     QuestionAnalytics?
+  bookmarks     Bookmark[]
+
+  @@index([subjectId])
+  @@index([topicId])
+  @@index([difficulty])
+  @@index([sourceType])
+  @@map("questions")
+}
+
+// Normalized options table — supports variable option count and multiple correct answers
+model QuestionOption {
+  id          String   @id @default(uuid())
+  questionId  String
+  content     String
+  imageUrl    String?
+  explanation String?
+  isCorrect   Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+  @@map("question_options")
+}
+
+// Pre-aggregated analytics — updated asynchronously, never recalculated live
+// Separating from Question avoids write contention during high-traffic quiz sessions
+model QuestionAnalytics {
+  id                     String   @id @default(uuid())
+  questionId             String   @unique
+  totalAttempts          Int      @default(0)
+  correctAttempts        Int      @default(0)
+  incorrectAttempts      Int      @default(0)
+  skippedAttempts        Int      @default(0)
+  avgTimeTaken           Float?
+  communityEasyCount     Int      @default(0)
+  communityModerateCount Int      @default(0)
+  communityHardCount     Int      @default(0)
+  // Weighted score: (easy*1 + moderate*2 + hard*3) / total community votes
+  communityDifficultyScore Float?
+  // successRate = (correctAttempts / totalAttempts) * 100
+  successRate            Float?
+  updatedAt              DateTime @updatedAt
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@map("question_analytics")
+}
+
+// Reusable named collection of questions (SAT Algebra PYQs, Top 500 MCQs)
+// Same set can be attached to multiple courses without duplication
+model QuestionSet {
+  id          String              @id @default(uuid())
+  title       String
+  description String?
+  subjectId   String?
+  topicId     String?
+  sourceType  QuestionSourceType?
+  isPublished Boolean             @default(false)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  subject Subject? @relation(fields: [subjectId], references: [id])
+  topic   Topic?   @relation(fields: [topicId],   references: [id])
+  items   QuestionSetItem[]
+  assets  LearningAsset[]
+
+  @@index([subjectId])
+  @@map("question_sets")
+}
+
+model QuestionSetItem {
+  id            String @id @default(uuid())
+  questionSetId String
+  questionId    String
+  sortOrder     Int    @default(0)
+
+  questionSet QuestionSet @relation(fields: [questionSetId], references: [id], onDelete: Cascade)
+  question    Question    @relation(fields: [questionId],    references: [id], onDelete: Cascade)
+
+  @@unique([questionSetId, questionId])
+  @@map("question_set_items")
+}
+
+// A Quiz is a timed, scored assessment
+// Same quiz can be reused across multiple courses via LearningAsset.quizId
+model Quiz {
+  id               String   @id @default(uuid())
+  title            String
+  description      String?
+  quizType         QuizType @default(PRACTICE)
+  subjectId        String?
+  topicId          String?
+  timeLimit        Int?
+  passingScore     Int      @default(70)
+  totalMarks       Int?
+  shuffleQuestions Boolean  @default(false)
+  isPublished      Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  subject   Subject? @relation(fields: [subjectId], references: [id])
+  topic     Topic?   @relation(fields: [topicId],   references: [id])
+  questions QuizQuestion[]
+  attempts  QuizAttempt[]
+  assets    LearningAsset[]
+
+  @@index([subjectId])
+  @@map("quizzes")
+}
+
+model QuizQuestion {
+  id         String @id @default(uuid())
+  quizId     String
+  questionId String
+  sortOrder  Int    @default(0)
+  points     Int    @default(1)
+
+  quiz     Quiz     @relation(fields: [quizId],     references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([quizId, questionId])
+  @@map("quiz_questions")
+}
+
+// Official exams (SAT May 2024, ACT April 2025) — for PYQ filtering
+model Exam {
+  id          String   @id @default(uuid())
+  programId   String
+  name        String
+  description String?
+  examYear    Int
+  examMonth   Int?
+  session     String?
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  program   Program        @relation(fields: [programId], references: [id])
+  questions ExamQuestion[]
+
+  @@index([programId])
+  @@index([examYear])
+  @@map("exams")
+}
+
+model ExamQuestion {
+  id          String  @id @default(uuid())
+  examId      String
+  questionId  String
+  sectionName String?
+  sortOrder   Int     @default(0)
+  points      Int     @default(1)
+
+  exam     Exam     @relation(fields: [examId],     references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([examId, questionId])
+  @@map("exam_questions")
+}
+
+// ─────────────────────────────────────────────
+// LEARNING & PROGRESS
+// ─────────────────────────────────────────────
+
+// The single access-control record — gates all premium content
 model Enrollment {
   id          String           @id @default(uuid())
   userId      String
   courseId    String
   status      EnrollmentStatus @default(ACTIVE)
-  progress    Float            @default(0)
-  completedAt DateTime?
+  enrolledAt  DateTime         @default(now())
   expiresAt   DateTime?
+  completedAt DateTime?
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 
-  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  course         Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  lessonProgress LessonProgress[]
+  user           User                    @relation(fields: [userId],   references: [id], onDelete: Cascade)
+  course         Course                  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseProgress CourseProgress?
+  moduleProgress ModuleProgress[]
+  assetProgress  LearningAssetProgress[]
+  quizAttempts   QuizAttempt[]
 
   @@unique([userId, courseId])
   @@index([userId])
@@ -315,211 +667,257 @@ model Enrollment {
   @@map("enrollments")
 }
 
-model LessonProgress {
-  id           String     @id @default(uuid())
+// Pre-computed summary — makes "Course 65% Completed" an O(1) read
+model CourseProgress {
+  id              String    @id @default(uuid())
+  enrollmentId    String    @unique
+  completionPct   Float     @default(0)
+  totalAssets     Int       @default(0)
+  completedAssets Int       @default(0)
+  lastAccessedAt  DateTime?
+  updatedAt       DateTime  @updatedAt
+
+  enrollment Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+
+  @@map("course_progress")
+}
+
+// Pre-computed per-module summary — makes "4 of 6 Modules Completed" an O(1) read
+model ModuleProgress {
+  id              String    @id @default(uuid())
+  enrollmentId    String
+  moduleId        String
+  completionPct   Float     @default(0)
+  totalAssets     Int       @default(0)
+  completedAssets Int       @default(0)
+  isCompleted     Boolean   @default(false)
+  completedAt     DateTime?
+  updatedAt       DateTime  @updatedAt
+
+  enrollment Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  module     Module     @relation(fields: [moduleId],     references: [id], onDelete: Cascade)
+
+  @@unique([enrollmentId, moduleId])
+  @@map("module_progress")
+}
+
+// Tracks completion of individual videos, PDFs, articles, quizzes, and question sets
+model LearningAssetProgress {
+  id           String    @id @default(uuid())
   enrollmentId String
-  lessonId     String
-  isCompleted  Boolean    @default(false)
-  watchedSecs  Int        @default(0)
+  assetId      String
+  isCompleted  Boolean   @default(false)
+  watchedSecs  Int       @default(0)
+  lastPosition Int       @default(0)
   completedAt  DateTime?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  enrollment   Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
-  lesson       Lesson     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  enrollment Enrollment    @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  asset      LearningAsset @relation(fields: [assetId],      references: [id], onDelete: Cascade)
 
-  @@unique([enrollmentId, lessonId])
-  @@map("lesson_progress")
+  @@unique([enrollmentId, assetId])
+  @@map("learning_asset_progress")
 }
 
-// ─────────────────────────────────────────────
-// QUIZZES & QUESTIONS
-// ─────────────────────────────────────────────
-
-model Subject {
-  id          String         @id @default(uuid())
-  name        String         @unique
-  slug        String         @unique
-  description String?
-  category    CourseCategory
-  iconUrl     String?
-  color       String?
-  isActive    Boolean        @default(true)
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-
-  questions   Question[]
-  quizzes     Quiz[]
-
-  @@map("subjects")
-}
-
-model Quiz {
-  id           String   @id @default(uuid())
-  subjectId    String?
-  title        String
-  description  String?
-  timeLimit    Int?
-  passingScore Int      @default(70)
-  isPublished  Boolean  @default(false)
-  isMockTest   Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  subject      Subject?       @relation(fields: [subjectId], references: [id])
-  questions    QuizQuestion[]
-  attempts     QuizAttempt[]
-
-  @@index([subjectId])
-  @@map("quizzes")
-}
-
-model Question {
-  id          String          @id @default(uuid())
-  subjectId   String?
-  content     String
-  explanation String?
-  imageUrl    String?
-  difficulty  DifficultyLevel @default(MEDIUM)
-  topic       String?
-  tags        String[]
-  points      Int             @default(1)
-  isActive    Boolean         @default(true)
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-
-  subject        Subject?         @relation(fields: [subjectId], references: [id])
-  options        QuestionOption[]
-  quizzes        QuizQuestion[]
-  attemptAnswers AttemptAnswer[]
-
-  @@index([subjectId])
-  @@index([difficulty])
-  @@map("questions")
-}
-
-model QuestionOption {
-  id         String   @id @default(uuid())
-  questionId String
-  content    String
-  isCorrect  Boolean  @default(false)
-  sortOrder  Int      @default(0)
-  createdAt  DateTime @default(now())
-
-  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-
-  @@index([questionId])
-  @@map("question_options")
-}
-
-model QuizQuestion {
-  id         String   @id @default(uuid())
-  quizId     String
-  questionId String
-  sortOrder  Int      @default(0)
-  points     Int      @default(1)
-
-  quiz       Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-
-  @@unique([quizId, questionId])
-  @@map("quiz_questions")
-}
-
+// A quiz attempt — exists for both enrolled (enrollmentId set) and demo users (null)
 model QuizAttempt {
   id           String            @id @default(uuid())
   userId       String
   quizId       String
+  enrollmentId String?
   status       QuizAttemptStatus @default(IN_PROGRESS)
   score        Float?
-  totalPoints  Int               @default(0)
   earnedPoints Int               @default(0)
+  totalPoints  Int               @default(0)
   timeTaken    Int?
   startedAt    DateTime          @default(now())
   completedAt  DateTime?
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
 
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  quiz         Quiz          @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  answers      AttemptAnswer[]
+  user             User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quiz             Quiz                  @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  enrollment       Enrollment?           @relation(fields: [enrollmentId], references: [id])
+  questionAttempts UserQuestionAttempt[]
 
   @@index([userId])
   @@index([quizId])
   @@map("quiz_attempts")
 }
 
-model AttemptAnswer {
-  id               String   @id @default(uuid())
-  attemptId        String
-  questionId       String
-  selectedOptionId String?
-  isCorrect        Boolean  @default(false)
-  createdAt        DateTime @default(now())
+// Universal per-question attempt record — works for quiz attempts and standalone practice
+// quizAttemptId is null for standalone practice (free/demo mode)
+// selectedOptionIds stores option UUIDs — supports both single and multiple correct
+// difficultyFeedback feeds QuestionAnalytics aggregation (run via background job)
+model UserQuestionAttempt {
+  id                 String               @id @default(uuid())
+  userId             String
+  questionId         String
+  quizAttemptId      String?
+  selectedOptionIds  String[]
+  textAnswer         String?
+  numericAnswer      Float?
+  isCorrect          Boolean?
+  timeTaken          Int?
+  isSkipped          Boolean              @default(false)
+  difficultyFeedback CommunityDifficulty?
+  attemptedAt        DateTime             @default(now())
 
-  attempt    QuizAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
-  question   Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  user        User         @relation(fields: [userId],        references: [id], onDelete: Cascade)
+  question    Question     @relation(fields: [questionId],    references: [id], onDelete: Cascade)
+  quizAttempt QuizAttempt? @relation(fields: [quizAttemptId], references: [id])
 
-  @@index([attemptId])
-  @@map("attempt_answers")
+  @@index([userId])
+  @@index([questionId])
+  @@index([quizAttemptId])
+  @@map("user_question_attempts")
 }
 
 // ─────────────────────────────────────────────
-// TEST PREP SPECIFIC
+// COMMERCE
 // ─────────────────────────────────────────────
 
-model SATSection {
-  id          String   @id @default(uuid())
-  name        String
-  description String?
-  maxScore    Int
-  topics      String[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model Order {
+  id             String      @id @default(uuid())
+  userId         String
+  status         OrderStatus @default(PENDING)
+  subtotal       Decimal     @db.Decimal(10, 2)
+  discountAmount Decimal     @default(0) @db.Decimal(10, 2)
+  total          Decimal     @db.Decimal(10, 2)
+  currency       String      @default("USD")
+  couponId       String?
+  notes          String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 
-  @@map("sat_sections")
+  user     User       @relation(fields: [userId],   references: [id], onDelete: Cascade)
+  coupon   Coupon?    @relation(fields: [couponId], references: [id])
+  items    OrderItem[]
+  payments Payment[]
+
+  @@index([userId])
+  @@map("orders")
 }
 
-model ACTSection {
-  id          String   @id @default(uuid())
-  name        String
-  description String?
-  maxScore    Int
-  topics      String[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+// Price and title are snapshotted at purchase time — historical accuracy is preserved
+// even if the course price or title changes later
+model OrderItem {
+  id        String   @id @default(uuid())
+  orderId   String
+  courseId  String
+  title     String
+  price     Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
 
-  @@map("act_sections")
+  order  Order  @relation(fields: [orderId],  references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id])
+
+  @@map("order_items")
 }
 
-model APSubject {
-  id          String    @id @default(uuid())
-  name        String
-  code        String    @unique
-  description String?
-  examDate    DateTime?
-  topics      String[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+// Separate from Order — tracks individual gateway transactions (retry, refund events)
+model Payment {
+  id                String          @id @default(uuid())
+  orderId           String
+  userId            String
+  amount            Decimal         @db.Decimal(10, 2)
+  currency          String          @default("USD")
+  status            PaymentStatus   @default(PENDING)
+  provider          PaymentProvider @default(STRIPE)
+  providerPaymentId String?
+  providerOrderId   String?
+  metadata          Json?
+  paidAt            DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
 
-  @@map("ap_subjects")
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId],  references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([userId])
+  @@map("payments")
 }
 
-model CodingTrack {
-  id          String          @id @default(uuid())
-  name        String
-  language    String
-  description String?
-  difficulty  DifficultyLevel @default(MEDIUM)
-  topics      String[]
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+model Coupon {
+  id          String     @id @default(uuid())
+  code        String     @unique
+  type        CouponType
+  value       Decimal    @db.Decimal(10, 2)
+  maxUses     Int?
+  usedCount   Int        @default(0)
+  minPurchase Decimal?   @db.Decimal(10, 2)
+  isActive    Boolean    @default(true)
+  expiresAt   DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
-  @@map("coding_tracks")
+  orders Order[]
+
+  @@index([code])
+  @@map("coupons")
+}
+
+model Subscription {
+  id                 String             @id @default(uuid())
+  userId             String
+  planName           String
+  status             SubscriptionStatus @default(ACTIVE)
+  providerSubId      String?
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  cancelAtEnd        Boolean            @default(false)
+  cancelledAt        DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("subscriptions")
+}
+
+// Platform-applied discount shown directly on the product/course page.
+// Different from Coupon (user enters a code at checkout).
+// Course.price is always the base price. The frontend computes effective price:
+//   PERCENTAGE: effectivePrice = price - (price * discountValue / 100)
+//   FIXED:      effectivePrice = price - discountValue
+model Offer {
+  id            String    @id @default(uuid())
+  title         String
+  description   String?
+  offerType     OfferType
+  discountValue Decimal   @db.Decimal(10, 2)
+  badgeText     String?
+  startDate     DateTime
+  endDate       DateTime?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  courses CourseOffer[]
+
+  @@map("offers")
+}
+
+// Junction — one offer can apply to many courses; one course can have many offers.
+// Enforce "only one active offer per course" at the application layer.
+model CourseOffer {
+  id        String   @id @default(uuid())
+  courseId  String
+  offerId   String
+  createdAt DateTime @default(now())
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  offer  Offer  @relation(fields: [offerId],  references: [id], onDelete: Cascade)
+
+  @@unique([courseId, offerId])
+  @@map("course_offers")
 }
 
 // ─────────────────────────────────────────────
-// SOCIAL & ENGAGEMENT
+// COMMUNITY & ENGAGEMENT
 // ─────────────────────────────────────────────
 
 model Review {
@@ -532,38 +930,41 @@ model Review {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  course    Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId],   references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@unique([userId, courseId])
   @@index([courseId])
   @@map("reviews")
 }
 
+// Polymorphic bookmark — courseId XOR questionId must be set (enforced at app layer)
 model Bookmark {
-  id        String   @id @default(uuid())
-  userId    String
-  courseId  String
-  createdAt DateTime @default(now())
+  id         String   @id @default(uuid())
+  userId     String
+  courseId   String?
+  questionId String?
+  createdAt  DateTime @default(now())
 
-  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  course    Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user     User      @relation(fields: [userId],     references: [id], onDelete: Cascade)
+  course   Course?   @relation(fields: [courseId],   references: [id], onDelete: Cascade)
+  question Question? @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, courseId])
   @@index([userId])
   @@map("bookmarks")
 }
 
 model Certificate {
-  id             String   @id @default(uuid())
-  userId         String
-  courseId       String
-  issueDate      DateTime @default(now())
-  certificateUrl String?
-  createdAt      DateTime @default(now())
+  id                String   @id @default(uuid())
+  userId            String
+  courseId          String
+  certificateNumber String   @unique @default(uuid())
+  certificateUrl    String?
+  issuedAt          DateTime @default(now())
+  createdAt         DateTime @default(now())
 
-  user           User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  course         Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId],   references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@unique([userId, courseId])
   @@map("certificates")
@@ -579,7 +980,7 @@ model Notification {
   actionUrl String?
   createdAt DateTime         @default(now())
 
-  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([isRead])
@@ -587,7 +988,7 @@ model Notification {
 }
 
 // ─────────────────────────────────────────────
-// BLOG
+// CMS / BLOG
 // ─────────────────────────────────────────────
 
 model BlogCategory {
@@ -597,12 +998,12 @@ model BlogCategory {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  posts     Blog[]
+  posts BlogPost[]
 
   @@map("blog_categories")
 }
 
-model Blog {
+model BlogPost {
   id          String    @id @default(uuid())
   authorId    String
   categoryId  String?
@@ -619,12 +1020,12 @@ model Blog {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  author      User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  category    BlogCategory? @relation(fields: [categoryId], references: [id])
+  author   User          @relation(fields: [authorId],   references: [id])
+  category BlogCategory? @relation(fields: [categoryId], references: [id])
 
   @@index([slug])
   @@index([isPublished])
-  @@map("blogs")
+  @@map("blog_posts")
 }
 
 // ─────────────────────────────────────────────
@@ -669,46 +1070,69 @@ model Announcement {
   @@map("announcements")
 }
 
+// General-purpose feedback from any visitor or logged-in user.
+// userId is null for anonymous submissions.
+model Feedback {
+  id         String       @id @default(uuid())
+  userId     String?
+  name       String?
+  email      String?
+  type       FeedbackType @default(GENERAL)
+  subject    String?
+  message    String
+  rating     Int?
+  courseId   String?
+  isRead     Boolean      @default(false)
+  adminNotes String?
+  createdAt  DateTime     @default(now())
+
+  user   User?   @relation(fields: [userId],   references: [id])
+  course Course? @relation(fields: [courseId], references: [id])
+
+  @@index([type])
+  @@index([isRead])
+  @@map("feedbacks")
+}
+
+// Captures prospective students from landing pages, ads, and referrals.
+// programId / courseId record what they expressed interest in.
+// When a lead purchases, set status = CONVERTED, convertedAt, and userId.
+model Lead {
+  id          String     @id @default(uuid())
+  firstName   String
+  lastName    String?
+  email       String
+  phone       String?
+  class       String?
+  city        String?
+  state       String?
+  country     String     @default("US")
+  programId   String?
+  courseId    String?
+  source      String?
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  notes       String?
+  status      LeadStatus @default(NEW)
+  convertedAt DateTime?
+  userId      String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  program Program? @relation(fields: [programId], references: [id])
+  course  Course?  @relation(fields: [courseId],  references: [id])
+  user    User?    @relation(fields: [userId],     references: [id])
+
+  @@index([email])
+  @@index([status])
+  @@index([programId])
+  @@map("leads")
+}
+
 // ─────────────────────────────────────────────
 // ADMIN & AUDIT
 // ─────────────────────────────────────────────
-
-model Permission {
-  id          String   @id @default(uuid())
-  name        String   @unique
-  description String?
-  resource    String
-  action      String
-  createdAt   DateTime @default(now())
-
-  roles       RolePermission[]
-
-  @@map("permissions")
-}
-
-model Role {
-  id          String   @id @default(uuid())
-  name        String   @unique
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  permissions RolePermission[]
-
-  @@map("roles")
-}
-
-model RolePermission {
-  id           String @id @default(uuid())
-  roleId       String
-  permissionId String
-
-  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
-
-  @@unique([roleId, permissionId])
-  @@map("role_permissions")
-}
 
 model AuditLog {
   id         String      @id @default(uuid())
@@ -722,7 +1146,7 @@ model AuditLog {
   userAgent  String?
   createdAt  DateTime    @default(now())
 
-  user       User? @relation(fields: [userId], references: [id])
+  user User? @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([resource])
@@ -730,53 +1154,39 @@ model AuditLog {
   @@map("audit_logs")
 }
 
-// ─────────────────────────────────────────────
-// PAYMENTS (FUTURE READY)
-// ─────────────────────────────────────────────
+model Permission {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  resource    String
+  action      String
+  createdAt   DateTime @default(now())
 
-model Order {
-  id              String        @id @default(uuid())
-  userId          String
-  courseId        String?
-  amount          Float
-  currency        String        @default("USD")
-  status          PaymentStatus @default(PENDING)
-  stripePaymentId String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  rolePermissions RolePermission[]
 
-  @@index([userId])
-  @@map("orders")
+  @@map("permissions")
 }
 
-model Coupon {
-  id          String     @id @default(uuid())
-  code        String     @unique
-  type        CouponType
-  value       Float
-  maxUses     Int?
-  usedCount   Int        @default(0)
-  minPurchase Float?
-  isActive    Boolean    @default(true)
-  expiresAt   DateTime?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  @@index([code])
-  @@map("coupons")
+  rolePermissions RolePermission[]
+
+  @@map("roles")
 }
 
-model Subscription {
-  id               String             @id @default(uuid())
-  userId           String
-  planName         String
-  status           SubscriptionStatus @default(ACTIVE)
-  stripeSubId      String?
-  currentPeriodEnd DateTime?
-  cancelAtEnd      Boolean            @default(false)
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
+model RolePermission {
+  id           String @id @default(uuid())
+  roleId       String
+  permissionId String
 
-  @@index([userId])
-  @@map("subscriptions")
+  role       Role       @relation(fields: [roleId],       references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
 }

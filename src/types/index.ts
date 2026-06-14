@@ -4,9 +4,12 @@
 
 export type UserRole = 'STUDENT' | 'INSTRUCTOR' | 'PARENT' | 'ADMIN' | 'SUPER_ADMIN';
 export type DifficultyLevel = 'EASY' | 'MEDIUM' | 'HARD' | 'EXPERT';
+// Kept for static display pages (courses/page.tsx, FeaturedCoursesSection)
 export type CourseCategory = 'SAT_PREP' | 'ACT_PREP' | 'AP_EXAM' | 'HIGH_SCHOOL' | 'CODING' | 'OTHER';
-export type ContentType = 'VIDEO' | 'TEXT' | 'QUIZ' | 'CODING' | 'PDF';
-export type EnrollmentStatus = 'ACTIVE' | 'COMPLETED' | 'CANCELLED' | 'PAUSED';
+export type AssetType = 'VIDEO' | 'PDF' | 'ARTICLE' | 'QUIZ' | 'QUESTION_SET';
+export type QuestionType = 'SINGLE_CORRECT' | 'MULTIPLE_CORRECT' | 'NUMERIC' | 'TEXT';
+export type QuizType = 'CHAPTER_TEST' | 'PRACTICE' | 'DAILY_QUIZ' | 'MOCK_TEST';
+export type EnrollmentStatus = 'ACTIVE' | 'COMPLETED' | 'CANCELLED' | 'PAUSED' | 'EXPIRED';
 export type QuizAttemptStatus = 'IN_PROGRESS' | 'COMPLETED' | 'ABANDONED';
 
 // ─────────────────────────────────────────────
@@ -41,37 +44,9 @@ export interface Profile {
 }
 
 // ─────────────────────────────────────────────
-// COURSE
+// CURRICULUM
 // ─────────────────────────────────────────────
-export interface Course {
-  id: string;
-  sectionId: string;
-  title: string;
-  slug: string;
-  description: string;
-  shortDesc?: string;
-  thumbnailUrl?: string;
-  previewVideoUrl?: string;
-  category: CourseCategory;
-  difficulty: DifficultyLevel;
-  durationHours?: number;
-  totalLessons: number;
-  price: number;
-  isFree: boolean;
-  isPublished: boolean;
-  isFeatured: boolean;
-  requirements: string[];
-  objectives: string[];
-  tags: string[];
-  createdAt: Date;
-  updatedAt: Date;
-  section?: CourseSection;
-  instructors?: CourseInstructor[];
-  reviews?: Review[];
-  enrollments?: Enrollment[];
-}
-
-export interface CourseSection {
+export interface Program {
   id: string;
   name: string;
   slug: string;
@@ -80,6 +55,55 @@ export interface CourseSection {
   color?: string;
   sortOrder: number;
   isActive: boolean;
+}
+
+export interface Subject {
+  id: string;
+  programId: string;
+  name: string;
+  slug: string;
+  description?: string;
+  iconUrl?: string;
+  color?: string;
+}
+
+export interface Topic {
+  id: string;
+  subjectId: string;
+  parentTopicId?: string;
+  name: string;
+  slug: string;
+  description?: string;
+  sortOrder: number;
+}
+
+// ─────────────────────────────────────────────
+// COURSE
+// ─────────────────────────────────────────────
+export interface Course {
+  id: string;
+  programId: string;
+  title: string;
+  slug: string;
+  description: string;
+  shortDesc?: string;
+  thumbnailUrl?: string;
+  previewVideoUrl?: string;
+  difficulty: DifficultyLevel;
+  price: number;
+  comparePrice?: number;
+  isFree: boolean;
+  isPublished: boolean;
+  isFeatured: boolean;
+  requirements: string[];
+  objectives: string[];
+  tags: string[];
+  createdAt: Date;
+  updatedAt: Date;
+  program?: Program;
+  instructors?: CourseInstructor[];
+  reviews?: Review[];
+  enrollments?: Enrollment[];
 }
 
 export interface Instructor {
@@ -109,21 +133,25 @@ export interface Module {
   description?: string;
   sortOrder: number;
   isPublished: boolean;
-  lessons?: Lesson[];
+  assets?: LearningAsset[];
 }
 
-export interface Lesson {
+export interface LearningAsset {
   id: string;
   moduleId: string;
   title: string;
-  slug: string;
-  content?: string;
-  videoUrl?: string;
-  videoDuration?: number;
-  contentType: ContentType;
+  description?: string;
+  assetType: AssetType;
   sortOrder: number;
   isFree: boolean;
   isPublished: boolean;
+  videoUrl?: string;
+  videoDuration?: number;
+  videoProvider?: string;
+  pdfUrl?: string;
+  articleContent?: string;
+  quizId?: string;
+  questionSetId?: string;
 }
 
 // ─────────────────────────────────────────────
@@ -134,44 +162,56 @@ export interface Enrollment {
   userId: string;
   courseId: string;
   status: EnrollmentStatus;
-  progress: number;
+  enrolledAt: Date;
   completedAt?: Date;
   expiresAt?: Date;
   createdAt: Date;
   course?: Course;
-  lessonProgress?: LessonProgress[];
+  courseProgress?: CourseProgress;
 }
 
-export interface LessonProgress {
+export interface CourseProgress {
   id: string;
   enrollmentId: string;
-  lessonId: string;
+  completionPct: number;
+  totalAssets: number;
+  completedAssets: number;
+  lastAccessedAt?: Date;
+}
+
+export interface ModuleProgress {
+  id: string;
+  enrollmentId: string;
+  moduleId: string;
+  completionPct: number;
+  totalAssets: number;
+  completedAssets: number;
+  isCompleted: boolean;
+  completedAt?: Date;
+}
+
+export interface LearningAssetProgress {
+  id: string;
+  enrollmentId: string;
+  assetId: string;
   isCompleted: boolean;
   watchedSecs: number;
+  lastPosition: number;
   completedAt?: Date;
 }
 
 // ─────────────────────────────────────────────
 // QUIZ & QUESTIONS
 // ─────────────────────────────────────────────
-export interface Subject {
-  id: string;
-  name: string;
-  slug: string;
-  description?: string;
-  category: CourseCategory;
-  iconUrl?: string;
-  color?: string;
-}
-
 export interface Question {
   id: string;
-  subjectId?: string;
-  content: string;
+  subjectId: string;
+  topicId?: string;
+  statement: string;
   explanation?: string;
   imageUrl?: string;
   difficulty: DifficultyLevel;
-  topic?: string;
+  questionType: QuestionType;
   tags: string[];
   points: number;
   options: QuestionOption[];
@@ -181,6 +221,8 @@ export interface QuestionOption {
   id: string;
   questionId: string;
   content: string;
+  imageUrl?: string;
+  explanation?: string;
   isCorrect: boolean;
   sortOrder: number;
 }
@@ -190,10 +232,10 @@ export interface Quiz {
   subjectId?: string;
   title: string;
   description?: string;
+  quizType: QuizType;
   timeLimit?: number;
   passingScore: number;
   isPublished: boolean;
-  isMockTest: boolean;
   questions?: QuizQuestion[];
 }
 
@@ -217,15 +259,21 @@ export interface QuizAttempt {
   timeTaken?: number;
   startedAt: Date;
   completedAt?: Date;
-  answers?: AttemptAnswer[];
+  questionAttempts?: UserQuestionAttempt[];
 }
 
-export interface AttemptAnswer {
+export interface UserQuestionAttempt {
   id: string;
-  attemptId: string;
+  userId: string;
   questionId: string;
-  selectedOptionId?: string;
-  isCorrect: boolean;
+  quizAttemptId?: string;
+  selectedOptionIds: string[];
+  textAnswer?: string;
+  numericAnswer?: number;
+  isCorrect?: boolean;
+  timeTaken?: number;
+  isSkipped: boolean;
+  attemptedAt: Date;
 }
 
 // ─────────────────────────────────────────────
@@ -266,7 +314,8 @@ export interface Review {
 export interface Bookmark {
   id: string;
   userId: string;
-  courseId: string;
+  courseId?: string;
+  questionId?: string;
   createdAt: Date;
   course?: Course;
 }

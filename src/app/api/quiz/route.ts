@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
         ...(subjectId && { subjectId }),
       },
       include: {
-        subject: { select: { name: true, slug: true, category: true } },
+        subject: { select: { name: true, slug: true } },
         _count: { select: { questions: true, attempts: true } },
       },
       orderBy: { createdAt: 'desc' },
@@ -58,14 +58,12 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    type QuizOption = { id: string; content: string; sortOrder: number };
-    type QuizQuestionItem = { question: { id: string; content: string; difficulty: string; points: number; options: QuizOption[] } };
-    const questions = (quiz.questions as QuizQuestionItem[]).map((qq: QuizQuestionItem) => ({
+    const questions = quiz.questions.map((qq) => ({
       id: qq.question.id,
-      content: qq.question.content,
+      statement: qq.question.statement,
       difficulty: qq.question.difficulty,
       points: qq.question.points,
-      options: qq.question.options.map((o: QuizOption) => ({
+      options: qq.question.options.map((o) => ({
         id: o.id,
         content: o.content,
         sortOrder: o.sortOrder,

@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
         where,
         include: {
           options: { orderBy: { sortOrder: 'asc' } },
-          subject: { select: { name: true, category: true } },
+          subject: { select: { name: true } },
         },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
@@ -59,9 +59,9 @@ export async function POST(req: NextRequest) {
   try {
     await withAdmin();
     const body = await req.json();
-    const { content, explanation, difficulty, subjectId, topic, tags, points, options } = body;
+    const { statement, explanation, difficulty, subjectId, topicId, tags, points, options } = body;
 
-    if (!content) return badRequest('content is required');
+    if (!statement) return badRequest('statement is required');
     if (!options || options.length < 2) return badRequest('At least 2 options are required');
     if (!options.some((o: { isCorrect: boolean }) => o.isCorrect)) {
       return badRequest('At least one option must be marked as correct');
@@ -69,11 +69,11 @@ export async function POST(req: NextRequest) {
 
     const question = await prisma.question.create({
       data: {
-        content,
+        statement,
         explanation: explanation ?? null,
         difficulty: difficulty ?? 'MEDIUM',
         subjectId: subjectId ?? null,
-        topic: topic ?? null,
+        topicId: topicId ?? null,
         tags: tags ?? [],
         points: points ?? 1,
         options: {

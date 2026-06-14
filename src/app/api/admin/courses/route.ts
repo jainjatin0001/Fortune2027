@@ -27,11 +27,9 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const page = Math.max(1, parseInt(searchParams.get('page') ?? '1'));
     const limit = Math.min(50, parseInt(searchParams.get('limit') ?? '20'));
-    const category = searchParams.get('category');
     const published = searchParams.get('published');
 
     const where = {
-      ...(category && { category: category as never }),
       ...(published !== null && { isPublished: published === 'true' }),
     };
 
@@ -39,7 +37,7 @@ export async function GET(req: NextRequest) {
       prisma.course.findMany({
         where,
         include: {
-          section: { select: { name: true, slug: true } },
+          program: { select: { name: true, slug: true } },
           _count: { select: { enrollments: true, modules: true } },
         },
         orderBy: { createdAt: 'desc' },
@@ -59,10 +57,10 @@ export async function POST(req: NextRequest) {
   try {
     await withAdmin();
     const body = await req.json();
-    const { sectionId, title, slug, description, shortDesc, category, difficulty, price, isFree } = body;
+    const { programId, title, slug, description, shortDesc, difficulty, price, isFree } = body;
 
-    if (!sectionId || !title || !slug || !description || !category) {
-      return badRequest('sectionId, title, slug, description, and category are required');
+    if (!programId || !title || !slug || !description) {
+      return badRequest('programId, title, slug, and description are required');
     }
 
     const existing = await prisma.course.findUnique({ where: { slug } });
@@ -70,12 +68,11 @@ export async function POST(req: NextRequest) {
 
     const course = await prisma.course.create({
       data: {
-        sectionId,
+        programId,
         title,
         slug,
         description,
         shortDesc: shortDesc ?? null,
-        category,
         difficulty: difficulty ?? 'MEDIUM',
         price: price ?? 0,
         isFree: isFree ?? false,

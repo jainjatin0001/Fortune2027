@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     if (courseId) {
       const enrollment = await prisma.enrollment.findUnique({
         where: { userId_courseId: { userId: user.id, courseId } },
-        include: { course: { select: { id: true, title: true, category: true } } },
+        include: { course: { select: { id: true, title: true, program: { select: { name: true, slug: true } } } } },
       });
       return NextResponse.json({ enrolled: !!enrollment, enrollment });
     }
@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
       where: { userId: user.id },
       include: {
         course: {
-          select: { id: true, title: true, category: true, thumbnailUrl: true, totalLessons: true, durationHours: true },
+          select: { id: true, title: true, thumbnailUrl: true, program: { select: { name: true, slug: true } } },
         },
       },
       orderBy: { createdAt: 'desc' },
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
       where: { userId_courseId: { userId: user.id, courseId } },
       create: { userId: user.id, courseId, status: 'ACTIVE' },
       update: { status: 'ACTIVE' },
-      include: { course: { select: { id: true, title: true, category: true } } },
+      include: { course: { select: { id: true, title: true, program: { select: { name: true, slug: true } } } } },
     });
 
     return NextResponse.json({ enrollment }, { status: 201 });

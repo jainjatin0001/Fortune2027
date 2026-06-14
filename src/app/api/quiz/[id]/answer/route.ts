@@ -33,20 +33,25 @@ export async function POST(
     const isCorrect = option.isCorrect;
     const correctOption = option.question.options[0];
 
-    void timeTaken;
-
-    const existingAnswer = await prisma.attemptAnswer.findFirst({
-      where: { attemptId, questionId },
+    const existing = await prisma.userQuestionAttempt.findFirst({
+      where: { quizAttemptId: attemptId, questionId, userId: user.id },
     });
 
-    if (existingAnswer) {
-      await prisma.attemptAnswer.update({
-        where: { id: existingAnswer.id },
-        data: { selectedOptionId, isCorrect },
+    if (existing) {
+      await prisma.userQuestionAttempt.update({
+        where: { id: existing.id },
+        data: { selectedOptionIds: [selectedOptionId], isCorrect, timeTaken: timeTaken ?? null },
       });
     } else {
-      await prisma.attemptAnswer.create({
-        data: { attemptId, questionId, selectedOptionId, isCorrect },
+      await prisma.userQuestionAttempt.create({
+        data: {
+          userId: user.id,
+          questionId,
+          quizAttemptId: attemptId,
+          selectedOptionIds: [selectedOptionId],
+          isCorrect,
+          timeTaken: timeTaken ?? null,
+        },
       });
     }
 

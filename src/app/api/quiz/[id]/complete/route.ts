@@ -17,7 +17,7 @@ export async function POST(
     const attempt = await prisma.quizAttempt.findUnique({
       where: { id: attemptId },
       include: {
-        answers: {
+        questionAttempts: {
           include: {
             question: { select: { points: true } },
           },
@@ -33,7 +33,7 @@ export async function POST(
     }
 
     const totalPoints = attempt.quiz.questions.reduce((sum: number, qq: { question: { points: number } }) => sum + qq.question.points, 0);
-    const earnedPoints = attempt.answers
+    const earnedPoints = attempt.questionAttempts
       .filter((a: { isCorrect: boolean | null; question: { points: number } }) => a.isCorrect)
       .reduce((sum: number, a: { isCorrect: boolean | null; question: { points: number } }) => sum + a.question.points, 0);
 
@@ -57,7 +57,7 @@ export async function POST(
       passed,
       earnedPoints,
       totalPoints,
-      correctAnswers: attempt.answers.filter((a: { isCorrect: boolean | null; question: { points: number } }) => a.isCorrect).length,
+      correctAnswers: attempt.questionAttempts.filter((a: { isCorrect: boolean | null; question: { points: number } }) => a.isCorrect).length,
       totalQuestions: attempt.quiz.questions.length,
       timeTaken: completed.timeTaken,
     });

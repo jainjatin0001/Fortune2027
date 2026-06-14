@@ -2,13 +2,6 @@ import { NextResponse } from 'next/server';
 import { getDbUser, unauthorized } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
-type ProgressEnrollment = {
-  courseId: string;
-  status: string;
-  progress: number;
-  course: { id: string; title: string; category: string; thumbnailUrl: string | null; totalLessons: number };
-  lessonProgress: { isCompleted: boolean }[];
-};
 type ProgressAttempt = {
   id: string;
   score: number | null;
@@ -26,8 +19,8 @@ export async function GET() {
       prisma.enrollment.findMany({
         where: { userId: user.id, status: 'ACTIVE' },
         include: {
-          course: { select: { id: true, title: true, category: true, thumbnailUrl: true, totalLessons: true } },
-          lessonProgress: { select: { isCompleted: true } },
+          course: { select: { id: true, title: true, thumbnailUrl: true, program: { select: { name: true, slug: true } } } },
+          courseProgress: true,
         },
       }),
       prisma.quizAttempt.findMany({
@@ -48,16 +41,16 @@ export async function GET() {
           )
         : 0;
 
-    const completedCourses = (enrollments as ProgressEnrollment[]).filter((e: ProgressEnrollment) => e.status === 'COMPLETED').length;
+    const completedCourses = enrollments.filter((e) => e.status === 'COMPLETED').length;
 
-    const coursesWithProgress = (enrollments as ProgressEnrollment[]).map((e: ProgressEnrollment) => ({
+    const coursesWithProgress = enrollments.map((e) => ({
       courseId: e.courseId,
       title: e.course.title,
-      category: e.course.category,
+      programName: e.course.program?.name ?? '',
       thumbnailUrl: e.course.thumbnailUrl,
-      progress: e.progress,
-      completedLessons: e.lessonProgress.filter((lp: { isCompleted: boolean }) => lp.isCompleted).length,
-      totalLessons: e.course.totalLessons,
+      completionPct: e.courseProgress?.completionPct ?? 0,
+      completedAssets: e.courseProgress?.completedAssets ?? 0,
+      totalAssets: e.courseProgress?.totalAssets ?? 0,
     }));
 
     return NextResponse.json({

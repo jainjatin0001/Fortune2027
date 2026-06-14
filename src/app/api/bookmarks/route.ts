@@ -10,7 +10,7 @@ export async function GET() {
     const bookmarks = await prisma.bookmark.findMany({
       where: { userId: user.id },
       include: {
-        course: { select: { id: true, title: true, category: true, thumbnailUrl: true, difficulty: true } },
+        course: { select: { id: true, title: true, thumbnailUrl: true, difficulty: true, program: { select: { name: true, slug: true } } } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -30,8 +30,8 @@ export async function POST(req: NextRequest) {
     const { courseId } = body;
     if (!courseId) return badRequest('courseId is required');
 
-    const existing = await prisma.bookmark.findUnique({
-      where: { userId_courseId: { userId: user.id, courseId } },
+    const existing = await prisma.bookmark.findFirst({
+      where: { userId: user.id, courseId },
     });
 
     if (existing) {

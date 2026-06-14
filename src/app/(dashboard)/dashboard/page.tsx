@@ -18,8 +18,8 @@ async function getDashboardData(userId: string) {
     prisma.enrollment.findMany({
       where: { userId, status: 'ACTIVE' },
       include: {
-        course: { select: { id: true, title: true, category: true, thumbnailUrl: true, totalLessons: true } },
-        lessonProgress: { select: { isCompleted: true } },
+        course: { select: { id: true, title: true, thumbnailUrl: true, program: { select: { name: true, slug: true } } } },
+        courseProgress: true,
       },
       orderBy: { updatedAt: 'desc' },
       take: 5,
@@ -38,9 +38,8 @@ async function getDashboardData(userId: string) {
 
 type EnrollmentItem = {
   id: string;
-  progress: number;
-  course: { id: string; title: string; category: string; thumbnailUrl: string | null; totalLessons: number };
-  lessonProgress: { isCompleted: boolean }[];
+  courseProgress: { completionPct: number; completedAssets: number; totalAssets: number } | null;
+  course: { id: string; title: string; thumbnailUrl: string | null; program: { name: string; slug: string } | null };
 };
 type QuizAttemptItem = {
   id: string;
@@ -49,13 +48,11 @@ type QuizAttemptItem = {
   quiz: { title: string };
 };
 
-const CATEGORY_COLOR: Record<string, string> = {
-  SAT_PREP: 'var(--color-sat)',
-  ACT_PREP: 'var(--color-act)',
-  AP_EXAM: 'var(--color-ap)',
-  CODING: 'var(--color-coding)',
-  HIGH_SCHOOL: 'var(--color-highschool)',
-  OTHER: 'var(--color-primary)',
+const PROGRAM_COLOR: Record<string, string> = {
+  sat: 'var(--color-sat)',
+  act: 'var(--color-act)',
+  ap: 'var(--color-ap)',
+  coding: 'var(--color-coding)',
 };
 
 function LockedCard({ title, description, icon: Icon }: { title: string; description: string; icon: React.ComponentType<{ className?: string }> }) {
@@ -192,26 +189,27 @@ export default async function DashboardPage() {
           {isPremium ? (
             <div className="space-y-5">
               {enrollments.map((e: EnrollmentItem) => {
-                const color = CATEGORY_COLOR[e.course.category] ?? 'var(--color-primary)';
-                const completedLessons = e.lessonProgress.filter((lp: { isCompleted: boolean }) => lp.isCompleted).length;
+                const color = PROGRAM_COLOR[e.course.program?.slug ?? ''] ?? 'var(--color-primary)';
+                const completedLessons = e.courseProgress?.completedAssets ?? 0;
+                const progressPct = e.courseProgress?.completionPct ?? 0;
                 return (
                   <div key={e.id}>
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0" style={{ background: color }}>
-                        {e.course.category.charAt(0)}
+                        {(e.course.program?.name ?? 'C').charAt(0)}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-sm font-semibold truncate" style={{ color: 'var(--color-foreground)' }}>{e.course.title}</span>
-                          <span className="text-xs font-bold shrink-0" style={{ color }}>{Math.round(e.progress)}%</span>
+                          <span className="text-xs font-bold shrink-0" style={{ color }}>{Math.round(progressPct)}%</span>
                         </div>
                         <span className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>
-                          {completedLessons}/{e.course.totalLessons} lessons
+                          {completedLessons}/{e.courseProgress?.totalAssets ?? 0} lessons
                         </span>
                       </div>
                     </div>
                     <div className="progress-track">
-                      <div className="progress-fill" style={{ width: `${e.progress}%`, background: color }} />
+                      <div className="progress-fill" style={{ width: `${progressPct}%`, background: color }} />
                     </div>
                   </div>
                 );
@@ -228,7 +226,7 @@ export default async function DashboardPage() {
                 >
                   <div
                     className="w-6 h-6 rounded-md flex items-center justify-center text-white text-xs font-bold shrink-0 mt-0.5"
-                    style={{ background: CATEGORY_COLOR[q.category] ?? 'var(--color-primary)' }}
+                    style={{ background: 'var(--color-primary)' }}
                   >
                     {q.category.charAt(0)}
                   </div>

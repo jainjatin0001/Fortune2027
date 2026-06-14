@@ -29,16 +29,16 @@ export async function PUT(
     await withAdmin();
     const { id } = await params;
     const body = await req.json();
-    const { content, explanation, difficulty, subjectId, topic, tags, points, isActive, options } = body;
+    const { statement, explanation, difficulty, subjectId, topicId, tags, points, isActive, options } = body;
 
     const question = await prisma.question.update({
       where: { id },
       data: {
-        ...(content && { content }),
+        ...(statement && { statement }),
         ...(explanation !== undefined && { explanation }),
         ...(difficulty && { difficulty }),
         ...(subjectId !== undefined && { subjectId }),
-        ...(topic !== undefined && { topic }),
+        ...(topicId !== undefined && { topicId }),
         ...(tags && { tags }),
         ...(points && { points }),
         ...(typeof isActive === 'boolean' && { isActive }),
