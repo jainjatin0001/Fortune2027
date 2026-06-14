@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, BookOpen, BarChart2, Bookmark, Trophy, Brain,
-  Settings, User, Code2, FlaskConical, Play, GraduationCap
+  Settings, User, Code2, FlaskConical, Play, GraduationCap, Shield,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { APP_NAME } from '@/constants';
@@ -24,7 +24,11 @@ const bottomItems = [
   { icon: Settings, label: 'Settings', href: '/settings' },
 ];
 
-export function DashboardSidebar() {
+interface DashboardSidebarProps {
+  role?: string;
+}
+
+export function DashboardSidebar({ role }: DashboardSidebarProps) {
   const pathname = usePathname();
 
   return (
@@ -132,6 +136,17 @@ export function DashboardSidebar() {
             {label}
           </Link>
         ))}
+
+        {role === 'SUPER_ADMIN' && (
+          <Link
+            href="/admin"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors"
+            style={{ color: 'var(--color-danger)', background: 'color-mix(in srgb, var(--color-danger) 10%, transparent)' }}
+          >
+            <Shield className="h-4 w-4 shrink-0" />
+            Admin Panel
+          </Link>
+        )}
       </div>
     </aside>
   );

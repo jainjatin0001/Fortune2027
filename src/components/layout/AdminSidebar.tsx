@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, Users, BookOpen, HelpCircle, BarChart2,
-  FileText, Bell, Settings, Shield, Database
+  FileText, Bell, Settings, Shield, Database, Layers,
+  BookMarked, Tag, Megaphone, Mail,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { APP_NAME } from '@/constants';
@@ -12,11 +13,16 @@ import { APP_NAME } from '@/constants';
 const adminNavItems = [
   { icon: LayoutDashboard, label: 'Overview', href: '/admin' },
   { icon: Users, label: 'Users', href: '/admin/users' },
+  { icon: Layers, label: 'Programs', href: '/admin/programs' },
+  { icon: BookMarked, label: 'Subjects', href: '/admin/subjects' },
+  { icon: Tag, label: 'Topics', href: '/admin/topics' },
   { icon: BookOpen, label: 'Courses', href: '/admin/courses' },
   { icon: HelpCircle, label: 'Questions', href: '/admin/questions' },
   { icon: BarChart2, label: 'Analytics', href: '/admin/analytics' },
   { icon: FileText, label: 'Blog', href: '/admin/blog' },
   { icon: Bell, label: 'Notifications', href: '/admin/notifications' },
+  { icon: Megaphone, label: 'Announcements', href: '/admin/announcements' },
+  { icon: Mail, label: 'Contact Messages', href: '/admin/contact-messages' },
   { icon: Database, label: 'Audit Logs', href: '/admin/audit' },
   { icon: Shield, label: 'Roles & Permissions', href: '/admin/roles' },
   { icon: Settings, label: 'Settings', href: '/admin/settings' },

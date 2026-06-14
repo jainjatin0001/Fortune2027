@@ -42,6 +42,14 @@ export async function requireAdmin() {
   return user;
 }
 
+export async function requireSuperAdmin() {
+  const user = await requireDbUser();
+  if (user.role !== 'SUPER_ADMIN') {
+    throw new Error('FORBIDDEN');
+  }
+  return user;
+}
+
 export function unauthorized() {
   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 }
