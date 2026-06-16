@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, Users, BookOpen, HelpCircle, BarChart2,
   FileText, Bell, Settings, Shield, Database, Layers,
-  BookMarked, Tag, Megaphone, Mail,
+  BookMarked, Tag, Megaphone, Mail, ArrowLeft,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { APP_NAME } from '@/constants';
@@ -53,7 +53,7 @@ export function AdminSidebar() {
         </Link>
       </div>
 
-      <nav className="flex-1 p-4 space-y-1" aria-label="Admin navigation">
+      <nav className="flex-1 p-4 space-y-1 overflow-y-auto" aria-label="Admin navigation">
         <div className="text-xs font-semibold mb-3 px-3" style={{ color: 'var(--color-muted-foreground)' }}>ADMIN MENU</div>
         {adminNavItems.map(({ icon: Icon, label, href }) => {
           const active = pathname === href || (href !== '/admin' && pathname.startsWith(href));
@@ -74,6 +74,17 @@ export function AdminSidebar() {
           );
         })}
       </nav>
+
+      <div className="p-4 border-t shrink-0" style={{ borderColor: 'var(--sidebar-border)' }}>
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors w-full"
+          style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary)' }}
+        >
+          <ArrowLeft className="h-4 w-4 shrink-0" />
+          Back to Dashboard
+        </Link>
+      </div>
     </aside>
   );
 }

@@ -43,6 +43,9 @@ const DIFFICULTY = ['EASY', 'MEDIUM', 'HARD', 'EXPERT'];
 const QUESTION_TYPES = ['SINGLE_CORRECT', 'MULTIPLE_CORRECT', 'NUMERIC', 'TEXT'];
 const SOURCE_TYPES = ['MCQ', 'PYQ', 'PRACTICE', 'MOCK_TEST'];
 
+// Module-level counter for stable option keys — survives re-renders, resets per session.
+let _optKeySeq = 0;
+const genKey = () => `ok-${++_optKeySeq}`;
 const emptyOption = (): QuestionOption => ({ content: '', isCorrect: false });
 
 export default function AdminQuestionsPage() {
@@ -56,6 +59,9 @@ export default function AdminQuestionsPage() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editQuestion, setEditQuestion] = useState<Question | null>(null);
+  // optionKeys is a parallel array of stable React keys — one per option.
+  // Kept separate from option data so QuestionOption stays API-clean.
+  const [optionKeys, setOptionKeys] = useState<string[]>(() => [genKey(), genKey(), genKey(), genKey()]);
   const [form, setForm] = useState({
     statement: '',
     explanation: '',
@@ -97,18 +103,22 @@ export default function AdminQuestionsPage() {
     fetch('/api/admin/subjects?limit=100').then(r => r.json()).then(d => setSubjects(d.subjects ?? []));
   }, [fetchQuestions]);
 
-  const resetForm = () => setForm({
-    statement: '',
-    explanation: '',
-    difficulty: 'MEDIUM',
-    questionType: 'SINGLE_CORRECT',
-    sourceType: 'MCQ',
-    subjectId: '',
-    topicId: '',
-    points: 1,
-    tags: '',
-    options: [emptyOption(), emptyOption(), emptyOption(), emptyOption()],
-  });
+  const resetForm = () => {
+    const keys = [genKey(), genKey(), genKey(), genKey()];
+    setOptionKeys(keys);
+    setForm({
+      statement: '',
+      explanation: '',
+      difficulty: 'MEDIUM',
+      questionType: 'SINGLE_CORRECT',
+      sourceType: 'MCQ',
+      subjectId: '',
+      topicId: '',
+      points: 1,
+      tags: '',
+      options: [emptyOption(), emptyOption(), emptyOption(), emptyOption()],
+    });
+  };
 
   const openAdd = () => {
     setEditQuestion(null);
@@ -119,6 +129,10 @@ export default function AdminQuestionsPage() {
 
   const openEdit = (q: Question) => {
     setEditQuestion(q);
+    const opts = q.options.length > 0
+      ? q.options.map(o => ({ content: o.content, isCorrect: o.isCorrect }))
+      : [emptyOption(), emptyOption(), emptyOption(), emptyOption()];
+    setOptionKeys(opts.map((_, i) => q.options[i]?.id ?? genKey()));
     setForm({
       statement: q.statement,
       explanation: '',
@@ -129,9 +143,7 @@ export default function AdminQuestionsPage() {
       topicId: '',
       points: q.points,
       tags: q.tags.join(', '),
-      options: q.options.length > 0
-        ? q.options.map(o => ({ content: o.content, isCorrect: o.isCorrect }))
-        : [emptyOption(), emptyOption(), emptyOption(), emptyOption()],
+      options: opts,
     });
     setFormError('');
     setModalOpen(true);
@@ -357,13 +369,13 @@ export default function AdminQuestionsPage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>Answer Options *</Label>
-                <Button type="button" variant="ghost" size="sm" onClick={() => setForm(f => ({ ...f, options: [...f.options, emptyOption()] }))} className="h-7 gap-1 text-xs">
+                <Button type="button" variant="ghost" size="sm" onClick={() => { setOptionKeys(k => [...k, genKey()]); setForm(f => ({ ...f, options: [...f.options, emptyOption()] })); }} className="h-7 gap-1 text-xs">
                   <Plus className="h-3 w-3" /> Add Option
                 </Button>
               </div>
               <div className="space-y-2">
                 {form.options.map((opt, i) => (
-                  <div key={i} className="flex items-center gap-3">
+                  <div key={optionKeys[i] ?? i} className="flex items-center gap-3">
                     <Checkbox
                       checked={opt.isCorrect}
                       onCheckedChange={(v) => setOption(i, 'isCorrect', !!v)}
@@ -377,7 +389,7 @@ export default function AdminQuestionsPage() {
                     />
                     {form.options.length > 2 && (
                       <button
-                        onClick={() => setForm(f => ({ ...f, options: f.options.filter((_, j) => j !== i) }))}
+                        onClick={() => { setOptionKeys(k => k.filter((_, j) => j !== i)); setForm(f => ({ ...f, options: f.options.filter((_, j) => j !== i) })); }}
                         className="cursor-pointer p-1 rounded-lg transition-colors hover:opacity-70"
                         style={{ color: 'var(--color-danger)' }}
                       >

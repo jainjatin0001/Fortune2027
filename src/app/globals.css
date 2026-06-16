@@ -164,6 +164,8 @@
   --card-foreground: 15 23 42;
   --popover: 255 255 255;
   --popover-foreground: 15 23 42;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #0f172a;
   --primary: 30 58 138;
   --primary-foreground: 255 255 255;
   --secondary: 241 245 249;
@@ -255,6 +257,8 @@
   --card-foreground: 241 245 249;
   --popover: 30 41 59;
   --popover-foreground: 241 245 249;
+  --color-popover: #1e293b;
+  --color-popover-foreground: #f1f5f9;
   --primary: 59 130 246;
   --primary-foreground: 255 255 255;
   --secondary: 51 65 85;

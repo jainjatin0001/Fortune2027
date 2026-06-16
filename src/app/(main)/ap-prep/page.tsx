@@ -1,10 +1,14 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowRight, CheckCircle, FlaskConical } from 'lucide-react';
+import { ArrowRight, CheckCircle, FlaskConical, BookOpen, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SectionHeader } from '@/components/shared/SectionHeader';
 import { QuizInterface } from '@/components/shared/QuizInterface';
 import { getDemoQuestions } from '../../../../data/demo';
+import { prisma } from '@/lib/prisma';
+import { formatPrice, getCategoryBadgeClass, getCategoryLabel } from '@/lib/utils';
+
+const apGradient = 'linear-gradient(135deg, #d97706 0%, #b45309 100%)';
 
 export const metadata: Metadata = {
   title: 'AP Exam Preparation',
@@ -41,8 +45,33 @@ const diffColors: Record<string, string> = {
   Expert: 'difficulty-expert',
 };
 
+async function getAPCourses() {
+  try {
+    const rows = await prisma.course.findMany({
+      where: {
+        isPublished: true,
+        program: { OR: [{ slug: { startsWith: 'ap' } }, { name: { contains: 'AP' } }] },
+      },
+      select: {
+        id: true, title: true, slug: true, shortDesc: true,
+        difficulty: true, price: true, isFree: true,
+        program: { select: { name: true, slug: true } },
+        _count: { select: { enrollments: true } },
+      },
+      orderBy: [{ isFeatured: 'desc' }, { sortOrder: 'asc' }],
+      take: 6,
+    });
+    return rows.map((c) => ({ ...c, price: Number(c.price) }));
+  } catch {
+    return [];
+  }
+}
+
 export default async function APPage() {
-  const apQuestions = getDemoQuestions('AP_EXAM');
+  const [apQuestions, apCourses] = await Promise.all([
+    Promise.resolve(getDemoQuestions('AP_EXAM')),
+    getAPCourses(),
+  ]);
 
   return (
     <div style={{ background: 'var(--color-background)' }}>
@@ -100,6 +129,55 @@ export default async function APPage() {
           </div>
         </div>
       </section>
+
+      {/* AP Courses from DB */}
+      {apCourses.length > 0 && (
+        <section className="section-padding" style={{ background: 'var(--color-background)' }}>
+          <div className="container-app">
+            <SectionHeader eyebrow="AP Courses" title="Enroll in an AP Course" subtitle="Expert-built courses for every AP subject — structured, aligned, and exam-ready." />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {apCourses.map((course) => (
+                <Link key={course.id} href={`/courses/${course.slug}`} className="card-base overflow-hidden group block">
+                  <div className="h-40 relative" style={{ background: apGradient }}>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <BookOpen className="h-12 w-12 text-white opacity-30" />
+                    </div>
+                    {course.isFree && (
+                      <span className="absolute top-3 left-3 px-2 py-1 rounded-md text-xs font-bold text-white bg-green-600">FREE</span>
+                    )}
+                    <span className={`absolute top-3 right-3 px-2 py-1 rounded-md text-xs font-medium ${getCategoryBadgeClass('AP_EXAM')}`}>
+                      {getCategoryLabel('AP_EXAM')}
+                    </span>
+                  </div>
+                  <div className="p-5">
+                    <h3 className="font-semibold text-base line-clamp-2 mb-2 group-hover:text-[var(--color-accent)] transition-colors" style={{ color: 'var(--color-foreground)' }}>
+                      {course.title}
+                    </h3>
+                    {course.shortDesc && (
+                      <p className="text-xs line-clamp-2 mb-4" style={{ color: 'var(--color-muted-foreground)' }}>{course.shortDesc}</p>
+                    )}
+                    <div className="flex items-center gap-2 mb-4">
+                      <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: 'var(--color-muted)', color: 'var(--color-muted-foreground)' }}>{course.difficulty}</span>
+                      <span className="text-xs flex items-center gap-1" style={{ color: 'var(--color-muted-foreground)' }}>
+                        <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />New
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between pt-4 border-t" style={{ borderColor: 'var(--color-border)' }}>
+                      <span className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>{course._count.enrollments.toLocaleString()} enrolled</span>
+                      <span className="text-base font-bold" style={{ color: 'var(--color-primary)' }}>{formatPrice(course.price)}</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+            <div className="text-center mt-8">
+              <Link href="/courses">
+                <Button variant="outline" size="lg" className="gap-2">View All Courses <ArrowRight className="h-4 w-4" /></Button>
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="section-padding" style={{ background: 'var(--color-background-alt)' }}>
         <div className="container-app">
