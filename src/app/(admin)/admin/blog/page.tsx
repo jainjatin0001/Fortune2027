@@ -26,10 +26,16 @@ interface BlogPost {
   category: { name: string } | null;
 }
 
-const emptyForm = { title: '', slug: '', excerpt: '', content: '', isPublished: false, isFeatured: false };
+interface BlogCategory {
+  id: string;
+  name: string;
+}
+
+const emptyForm = { title: '', slug: '', excerpt: '', content: '', categoryId: '', isPublished: false, isFeatured: false };
 
 export default function AdminBlogPage() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [categories, setCategories] = useState<BlogCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -62,13 +68,16 @@ export default function AdminBlogPage() {
     }
   }, [page, search, publishedFilter]);
 
-  useEffect(() => { fetchPosts(); }, [fetchPosts]);
+  useEffect(() => {
+    fetchPosts();
+    fetch('/api/admin/blog-categories?limit=100').then(r => r.json()).then(d => setCategories(d.categories ?? []));
+  }, [fetchPosts]);
 
   const openAdd = () => { setEditPost(null); setForm(emptyForm); setFormError(''); setModalOpen(true); };
 
   const openEdit = (p: BlogPost) => {
     setEditPost(p);
-    setForm({ title: p.title, slug: p.slug, excerpt: p.excerpt ?? '', content: '', isPublished: p.isPublished, isFeatured: p.isFeatured });
+    setForm({ title: p.title, slug: p.slug, excerpt: p.excerpt ?? '', content: '', categoryId: '', isPublished: p.isPublished, isFeatured: p.isFeatured });
     setFormError('');
     setModalOpen(true);
   };
@@ -81,7 +90,7 @@ export default function AdminBlogPage() {
     try {
       let res: Response;
       if (editPost) {
-        const payload: Record<string, unknown> = { title: form.title, excerpt: form.excerpt, isPublished: form.isPublished, isFeatured: form.isFeatured };
+        const payload: Record<string, unknown> = { title: form.title, excerpt: form.excerpt, categoryId: form.categoryId || null, isPublished: form.isPublished, isFeatured: form.isFeatured };
         if (form.content) payload.content = form.content;
         res = await fetch(`/api/admin/blog/${editPost.id}`, {
           method: 'PATCH',
@@ -193,6 +202,16 @@ export default function AdminBlogPage() {
             <div className="space-y-1.5">
               <Label>Slug *</Label>
               <Input value={form.slug} onChange={(e) => setForm(f => ({ ...f, slug: e.target.value }))} disabled={!!editPost} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Category</Label>
+              <Select value={form.categoryId || 'none'} onValueChange={(v) => setForm(f => ({ ...f, categoryId: v === 'none' ? '' : v }))}>
+                <SelectTrigger><SelectValue placeholder="Uncategorized" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Uncategorized</SelectItem>
+                  {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-1.5">
               <Label>Excerpt</Label>
