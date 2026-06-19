@@ -29,10 +29,12 @@ export async function GET(req: NextRequest) {
     const limit = Math.min(50, parseInt(searchParams.get('limit') ?? '20'));
     const subjectId = searchParams.get('subjectId');
     const difficulty = searchParams.get('difficulty');
+    const search = searchParams.get('search') ?? '';
 
     const where = {
       ...(subjectId && { subjectId }),
       ...(difficulty && { difficulty: difficulty.toUpperCase() as never }),
+      ...(search && { statement: { contains: search, mode: 'insensitive' as const } }),
     };
 
     const [questions, total] = await Promise.all([

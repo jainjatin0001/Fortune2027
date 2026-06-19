@@ -24,6 +24,7 @@ const NAV_GROUPS = [
     { icon: Tag, label: 'Topics', href: '/admin/topics' },
     { icon: BookOpen, label: 'Courses', href: '/admin/courses' },
     { icon: FolderOpen, label: 'Modules', href: '/admin/modules' },
+    { icon: Database, label: 'Learning Assets', href: '/admin/learning-assets' },
     { icon: UserCheck, label: 'Instructors', href: '/admin/instructors' },
   ]},
   { group: 'ASSESSMENT', items: [
@@ -46,7 +47,6 @@ const NAV_GROUPS = [
   ]},
 ];
 
-const ALL_GROUPS = NAV_GROUPS.map((g) => g.group);
 const STORAGE_KEY = 'admin-sidebar-collapsed';
 
 export function AdminSidebar() {

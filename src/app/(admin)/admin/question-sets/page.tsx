@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { ListChecks, X } from 'lucide-react';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminTable, type Column } from '@/components/admin/AdminTable';
 import { ConfirmDeleteDialog } from '@/components/admin/ConfirmDeleteDialog';
@@ -30,6 +31,20 @@ interface Subject {
   name: string;
 }
 
+interface BankQuestion {
+  id: string;
+  statement: string;
+  difficulty: string;
+  sourceType: string;
+  subject: { name: string } | null;
+}
+
+interface SetItem {
+  id: string;
+  sortOrder: number;
+  question: BankQuestion;
+}
+
 const SOURCE_TYPES = ['MCQ', 'PYQ', 'PRACTICE', 'MOCK_TEST'];
 
 const emptyForm = {
@@ -39,6 +54,13 @@ const emptyForm = {
   topicId: '',
   sourceType: '',
   isPublished: false,
+};
+
+const diffColors: Record<string, { background: string; color: string }> = {
+  EASY: { background: '#dcfce7', color: '#16a34a' },
+  MEDIUM: { background: '#fef3c7', color: '#d97706' },
+  HARD: { background: '#fee2e2', color: '#dc2626' },
+  EXPERT: { background: '#ede9fe', color: '#7c3aed' },
 };
 
 export default function AdminQuestionSetsPage() {
@@ -59,6 +81,16 @@ export default function AdminQuestionSetsPage() {
 
   const [deleteSet, setDeleteSet] = useState<QuestionSet | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // Manage Questions panel
+  const [manageSet, setManageSet] = useState<QuestionSet | null>(null);
+  const [setItems, setSetItems] = useState<SetItem[]>([]);
+  const [bankSearch, setBankSearch] = useState('');
+  const [bankSubject, setBankSubject] = useState('');
+  const [bankResults, setBankResults] = useState<BankQuestion[]>([]);
+  const [bankLoading, setBankLoading] = useState(false);
+  const [addingId, setAddingId] = useState<string | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   const fetchSets = useCallback(async (p = page, s = search, sub = subjectFilter, pub = publishedFilter) => {
     setLoading(true);
@@ -153,6 +185,74 @@ export default function AdminQuestionSetsPage() {
     }
   };
 
+  // ── Manage Questions ──────────────────────────────────────────────────────
+
+  const openManage = async (qs: QuestionSet) => {
+    setManageSet(qs);
+    setBankSearch('');
+    setBankSubject('');
+    setBankResults([]);
+    const res = await fetch(`/api/admin/question-sets/${qs.id}/questions`);
+    const data = await res.json();
+    setSetItems(data.items ?? []);
+  };
+
+  const searchBank = useCallback(async (s = bankSearch, sub = bankSubject) => {
+    setBankLoading(true);
+    try {
+      const params = new URLSearchParams({ limit: '20', page: '1' });
+      if (s) params.set('search', s);
+      if (sub) params.set('subjectId', sub);
+      const res = await fetch(`/api/admin/questions?${params}`);
+      const data = await res.json();
+      setBankResults(data.questions ?? []);
+    } finally {
+      setBankLoading(false);
+    }
+  }, [bankSearch, bankSubject]);
+
+  useEffect(() => {
+    if (manageSet) searchBank();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [manageSet]);
+
+  const addQuestion = async (questionId: string) => {
+    if (!manageSet) return;
+    setAddingId(questionId);
+    try {
+      const res = await fetch(`/api/admin/question-sets/${manageSet.id}/questions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ questionId }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        toast('error', err.error ?? 'Failed to add');
+        return;
+      }
+      const refreshed = await fetch(`/api/admin/question-sets/${manageSet.id}/questions`);
+      const data = await refreshed.json();
+      setSetItems(data.items ?? []);
+      fetchSets();
+    } finally {
+      setAddingId(null);
+    }
+  };
+
+  const removeQuestion = async (questionId: string) => {
+    if (!manageSet) return;
+    setRemovingId(questionId);
+    try {
+      await fetch(`/api/admin/question-sets/${manageSet.id}/questions/${questionId}`, { method: 'DELETE' });
+      setSetItems(items => items.filter(i => i.question.id !== questionId));
+      fetchSets();
+    } finally {
+      setRemovingId(null);
+    }
+  };
+
+  const assignedIds = new Set(setItems.map(i => i.question.id));
+
   const columns: Column<QuestionSet>[] = [
     {
       key: 'title',
@@ -175,6 +275,20 @@ export default function AdminQuestionSetsPage() {
       key: 'questions',
       label: 'Questions',
       render: (qs) => <span className="text-sm">{qs._count.items}</span>,
+    },
+    {
+      key: 'manage',
+      label: 'Manage',
+      render: (qs) => (
+        <button
+          onClick={(e) => { e.stopPropagation(); openManage(qs); }}
+          className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors"
+          style={{ background: 'color-mix(in srgb, var(--color-primary) 12%, transparent)', color: 'var(--color-primary)' }}
+        >
+          <ListChecks className="h-3.5 w-3.5" />
+          Questions
+        </button>
+      ),
     },
     {
       key: 'status',
@@ -225,6 +339,7 @@ export default function AdminQuestionSetsPage() {
         }
       />
 
+      {/* Create / Edit Modal */}
       <Dialog open={modalOpen} onOpenChange={(v) => !v && setModalOpen(false)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -270,6 +385,111 @@ export default function AdminQuestionSetsPage() {
               <Button variant="outline" onClick={() => setModalOpen(false)} disabled={saving}>Cancel</Button>
               <Button onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : editSet ? 'Save Changes' : 'Create Set'}</Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Manage Questions Modal */}
+      <Dialog open={!!manageSet} onOpenChange={(v) => !v && setManageSet(null)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Manage Questions — {manageSet?.title}</DialogTitle>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto space-y-5 pr-1">
+            {/* Current questions */}
+            <div>
+              <p className="text-sm font-semibold mb-2" style={{ color: 'var(--color-foreground)' }}>
+                In this set ({setItems.length})
+              </p>
+              {setItems.length === 0 ? (
+                <p className="text-sm" style={{ color: 'var(--color-muted-foreground)' }}>No questions added yet.</p>
+              ) : (
+                <div className="space-y-1.5">
+                  {setItems.map((item, i) => (
+                    <div key={item.id} className="flex items-start gap-3 p-2.5 rounded-lg border" style={{ borderColor: 'var(--color-border)', background: 'var(--color-card)' }}>
+                      <span className="text-xs font-mono mt-0.5 w-5 text-right shrink-0" style={{ color: 'var(--color-muted-foreground)' }}>{i + 1}.</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm line-clamp-2">{item.question.statement}</p>
+                        <div className="flex gap-2 mt-1">
+                          <span className="text-xs px-1.5 py-0.5 rounded" style={diffColors[item.question.difficulty] ?? {}}>{item.question.difficulty}</span>
+                          <span className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>{item.question.subject?.name} · {item.question.sourceType}</span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => removeQuestion(item.question.id)}
+                        disabled={removingId === item.question.id}
+                        className="shrink-0 p-1 rounded hover:opacity-70 transition-opacity"
+                        style={{ color: 'var(--color-danger)' }}
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Search question bank */}
+            <div>
+              <p className="text-sm font-semibold mb-2" style={{ color: 'var(--color-foreground)' }}>Add from Question Bank</p>
+              <div className="flex gap-2 mb-3">
+                <Input
+                  className="flex-1"
+                  placeholder="Search questions..."
+                  value={bankSearch}
+                  onChange={(e) => setBankSearch(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && searchBank(bankSearch, bankSubject)}
+                />
+                <Select value={bankSubject || 'all'} onValueChange={(v) => { const val = v === 'all' ? '' : v; setBankSubject(val); searchBank(bankSearch, val); }}>
+                  <SelectTrigger className="w-36 shrink-0"><SelectValue placeholder="Subject" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All subjects</SelectItem>
+                    {subjects.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Button variant="outline" size="sm" onClick={() => searchBank(bankSearch, bankSubject)} disabled={bankLoading}>
+                  {bankLoading ? '...' : 'Search'}
+                </Button>
+              </div>
+
+              {bankResults.length === 0 && !bankLoading && (
+                <p className="text-sm" style={{ color: 'var(--color-muted-foreground)' }}>No questions found.</p>
+              )}
+              <div className="space-y-1.5">
+                {bankResults.map(q => {
+                  const already = assignedIds.has(q.id);
+                  return (
+                    <div key={q.id} className="flex items-start gap-3 p-2.5 rounded-lg border" style={{ borderColor: 'var(--color-border)', background: already ? 'var(--color-primary-light)' : 'var(--color-background)' }}>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm line-clamp-2">{q.statement}</p>
+                        <div className="flex gap-2 mt-1">
+                          <span className="text-xs px-1.5 py-0.5 rounded" style={diffColors[q.difficulty] ?? {}}>{q.difficulty}</span>
+                          <span className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>{q.subject?.name} · {q.sourceType}</span>
+                        </div>
+                      </div>
+                      {already ? (
+                        <span className="text-xs shrink-0 mt-1" style={{ color: 'var(--color-primary)' }}>Added</span>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="shrink-0"
+                          onClick={() => addQuestion(q.id)}
+                          disabled={addingId === q.id}
+                        >
+                          {addingId === q.id ? '...' : 'Add'}
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-3 border-t" style={{ borderColor: 'var(--color-border)' }}>
+            <Button variant="outline" onClick={() => setManageSet(null)}>Done</Button>
           </div>
         </DialogContent>
       </Dialog>

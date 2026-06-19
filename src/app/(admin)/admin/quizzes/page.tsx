@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { ListChecks, X } from 'lucide-react';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminTable, type Column } from '@/components/admin/AdminTable';
 import { ConfirmDeleteDialog } from '@/components/admin/ConfirmDeleteDialog';
@@ -34,6 +35,23 @@ interface Subject {
   name: string;
 }
 
+interface BankQuestion {
+  id: string;
+  statement: string;
+  difficulty: string;
+  questionType: string;
+  sourceType: string;
+  subject: { name: string } | null;
+  options: { id: string; content: string; isCorrect: boolean }[];
+}
+
+interface QuizQuestion {
+  id: string;
+  sortOrder: number;
+  points: number;
+  question: BankQuestion;
+}
+
 const QUIZ_TYPES = ['CHAPTER_TEST', 'PRACTICE', 'DAILY_QUIZ', 'MOCK_TEST'];
 
 const emptyForm = {
@@ -56,7 +74,6 @@ export default function AdminQuizzesPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
-  const [subjectFilter, setSubjectFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [publishedFilter, setPublishedFilter] = useState('');
 
@@ -69,11 +86,20 @@ export default function AdminQuizzesPage() {
   const [deleteQuiz, setDeleteQuiz] = useState<Quiz | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const fetchQuizzes = useCallback(async (p = page, s = search, sub = subjectFilter, type = typeFilter, pub = publishedFilter) => {
+  // Manage Questions panel
+  const [manageQuiz, setManageQuiz] = useState<Quiz | null>(null);
+  const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
+  const [bankSearch, setBankSearch] = useState('');
+  const [bankSubject, setBankSubject] = useState('');
+  const [bankResults, setBankResults] = useState<BankQuestion[]>([]);
+  const [bankLoading, setBankLoading] = useState(false);
+  const [addingId, setAddingId] = useState<string | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+
+  const fetchQuizzes = useCallback(async (p = page, s = search, type = typeFilter, pub = publishedFilter) => {
     setLoading(true);
     try {
       const params = new URLSearchParams({ page: String(p), limit: '20', search: s });
-      if (sub) params.set('subjectId', sub);
       if (type) params.set('quizType', type);
       if (pub) params.set('published', pub);
       const res = await fetch(`/api/admin/quizzes?${params}`);
@@ -86,7 +112,7 @@ export default function AdminQuizzesPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, subjectFilter, typeFilter, publishedFilter]);
+  }, [page, search, typeFilter, publishedFilter]);
 
   useEffect(() => {
     fetchQuizzes();
@@ -180,11 +206,86 @@ export default function AdminQuizzesPage() {
     }
   };
 
+  // ── Manage Questions ──────────────────────────────────────────────────────
+
+  const openManage = async (q: Quiz) => {
+    setManageQuiz(q);
+    setBankSearch('');
+    setBankSubject('');
+    setBankResults([]);
+    const res = await fetch(`/api/admin/quizzes/${q.id}/questions`);
+    const data = await res.json();
+    setQuizQuestions(data.questions ?? []);
+  };
+
+  const searchBank = useCallback(async (s = bankSearch, sub = bankSubject) => {
+    setBankLoading(true);
+    try {
+      const params = new URLSearchParams({ limit: '20', page: '1' });
+      if (s) params.set('search', s);
+      if (sub) params.set('subjectId', sub);
+      const res = await fetch(`/api/admin/questions?${params}`);
+      const data = await res.json();
+      setBankResults(data.questions ?? []);
+    } finally {
+      setBankLoading(false);
+    }
+  }, [bankSearch, bankSubject]);
+
+  useEffect(() => {
+    if (manageQuiz) searchBank();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [manageQuiz]);
+
+  const addQuestion = async (questionId: string) => {
+    if (!manageQuiz) return;
+    setAddingId(questionId);
+    try {
+      const res = await fetch(`/api/admin/quizzes/${manageQuiz.id}/questions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ questionId }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        toast('error', err.error ?? 'Failed to add');
+        return;
+      }
+      const refreshed = await fetch(`/api/admin/quizzes/${manageQuiz.id}/questions`);
+      const data = await refreshed.json();
+      setQuizQuestions(data.questions ?? []);
+      fetchQuizzes();
+    } finally {
+      setAddingId(null);
+    }
+  };
+
+  const removeQuestion = async (questionId: string) => {
+    if (!manageQuiz) return;
+    setRemovingId(questionId);
+    try {
+      await fetch(`/api/admin/quizzes/${manageQuiz.id}/questions/${questionId}`, { method: 'DELETE' });
+      setQuizQuestions(q => q.filter(qq => qq.question.id !== questionId));
+      fetchQuizzes();
+    } finally {
+      setRemovingId(null);
+    }
+  };
+
+  const assignedIds = new Set(quizQuestions.map(qq => qq.question.id));
+
   const typeColors: Record<string, { background: string; color: string }> = {
     CHAPTER_TEST: { background: '#dbeafe', color: '#1d4ed8' },
     PRACTICE: { background: '#dcfce7', color: '#16a34a' },
     DAILY_QUIZ: { background: '#fef3c7', color: '#d97706' },
     MOCK_TEST: { background: '#fee2e2', color: '#dc2626' },
+  };
+
+  const diffColors: Record<string, { background: string; color: string }> = {
+    EASY: { background: '#dcfce7', color: '#16a34a' },
+    MEDIUM: { background: '#fef3c7', color: '#d97706' },
+    HARD: { background: '#fee2e2', color: '#dc2626' },
+    EXPERT: { background: '#ede9fe', color: '#7c3aed' },
   };
 
   const columns: Column<Quiz>[] = [
@@ -213,6 +314,20 @@ export default function AdminQuizzesPage() {
       key: 'questions',
       label: 'Questions',
       render: (q) => <span className="text-sm">{q._count.questions}</span>,
+    },
+    {
+      key: 'manage',
+      label: 'Manage',
+      render: (q) => (
+        <button
+          onClick={(e) => { e.stopPropagation(); openManage(q); }}
+          className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors"
+          style={{ background: 'color-mix(in srgb, var(--color-primary) 12%, transparent)', color: 'var(--color-primary)' }}
+        >
+          <ListChecks className="h-3.5 w-3.5" />
+          Questions
+        </button>
+      ),
     },
     {
       key: 'timeLimit',
@@ -245,18 +360,18 @@ export default function AdminQuizzesPage() {
         onEdit={openEdit}
         onDelete={setDeleteQuiz}
         searchValue={search}
-        onSearchChange={(v) => { setSearch(v); setPage(1); fetchQuizzes(1, v, subjectFilter, typeFilter, publishedFilter); }}
+        onSearchChange={(v) => { setSearch(v); setPage(1); fetchQuizzes(1, v, typeFilter, publishedFilter); }}
         searchPlaceholder="Search quizzes..."
         filterSlot={
           <div className="flex gap-2">
-            <Select value={typeFilter || 'all'} onValueChange={(v) => { const val = v === 'all' ? '' : v; setTypeFilter(val); setPage(1); fetchQuizzes(1, search, subjectFilter, val, publishedFilter); }}>
+            <Select value={typeFilter || 'all'} onValueChange={(v) => { const val = v === 'all' ? '' : v; setTypeFilter(val); setPage(1); fetchQuizzes(1, search, val, publishedFilter); }}>
               <SelectTrigger className="h-9 w-40 text-sm"><SelectValue placeholder="All types" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All types</SelectItem>
                 {QUIZ_TYPES.map(t => <SelectItem key={t} value={t}>{t.replace('_', ' ')}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Select value={publishedFilter || 'all'} onValueChange={(v) => { const val = v === 'all' ? '' : v; setPublishedFilter(val); setPage(1); fetchQuizzes(1, search, subjectFilter, typeFilter, val); }}>
+            <Select value={publishedFilter || 'all'} onValueChange={(v) => { const val = v === 'all' ? '' : v; setPublishedFilter(val); setPage(1); fetchQuizzes(1, search, typeFilter, val); }}>
               <SelectTrigger className="h-9 w-32 text-sm"><SelectValue placeholder="Status" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All</SelectItem>
@@ -268,6 +383,7 @@ export default function AdminQuizzesPage() {
         }
       />
 
+      {/* Create / Edit Modal */}
       <Dialog open={modalOpen} onOpenChange={(v) => !v && setModalOpen(false)}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -332,6 +448,111 @@ export default function AdminQuizzesPage() {
               <Button variant="outline" onClick={() => setModalOpen(false)} disabled={saving}>Cancel</Button>
               <Button onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : editQuiz ? 'Save Changes' : 'Create Quiz'}</Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Manage Questions Modal */}
+      <Dialog open={!!manageQuiz} onOpenChange={(v) => !v && setManageQuiz(null)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Manage Questions — {manageQuiz?.title}</DialogTitle>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto space-y-5 pr-1">
+            {/* Current questions */}
+            <div>
+              <p className="text-sm font-semibold mb-2" style={{ color: 'var(--color-foreground)' }}>
+                In this quiz ({quizQuestions.length})
+              </p>
+              {quizQuestions.length === 0 ? (
+                <p className="text-sm" style={{ color: 'var(--color-muted-foreground)' }}>No questions added yet.</p>
+              ) : (
+                <div className="space-y-1.5">
+                  {quizQuestions.map((qq, i) => (
+                    <div key={qq.id} className="flex items-start gap-3 p-2.5 rounded-lg border" style={{ borderColor: 'var(--color-border)', background: 'var(--color-card)' }}>
+                      <span className="text-xs font-mono mt-0.5 w-5 text-right shrink-0" style={{ color: 'var(--color-muted-foreground)' }}>{i + 1}.</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm line-clamp-2">{qq.question.statement}</p>
+                        <div className="flex gap-2 mt-1">
+                          <span className="text-xs px-1.5 py-0.5 rounded" style={diffColors[qq.question.difficulty] ?? {}}>{qq.question.difficulty}</span>
+                          <span className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>{qq.question.subject?.name}</span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => removeQuestion(qq.question.id)}
+                        disabled={removingId === qq.question.id}
+                        className="shrink-0 p-1 rounded hover:opacity-70 transition-opacity"
+                        style={{ color: 'var(--color-danger)' }}
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Search question bank */}
+            <div>
+              <p className="text-sm font-semibold mb-2" style={{ color: 'var(--color-foreground)' }}>Add from Question Bank</p>
+              <div className="flex gap-2 mb-3">
+                <Input
+                  className="flex-1"
+                  placeholder="Search questions..."
+                  value={bankSearch}
+                  onChange={(e) => setBankSearch(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && searchBank(bankSearch, bankSubject)}
+                />
+                <Select value={bankSubject || 'all'} onValueChange={(v) => { const val = v === 'all' ? '' : v; setBankSubject(val); searchBank(bankSearch, val); }}>
+                  <SelectTrigger className="w-36 shrink-0"><SelectValue placeholder="Subject" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All subjects</SelectItem>
+                    {subjects.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Button variant="outline" size="sm" onClick={() => searchBank(bankSearch, bankSubject)} disabled={bankLoading}>
+                  {bankLoading ? '...' : 'Search'}
+                </Button>
+              </div>
+
+              {bankResults.length === 0 && !bankLoading && (
+                <p className="text-sm" style={{ color: 'var(--color-muted-foreground)' }}>No questions found.</p>
+              )}
+              <div className="space-y-1.5">
+                {bankResults.map(q => {
+                  const already = assignedIds.has(q.id);
+                  return (
+                    <div key={q.id} className="flex items-start gap-3 p-2.5 rounded-lg border" style={{ borderColor: 'var(--color-border)', background: already ? 'var(--color-primary-light)' : 'var(--color-background)' }}>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm line-clamp-2">{q.statement}</p>
+                        <div className="flex gap-2 mt-1">
+                          <span className="text-xs px-1.5 py-0.5 rounded" style={diffColors[q.difficulty] ?? {}}>{q.difficulty}</span>
+                          <span className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>{q.subject?.name} · {q.sourceType}</span>
+                        </div>
+                      </div>
+                      {already ? (
+                        <span className="text-xs shrink-0 mt-1" style={{ color: 'var(--color-primary)' }}>Added</span>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="shrink-0"
+                          onClick={() => addQuestion(q.id)}
+                          disabled={addingId === q.id}
+                        >
+                          {addingId === q.id ? '...' : 'Add'}
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-3 border-t" style={{ borderColor: 'var(--color-border)' }}>
+            <Button variant="outline" onClick={() => setManageQuiz(null)}>Done</Button>
           </div>
         </DialogContent>
       </Dialog>

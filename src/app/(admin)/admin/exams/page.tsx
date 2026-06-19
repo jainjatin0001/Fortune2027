@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { ListChecks, X } from 'lucide-react';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminTable, type Column } from '@/components/admin/AdminTable';
 import { ConfirmDeleteDialog } from '@/components/admin/ConfirmDeleteDialog';
@@ -31,6 +32,27 @@ interface Program {
   name: string;
 }
 
+interface Subject {
+  id: string;
+  name: string;
+}
+
+interface BankQuestion {
+  id: string;
+  statement: string;
+  difficulty: string;
+  sourceType: string;
+  subject: { name: string } | null;
+}
+
+interface ExamQuestion {
+  id: string;
+  sortOrder: number;
+  points: number;
+  sectionName: string | null;
+  question: BankQuestion;
+}
+
 const MONTHS = [
   { value: '1', label: 'January' }, { value: '2', label: 'February' }, { value: '3', label: 'March' },
   { value: '4', label: 'April' }, { value: '5', label: 'May' }, { value: '6', label: 'June' },
@@ -40,6 +62,13 @@ const MONTHS = [
 
 const currentYear = new Date().getFullYear();
 const YEARS = Array.from({ length: 10 }, (_, i) => String(currentYear - i));
+
+const diffColors: Record<string, { background: string; color: string }> = {
+  EASY: { background: '#dcfce7', color: '#16a34a' },
+  MEDIUM: { background: '#fef3c7', color: '#d97706' },
+  HARD: { background: '#fee2e2', color: '#dc2626' },
+  EXPERT: { background: '#ede9fe', color: '#7c3aed' },
+};
 
 const emptyForm = {
   programId: '',
@@ -54,6 +83,7 @@ const emptyForm = {
 export default function AdminExamsPage() {
   const [exams, setExams] = useState<Exam[]>([]);
   const [programs, setPrograms] = useState<Program[]>([]);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -69,6 +99,16 @@ export default function AdminExamsPage() {
 
   const [deleteExam, setDeleteExam] = useState<Exam | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // Map Questions panel
+  const [manageExam, setManageExam] = useState<Exam | null>(null);
+  const [examQuestions, setExamQuestions] = useState<ExamQuestion[]>([]);
+  const [bankSearch, setBankSearch] = useState('');
+  const [bankSubject, setBankSubject] = useState('');
+  const [bankResults, setBankResults] = useState<BankQuestion[]>([]);
+  const [bankLoading, setBankLoading] = useState(false);
+  const [addingId, setAddingId] = useState<string | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   const fetchExams = useCallback(async (p = page, s = search, prog = programFilter, pub = publishedFilter) => {
     setLoading(true);
@@ -91,6 +131,7 @@ export default function AdminExamsPage() {
   useEffect(() => {
     fetchExams();
     fetch('/api/admin/programs?limit=50').then(r => r.json()).then(d => setPrograms(d.programs ?? []));
+    fetch('/api/admin/subjects?limit=100').then(r => r.json()).then(d => setSubjects(d.subjects ?? []));
   }, [fetchExams]);
 
   const openAdd = () => {
@@ -180,6 +221,74 @@ export default function AdminExamsPage() {
     }
   };
 
+  // ── Map Questions ─────────────────────────────────────────────────────────
+
+  const openManage = async (exam: Exam) => {
+    setManageExam(exam);
+    setBankSearch('');
+    setBankSubject('');
+    setBankResults([]);
+    const res = await fetch(`/api/admin/exams/${exam.id}/questions`);
+    const data = await res.json();
+    setExamQuestions(data.questions ?? []);
+  };
+
+  const searchBank = useCallback(async (s = bankSearch, sub = bankSubject) => {
+    setBankLoading(true);
+    try {
+      const params = new URLSearchParams({ limit: '20', page: '1' });
+      if (s) params.set('search', s);
+      if (sub) params.set('subjectId', sub);
+      const res = await fetch(`/api/admin/questions?${params}`);
+      const data = await res.json();
+      setBankResults(data.questions ?? []);
+    } finally {
+      setBankLoading(false);
+    }
+  }, [bankSearch, bankSubject]);
+
+  useEffect(() => {
+    if (manageExam) searchBank();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [manageExam]);
+
+  const addQuestion = async (questionId: string) => {
+    if (!manageExam) return;
+    setAddingId(questionId);
+    try {
+      const res = await fetch(`/api/admin/exams/${manageExam.id}/questions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ questionId }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        toast('error', err.error ?? 'Failed to add');
+        return;
+      }
+      const refreshed = await fetch(`/api/admin/exams/${manageExam.id}/questions`);
+      const data = await refreshed.json();
+      setExamQuestions(data.questions ?? []);
+      fetchExams();
+    } finally {
+      setAddingId(null);
+    }
+  };
+
+  const removeQuestion = async (questionId: string) => {
+    if (!manageExam) return;
+    setRemovingId(questionId);
+    try {
+      await fetch(`/api/admin/exams/${manageExam.id}/questions/${questionId}`, { method: 'DELETE' });
+      setExamQuestions(q => q.filter(eq => eq.question.id !== questionId));
+      fetchExams();
+    } finally {
+      setRemovingId(null);
+    }
+  };
+
+  const assignedIds = new Set(examQuestions.map(eq => eq.question.id));
+
   const columns: Column<Exam>[] = [
     {
       key: 'name',
@@ -196,7 +305,21 @@ export default function AdminExamsPage() {
     {
       key: 'questions',
       label: 'Questions',
-      render: (e) => <span className="text-sm">{e._count.questions}</span>,
+      render: (e) => <span className="text-sm">{e._count.questions} mapped</span>,
+    },
+    {
+      key: 'map',
+      label: 'Map Questions',
+      render: (e) => (
+        <button
+          onClick={(ev) => { ev.stopPropagation(); openManage(e); }}
+          className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors"
+          style={{ background: 'color-mix(in srgb, var(--color-primary) 12%, transparent)', color: 'var(--color-primary)' }}
+        >
+          <ListChecks className="h-3.5 w-3.5" />
+          Map Questions
+        </button>
+      ),
     },
     {
       key: 'status',
@@ -247,6 +370,7 @@ export default function AdminExamsPage() {
         }
       />
 
+      {/* Create / Edit Modal */}
       <Dialog open={modalOpen} onOpenChange={(v) => !v && setModalOpen(false)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -311,6 +435,112 @@ export default function AdminExamsPage() {
               <Button variant="outline" onClick={() => setModalOpen(false)} disabled={saving}>Cancel</Button>
               <Button onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : editExam ? 'Save Changes' : 'Create Exam'}</Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Map Questions Modal */}
+      <Dialog open={!!manageExam} onOpenChange={(v) => !v && setManageExam(null)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Map Questions — {manageExam?.name}</DialogTitle>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto space-y-5 pr-1">
+            {/* Mapped questions */}
+            <div>
+              <p className="text-sm font-semibold mb-2" style={{ color: 'var(--color-foreground)' }}>
+                Mapped to this exam ({examQuestions.length})
+              </p>
+              {examQuestions.length === 0 ? (
+                <p className="text-sm" style={{ color: 'var(--color-muted-foreground)' }}>No questions mapped yet.</p>
+              ) : (
+                <div className="space-y-1.5">
+                  {examQuestions.map((eq, i) => (
+                    <div key={eq.id} className="flex items-start gap-3 p-2.5 rounded-lg border" style={{ borderColor: 'var(--color-border)', background: 'var(--color-card)' }}>
+                      <span className="text-xs font-mono mt-0.5 w-5 text-right shrink-0" style={{ color: 'var(--color-muted-foreground)' }}>{i + 1}.</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm line-clamp-2">{eq.question.statement}</p>
+                        <div className="flex gap-2 mt-1">
+                          <span className="text-xs px-1.5 py-0.5 rounded" style={diffColors[eq.question.difficulty] ?? {}}>{eq.question.difficulty}</span>
+                          <span className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>{eq.question.subject?.name} · {eq.question.sourceType}</span>
+                          {eq.sectionName && <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: '#dbeafe', color: '#1d4ed8' }}>{eq.sectionName}</span>}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => removeQuestion(eq.question.id)}
+                        disabled={removingId === eq.question.id}
+                        className="shrink-0 p-1 rounded hover:opacity-70 transition-opacity"
+                        style={{ color: 'var(--color-danger)' }}
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Search question bank */}
+            <div>
+              <p className="text-sm font-semibold mb-2" style={{ color: 'var(--color-foreground)' }}>Add from Question Bank</p>
+              <div className="flex gap-2 mb-3">
+                <Input
+                  className="flex-1"
+                  placeholder="Search questions..."
+                  value={bankSearch}
+                  onChange={(e) => setBankSearch(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && searchBank(bankSearch, bankSubject)}
+                />
+                <Select value={bankSubject || 'all'} onValueChange={(v) => { const val = v === 'all' ? '' : v; setBankSubject(val); searchBank(bankSearch, val); }}>
+                  <SelectTrigger className="w-36 shrink-0"><SelectValue placeholder="Subject" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All subjects</SelectItem>
+                    {subjects.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Button variant="outline" size="sm" onClick={() => searchBank(bankSearch, bankSubject)} disabled={bankLoading}>
+                  {bankLoading ? '...' : 'Search'}
+                </Button>
+              </div>
+
+              {bankResults.length === 0 && !bankLoading && (
+                <p className="text-sm" style={{ color: 'var(--color-muted-foreground)' }}>No questions found.</p>
+              )}
+              <div className="space-y-1.5">
+                {bankResults.map(q => {
+                  const already = assignedIds.has(q.id);
+                  return (
+                    <div key={q.id} className="flex items-start gap-3 p-2.5 rounded-lg border" style={{ borderColor: 'var(--color-border)', background: already ? 'var(--color-primary-light)' : 'var(--color-background)' }}>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm line-clamp-2">{q.statement}</p>
+                        <div className="flex gap-2 mt-1">
+                          <span className="text-xs px-1.5 py-0.5 rounded" style={diffColors[q.difficulty] ?? {}}>{q.difficulty}</span>
+                          <span className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>{q.subject?.name} · {q.sourceType}</span>
+                        </div>
+                      </div>
+                      {already ? (
+                        <span className="text-xs shrink-0 mt-1" style={{ color: 'var(--color-primary)' }}>Mapped</span>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="shrink-0"
+                          onClick={() => addQuestion(q.id)}
+                          disabled={addingId === q.id}
+                        >
+                          {addingId === q.id ? '...' : 'Map'}
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-3 border-t" style={{ borderColor: 'var(--color-border)' }}>
+            <Button variant="outline" onClick={() => setManageExam(null)}>Done</Button>
           </div>
         </DialogContent>
       </Dialog>
