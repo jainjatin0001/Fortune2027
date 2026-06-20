@@ -1,20 +1,41 @@
 import type { Metadata } from 'next';
-import { Mail, MessageSquare, Clock, MapPin } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+import { Mail, Phone, MessageSquare, Clock } from 'lucide-react';
+import { ContactForm } from './ContactForm';
 
 export const metadata: Metadata = {
   title: 'Contact Us',
-  description: 'Get in touch with the EduReach team. We\'re here to help students, parents, and educators.',
+  description: "Get in touch with the EduReach team. We're here to help students, parents, and educators.",
 };
 
 const contactInfo = [
-  { icon: Mail, label: 'Email', value: 'hello@edureach.com', sub: 'We reply within 24 hours' },
-  { icon: MessageSquare, label: 'Live Chat', value: 'Available in-app', sub: 'Mon–Fri, 9am–6pm ET' },
-  { icon: Clock, label: 'Support Hours', value: 'Mon–Fri 9am–8pm ET', sub: 'Sat 10am–4pm ET' },
-  { icon: MapPin, label: 'Headquarters', value: 'New York, NY', sub: 'Serving US & Canada' },
+  {
+    icon: Mail,
+    label: 'Email Us',
+    value: 'info.deltatutors@gmail.com',
+    sub: 'We reply within 24 hours',
+    href: 'mailto:info.deltatutors@gmail.com',
+  },
+  {
+    icon: Phone,
+    label: 'Call Us At',
+    value: '+1 902 220 4218',
+    sub: 'Mon–Fri 9am–6pm ET',
+    href: 'tel:+19022204218',
+  },
+  {
+    icon: MessageSquare,
+    label: 'Live Chat',
+    value: 'Available in-app',
+    sub: 'Mon–Fri, 9am–6pm ET',
+    href: null,
+  },
+  {
+    icon: Clock,
+    label: 'Support Hours',
+    value: 'Mon–Fri 9am–8pm ET',
+    sub: 'Sat 10am–4pm ET',
+    href: null,
+  },
 ];
 
 export default function ContactPage() {
@@ -33,17 +54,38 @@ export default function ContactPage() {
         <div className="grid lg:grid-cols-3 gap-12">
           {/* Contact Info */}
           <div>
-            <h2 className="text-heading-4 mb-6" style={{ color: 'var(--color-foreground)' }}>Get in Touch</h2>
+            <h2 className="text-heading-4 mb-6 font-bold" style={{ color: 'var(--color-foreground)' }}>
+              Get in Touch
+            </h2>
             <div className="space-y-6">
-              {contactInfo.map(({ icon: Icon, label, value, sub }) => (
+              {contactInfo.map(({ icon: Icon, label, value, sub, href }) => (
                 <div key={label} className="flex gap-4">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary)' }}>
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary)' }}
+                  >
                     <Icon className="h-5 w-5" />
                   </div>
                   <div>
-                    <div className="text-sm font-semibold" style={{ color: 'var(--color-foreground)' }}>{label}</div>
-                    <div className="text-sm" style={{ color: 'var(--color-muted-foreground)' }}>{value}</div>
-                    <div className="text-xs mt-0.5" style={{ color: 'var(--color-muted-foreground)', opacity: 0.7 }}>{sub}</div>
+                    <div className="text-sm font-bold" style={{ color: 'var(--color-foreground)' }}>
+                      {label}
+                    </div>
+                    {href ? (
+                      <a
+                        href={href}
+                        className="text-sm font-medium transition-colors hover:text-[var(--color-primary)]"
+                        style={{ color: 'var(--color-foreground)' }}
+                      >
+                        {value}
+                      </a>
+                    ) : (
+                      <div className="text-sm font-medium" style={{ color: 'var(--color-foreground)' }}>
+                        {value}
+                      </div>
+                    )}
+                    <div className="text-xs mt-0.5 font-medium" style={{ color: 'var(--color-muted-foreground)' }}>
+                      {sub}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -52,32 +94,7 @@ export default function ContactPage() {
 
           {/* Contact Form */}
           <div className="lg:col-span-2">
-            <div className="card-base p-8">
-              <h2 className="text-heading-4 mb-6" style={{ color: 'var(--color-foreground)' }}>Send a Message</h2>
-              <form className="space-y-6">
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
-                    <Input id="name" placeholder="Your name" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email Address</Label>
-                    <Input id="email" type="email" placeholder="you@example.com" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="subject">Subject</Label>
-                  <Input id="subject" placeholder="How can we help?" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="message">Message</Label>
-                  <Textarea id="message" placeholder="Tell us more..." rows={5} />
-                </div>
-                <Button className="w-full text-white font-semibold" style={{ background: 'var(--gradient-primary)' }}>
-                  Send Message
-                </Button>
-              </form>
-            </div>
+            <ContactForm />
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminTable, type Column } from '@/components/admin/AdminTable';
 import { ConfirmDeleteDialog } from '@/components/admin/ConfirmDeleteDialog';
@@ -18,20 +18,23 @@ interface BlogPost {
   title: string;
   slug: string;
   excerpt: string | null;
+  coverImage: string | null;
   isPublished: boolean;
   isFeatured: boolean;
   viewCount: number;
   createdAt: string;
+  categoryId: string | null;
   author: { firstName: string; lastName: string };
   category: { name: string } | null;
 }
+
 
 interface BlogCategory {
   id: string;
   name: string;
 }
 
-const emptyForm = { title: '', slug: '', excerpt: '', content: '', categoryId: '', isPublished: false, isFeatured: false };
+const emptyForm = { title: '', slug: '', excerpt: '', content: '', categoryId: '', coverImage: '', isPublished: false, isFeatured: false };
 
 export default function AdminBlogPage() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -47,6 +50,8 @@ export default function AdminBlogPage() {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [deletePost, setDeletePost] = useState<BlogPost | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -77,9 +82,28 @@ export default function AdminBlogPage() {
 
   const openEdit = (p: BlogPost) => {
     setEditPost(p);
-    setForm({ title: p.title, slug: p.slug, excerpt: p.excerpt ?? '', content: '', categoryId: '', isPublished: p.isPublished, isFeatured: p.isFeatured });
+    setForm({ title: p.title, slug: p.slug, excerpt: p.excerpt ?? '', content: '', categoryId: p.categoryId ?? '', coverImage: p.coverImage ?? '', isPublished: p.isPublished, isFeatured: p.isFeatured });
     setFormError('');
     setModalOpen(true);
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Upload failed');
+      setForm(f => ({ ...f, coverImage: data.url }));
+    } catch (e) {
+      setFormError(e instanceof Error ? e.message : 'Upload failed');
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   };
 
   const handleSave = async () => {
@@ -90,7 +114,7 @@ export default function AdminBlogPage() {
     try {
       let res: Response;
       if (editPost) {
-        const payload: Record<string, unknown> = { title: form.title, excerpt: form.excerpt, categoryId: form.categoryId || null, isPublished: form.isPublished, isFeatured: form.isFeatured };
+        const payload: Record<string, unknown> = { title: form.title, excerpt: form.excerpt, categoryId: form.categoryId || null, coverImage: form.coverImage || null, isPublished: form.isPublished, isFeatured: form.isFeatured };
         if (form.content) payload.content = form.content;
         res = await fetch(`/api/admin/blog/${editPost.id}`, {
           method: 'PATCH',
@@ -212,6 +236,43 @@ export default function AdminBlogPage() {
                   {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Cover Image</Label>
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+              <div className="flex gap-2">
+                <Input
+                  value={form.coverImage}
+                  onChange={(e) => setForm(f => ({ ...f, coverImage: e.target.value }))}
+                  placeholder="Or paste an image URL..."
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={uploading}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {uploading ? 'Uploading…' : 'Upload'}
+                </Button>
+              </div>
+              {form.coverImage && (
+                <div className="relative mt-1 rounded-lg overflow-hidden h-36 bg-muted">
+                  <img
+                    src={form.coverImage}
+                    alt="Cover preview"
+                    className="w-full h-full object-cover"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setForm(f => ({ ...f, coverImage: '' }))}
+                    className="absolute top-1.5 right-1.5 bg-black/60 text-white text-xs rounded px-1.5 py-0.5 hover:bg-black/80"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label>Excerpt</Label>

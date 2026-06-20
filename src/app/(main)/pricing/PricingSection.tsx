@@ -7,13 +7,43 @@ import { PRICING_PLANS, HOURLY_RATE } from '@/constants';
 
 type PlanFeature = { text: string; included: boolean; highlight?: boolean; bold?: boolean };
 
+type ModalStatus = 'idle' | 'loading' | 'success' | 'error';
+
 function ContactModal({ onClose }: { onClose: () => void }) {
   const [form, setForm] = useState({ name: '', email: '', course: '', message: '' });
-  const [submitted, setSubmitted] = useState(false);
+  const [status, setStatus] = useState<ModalStatus>('idle');
+  const [errorMsg, setErrorMsg] = useState('');
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
-    setSubmitted(true);
+    setStatus('loading');
+    setErrorMsg('');
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          subject: `Rate/Pricing Query — ${form.course}`,
+          message: form.message,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErrorMsg(data.error ?? 'Something went wrong. Please try again.');
+        setStatus('error');
+        return;
+      }
+
+      setStatus('success');
+    } catch {
+      setErrorMsg('Network error. Please check your connection and try again.');
+      setStatus('error');
+    }
   }
 
   return (
@@ -34,7 +64,7 @@ function ContactModal({ onClose }: { onClose: () => void }) {
           <X className="h-5 w-5" />
         </button>
 
-        {submitted ? (
+        {status === 'success' ? (
           <div className="text-center py-4">
             <div
               className="text-4xl mb-4"
@@ -62,16 +92,26 @@ function ContactModal({ onClose }: { onClose: () => void }) {
               Tell us about your needs and we&apos;ll get back to you with accurate pricing.
             </p>
 
+            {status === 'error' && (
+              <div
+                className="mb-4 px-4 py-3 rounded-lg text-sm font-medium"
+                style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' }}
+              >
+                {errorMsg}
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-foreground)' }}>
-                  Name
+                  Name <span style={{ color: '#dc2626' }}>*</span>
                 </label>
                 <input
                   type="text"
                   required
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  disabled={status === 'loading'}
                   className="w-full px-3 py-2 rounded-md border text-sm outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                   style={{
                     background: 'var(--color-background-alt)',
@@ -84,13 +124,14 @@ function ContactModal({ onClose }: { onClose: () => void }) {
 
               <div>
                 <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-foreground)' }}>
-                  Email
+                  Email <span style={{ color: '#dc2626' }}>*</span>
                 </label>
                 <input
                   type="email"
                   required
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  disabled={status === 'loading'}
                   className="w-full px-3 py-2 rounded-md border text-sm outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                   style={{
                     background: 'var(--color-background-alt)',
@@ -107,9 +148,9 @@ function ContactModal({ onClose }: { onClose: () => void }) {
                 </label>
                 <input
                   type="text"
-                  required
                   value={form.course}
                   onChange={(e) => setForm({ ...form, course: e.target.value })}
+                  disabled={status === 'loading'}
                   className="w-full px-3 py-2 rounded-md border text-sm outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                   style={{
                     background: 'var(--color-background-alt)',
@@ -125,9 +166,9 @@ function ContactModal({ onClose }: { onClose: () => void }) {
                   Message
                 </label>
                 <textarea
-                  required
                   value={form.message}
                   onChange={(e) => setForm({ ...form, message: e.target.value })}
+                  disabled={status === 'loading'}
                   rows={3}
                   className="w-full px-3 py-2 rounded-md border text-sm outline-none focus:ring-2 focus:ring-[var(--color-primary)] resize-none"
                   style={{
@@ -141,10 +182,11 @@ function ContactModal({ onClose }: { onClose: () => void }) {
 
               <Button
                 type="submit"
+                disabled={status === 'loading'}
                 className="w-full font-semibold"
                 style={{ background: 'var(--gradient-primary)', color: '#fff' }}
               >
-                Send Message
+                {status === 'loading' ? 'Sending…' : 'Send Message'}
               </Button>
             </form>
           </>

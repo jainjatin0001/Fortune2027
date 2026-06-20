@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { BookOpen } from 'lucide-react';
+import { Mail, Phone } from 'lucide-react';
 import { APP_NAME, FOOTER_LINKS } from '@/constants';
 
 function TwitterIcon() { return <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.259 5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>; }
@@ -18,7 +18,6 @@ const footerSections = [
   { title: 'Company', links: FOOTER_LINKS.company },
   { title: 'Test Prep', links: FOOTER_LINKS.testPrep },
   { title: 'Coding', links: FOOTER_LINKS.coding },
-  { title: 'Support', links: FOOTER_LINKS.support },
 ] as const;
 
 export function Footer() {
@@ -46,7 +45,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="text-sm leading-relaxed mb-6 max-w-xs" style={{ color: 'var(--color-muted-foreground)' }}>
-              Premium academic preparation for students in the United States and Canada. SAT, ACT, AP, and Coding — all in one place.
+              Premium academic preparation for students in the United States and Canada. SAT, ACT, AP, Coding & High School — all in one place.
             </p>
             <div className="flex gap-3">
               {socialLinks.map(({ icon: Icon, label, href }) => (
@@ -87,6 +86,41 @@ export function Footer() {
               </ul>
             </div>
           ))}
+
+          {/* Contact Us */}
+          <div>
+            <h3 className="text-sm font-semibold mb-4" style={{ color: 'var(--color-foreground)' }}>
+              Contact Us
+            </h3>
+            <ul className="space-y-4">
+              <li>
+                <p className="text-xs font-medium mb-1" style={{ color: 'var(--color-muted-foreground)' }}>
+                  Email us
+                </p>
+                <a
+                  href="mailto:info.deltatutors@gmail.com"
+                  className="text-sm font-medium flex items-center gap-2 transition-colors hover:text-[var(--color-primary)]"
+                  style={{ color: 'var(--color-foreground)' }}
+                >
+                  <Mail className="h-3.5 w-3.5 shrink-0" />
+                  info.deltatutors@gmail.com
+                </a>
+              </li>
+              <li>
+                <p className="text-xs font-medium mb-1" style={{ color: 'var(--color-muted-foreground)' }}>
+                  Call us at
+                </p>
+                <a
+                  href="tel:+19022204218"
+                  className="text-sm font-medium flex items-center gap-2 transition-colors hover:text-[var(--color-primary)]"
+                  style={{ color: 'var(--color-foreground)' }}
+                >
+                  <Phone className="h-3.5 w-3.5 shrink-0" />
+                  +1 902 220 4218
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
 
