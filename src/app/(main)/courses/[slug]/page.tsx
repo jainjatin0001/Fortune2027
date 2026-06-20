@@ -6,18 +6,16 @@ import {
   Users,
   Clock,
   BookOpen,
-  Award,
   CheckCircle2,
   Play,
   FileText,
   HelpCircle,
-  Monitor,
   BarChart2,
   Globe,
   Tag,
   ChevronRight,
   ShieldCheck,
-  Infinity as InfinityIcon,
+  ListChecks,
 } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import {
@@ -29,6 +27,70 @@ import {
 import { Button } from '@/components/ui/button';
 import { CourseCurriculum } from './_components/CourseCurriculum';
 import type { CourseCategory } from '@/types';
+
+// ─── Meta parser ─────────────────────────────────────────────────────────────
+const SEP = '---META---';
+
+function parseMeta(description: string): { descText: string; meta: Record<string, string> } {
+  const idx = description.indexOf(SEP);
+  if (idx === -1) return { descText: description.trim(), meta: {} };
+  const descText = description.slice(0, idx).trim();
+  const meta: Record<string, string> = {};
+  for (const line of description.slice(idx + SEP.length).split('\n')) {
+    const colon = line.indexOf(':');
+    if (colon === -1) continue;
+    const key = line.slice(0, colon).trim().toLowerCase();
+    const val = line.slice(colon + 1).trim();
+    if (key && val) meta[key] = val;
+  }
+  return { descText, meta };
+}
+
+// ─── Meta key → display config ────────────────────────────────────────────────
+// Add new keys here whenever you add them to a course description.
+const META_CONFIG: Record<string, {
+  statLabel: string;
+  statValue: (v: string) => string;
+  includeLabel: (v: string) => string;
+  icon: React.ReactNode;
+}> = {
+  video_lessons: {
+    statLabel: 'Video lessons',
+    statValue: (v) => `${v}+`,
+    includeLabel: (v) => `${v}+ video lessons`,
+    icon: <Play className="h-4 w-4" />,
+  },
+  pdf_pages: {
+    statLabel: 'PDF pages',
+    statValue: (v) => v,
+    includeLabel: (v) => `${v} PDF notes`,
+    icon: <FileText className="h-4 w-4" />,
+  },
+  quizzes: {
+    statLabel: 'Quizzes',
+    statValue: (v) => v,
+    includeLabel: (v) => `${v} quizzes`,
+    icon: <HelpCircle className="h-4 w-4" />,
+  },
+  mock_tests: {
+    statLabel: 'Mock tests',
+    statValue: (v) => v,
+    includeLabel: (v) => `${v} full-length mock tests`,
+    icon: <BookOpen className="h-4 w-4" />,
+  },
+  question_sets: {
+    statLabel: 'Question sets',
+    statValue: (v) => v,
+    includeLabel: (v) => `${v} question sets`,
+    icon: <ListChecks className="h-4 w-4" />,
+  },
+  month_access: {
+    statLabel: 'Months access',
+    statValue: (v) => v,
+    includeLabel: (v) => `${v} months access`,
+    icon: <Clock className="h-4 w-4" />,
+  },
+};
 
 // ─── Category hero gradients ─────────────────────────────────────────────────
 const HERO_GRADIENTS: Record<string, string> = {
@@ -242,11 +304,27 @@ export default async function CourseDetailPage({
   const instructor = course.instructors[0]?.instructor ?? null;
 
   const totalLessons = modules.reduce((s, m) => s + m.assets.length, 0);
-  const videoCount = modules.reduce(
-    (s, m) => s + m.assets.filter((a) => a.assetType === 'VIDEO').length,
-    0
-  );
   const enrollCount = course._count.enrollments;
+
+  const { descText, meta } = parseMeta(course.description);
+
+  const metaEntries = Object.entries(meta);
+
+  const statItems = metaEntries.slice(0, 5).map(([key, val]) => {
+    const cfg = META_CONFIG[key];
+    return {
+      value: cfg ? cfg.statValue(val) : val,
+      label: cfg ? cfg.statLabel : key.replace(/_/g, ' '),
+    };
+  });
+
+  const includeItems = metaEntries.map(([key, val]) => {
+    const cfg = META_CONFIG[key];
+    return {
+      icon: cfg ? cfg.icon : <Tag className="h-4 w-4" />,
+      label: cfg ? cfg.includeLabel(val) : `${key.replace(/_/g, ' ')}: ${val}`,
+    };
+  });
 
   return (
     <div style={{ background: 'var(--color-background)' }}>
@@ -447,7 +525,7 @@ export default async function CourseDetailPage({
                 About This Course
               </h2>
               <div className="space-y-3">
-                {course.description
+                {descText
                   .split('\n')
                   .filter(Boolean)
                   .map((para, i) => (
@@ -470,14 +548,8 @@ export default async function CourseDetailPage({
                 background: 'var(--color-background-alt)',
               }}
             >
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 text-center">
-                {[
-                  { value: `${Math.max(videoCount, 52)}`, label: 'Video lessons' },
-                  { value: '120+', label: 'PDF pages' },
-                  { value: '15', label: 'Quizzes' },
-                  { value: '5', label: 'Mock tests' },
-                  { value: '✓', label: 'Certificate' },
-                ].map((stat) => (
+              <div className="grid gap-4 text-center" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))' }}>
+                {statItems.map((stat) => (
                   <div key={stat.label}>
                     <div
                       className="text-xl font-extrabold"
@@ -736,18 +808,7 @@ export default async function CourseDetailPage({
                     This course includes:
                   </h4>
                   <ul className="space-y-3">
-                    {[
-                      {
-                        icon: <Play className="h-4 w-4" />,
-                        label: `${Math.max(videoCount, 50)}+ video lessons`,
-                      },
-                      { icon: <FileText className="h-4 w-4" />, label: '120 PDF notes' },
-                      { icon: <HelpCircle className="h-4 w-4" />, label: '15 quizzes' },
-                      { icon: <BookOpen className="h-4 w-4" />, label: '5 full-length mock tests' },
-                      { icon: <Award className="h-4 w-4" />, label: 'Certificate of completion' },
-                      { icon: <Monitor className="h-4 w-4" />, label: 'Access on mobile & TV' },
-                      { icon: <InfinityIcon className="h-4 w-4" />, label: 'Lifetime access' },
-                    ].map((item, i) => (
+                    {includeItems.map((item, i) => (
                       <li
                         key={i}
                         className="flex items-center gap-3 text-sm"

@@ -39,6 +39,11 @@ export async function GET(req: NextRequest) {
         include: {
           program: { select: { name: true, slug: true } },
           _count: { select: { enrollments: true, modules: true } },
+          instructors: {
+            orderBy: { isPrimary: 'desc' },
+            take: 1,
+            select: { instructorId: true },
+          },
         },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
@@ -66,6 +71,8 @@ export async function POST(req: NextRequest) {
     const existing = await prisma.course.findUnique({ where: { slug } });
     if (existing) return NextResponse.json({ error: 'Slug already in use' }, { status: 409 });
 
+    const { objectives, requirements, tags, thumbnailUrl, instructorId } = body;
+
     const course = await prisma.course.create({
       data: {
         programId,
@@ -76,8 +83,18 @@ export async function POST(req: NextRequest) {
         difficulty: difficulty ?? 'MEDIUM',
         price: price ?? 0,
         isFree: isFree ?? false,
+        objectives: objectives ?? [],
+        requirements: requirements ?? [],
+        tags: tags ?? [],
+        thumbnailUrl: thumbnailUrl ?? null,
       },
     });
+
+    if (instructorId) {
+      await prisma.courseInstructor.create({
+        data: { courseId: course.id, instructorId, isPrimary: true },
+      });
+    }
 
     return NextResponse.json({ course }, { status: 201 });
   } catch (e) {
@@ -92,13 +109,22 @@ export async function PATCH(req: NextRequest) {
     const { id, ...updates } = body;
     if (!id) return badRequest('id is required');
 
-    // Only allow safe fields
     const allowed = ['title', 'description', 'shortDesc', 'price', 'isFree', 'isPublished', 'isFeatured', 'difficulty', 'thumbnailUrl', 'tags', 'requirements', 'objectives'];
     const data = Object.fromEntries(
       Object.entries(updates).filter(([k]) => allowed.includes(k))
     );
 
     const course = await prisma.course.update({ where: { id }, data });
+
+    if ('instructorId' in body) {
+      await prisma.courseInstructor.deleteMany({ where: { courseId: id } });
+      if (body.instructorId) {
+        await prisma.courseInstructor.create({
+          data: { courseId: id, instructorId: body.instructorId, isPrimary: true },
+        });
+      }
+    }
+
     return NextResponse.json({ course });
   } catch (e) {
     return authError(e) ?? NextResponse.json({ error: 'Internal server error' }, { status: 500 });

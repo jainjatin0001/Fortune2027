@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminTable, type Column } from '@/components/admin/AdminTable';
 import { ConfirmDeleteDialog } from '@/components/admin/ConfirmDeleteDialog';
@@ -24,14 +25,25 @@ interface Course {
   isFree: boolean;
   isPublished: boolean;
   isFeatured: boolean;
+  objectives: string[];
+  requirements: string[];
+  tags: string[];
+  thumbnailUrl: string | null;
   createdAt: string;
   program: { name: string; slug: string };
   _count: { enrollments: number; modules: number };
+  instructors: Array<{ instructorId: string }>;
 }
 
 interface Program {
   id: string;
   name: string;
+}
+
+interface Instructor {
+  id: string;
+  name: string;
+  title: string | null;
 }
 
 const DIFFICULTY = ['EASY', 'MEDIUM', 'HARD', 'EXPERT'];
@@ -47,16 +59,24 @@ const emptyForm = {
   isFree: false,
   isPublished: false,
   isFeatured: false,
+  objectives: '',
+  requirements: '',
+  tags: '',
+  thumbnailUrl: '',
+  instructorId: '',
 };
 
 export default function AdminCoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [programs, setPrograms] = useState<Program[]>([]);
+  const [instructors, setInstructors] = useState<Instructor[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [publishedFilter, setPublishedFilter] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editCourse, setEditCourse] = useState<Course | null>(null);
@@ -89,6 +109,7 @@ export default function AdminCoursesPage() {
   useEffect(() => {
     fetchCourses();
     fetch('/api/admin/programs?limit=50').then(r => r.json()).then(d => setPrograms(d.programs ?? []));
+    fetch('/api/admin/instructors?limit=100').then(r => r.json()).then(d => setInstructors(d.instructors ?? []));
   }, [fetchCourses]);
 
   const openAdd = () => {
@@ -96,6 +117,27 @@ export default function AdminCoursesPage() {
     setForm(emptyForm);
     setFormError('');
     setModalOpen(true);
+  };
+
+  const parseLines = (s: string) => s.split('\n').map(l => l.trim()).filter(Boolean);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Upload failed');
+      setForm(f => ({ ...f, thumbnailUrl: data.url }));
+    } catch (e) {
+      setFormError(e instanceof Error ? e.message : 'Upload failed');
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   };
 
   const openEdit = (c: Course) => {
@@ -111,10 +153,25 @@ export default function AdminCoursesPage() {
       isFree: c.isFree,
       isPublished: c.isPublished,
       isFeatured: c.isFeatured,
+      objectives: (c.objectives ?? []).join('\n'),
+      requirements: (c.requirements ?? []).join('\n'),
+      tags: (c.tags ?? []).join('\n'),
+      thumbnailUrl: c.thumbnailUrl ?? '',
+      instructorId: c.instructors?.[0]?.instructorId ?? '',
     });
     setFormError('');
     setModalOpen(true);
   };
+
+  const buildPayload = () => ({
+    ...form,
+    price: parseFloat(form.price),
+    objectives: parseLines(form.objectives),
+    requirements: parseLines(form.requirements),
+    tags: parseLines(form.tags),
+    thumbnailUrl: form.thumbnailUrl || null,
+    instructorId: form.instructorId || null,
+  });
 
   const handleSave = async () => {
     setFormError('');
@@ -129,14 +186,14 @@ export default function AdminCoursesPage() {
         res = await fetch('/api/admin/courses', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: editCourse.id, ...form, price: parseFloat(form.price) }),
+          body: JSON.stringify({ id: editCourse.id, ...buildPayload() }),
         });
       } else {
         if (!form.programId) { setFormError('Program is required.'); setSaving(false); return; }
         res = await fetch('/api/admin/courses', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...form, price: parseFloat(form.price) }),
+          body: JSON.stringify(buildPayload()),
         });
       }
 
@@ -304,6 +361,93 @@ export default function AdminCoursesPage() {
                 <Checkbox checked={form.isFeatured} onCheckedChange={(v) => setForm(f => ({ ...f, isFeatured: !!v }))} />
                 Featured
               </label>
+            </div>
+
+            {/* Thumbnail */}
+            <div className="space-y-1.5">
+              <Label>Thumbnail Image</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={form.thumbnailUrl}
+                  onChange={(e) => setForm(f => ({ ...f, thumbnailUrl: e.target.value }))}
+                  placeholder="Paste URL or upload"
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={uploading}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {uploading ? 'Uploading…' : 'Upload'}
+                </Button>
+              </div>
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+              {form.thumbnailUrl && (
+                <div className="relative w-full h-32 rounded-lg overflow-hidden border mt-1" style={{ borderColor: 'var(--color-border)' }}>
+                  <Image src={form.thumbnailUrl} alt="Thumbnail preview" fill className="object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => setForm(f => ({ ...f, thumbnailUrl: '' }))}
+                    className="absolute top-1.5 right-1.5 bg-black/60 text-white text-xs px-2 py-0.5 rounded"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Instructor */}
+            <div className="space-y-1.5">
+              <Label>Instructor</Label>
+              <Select value={form.instructorId || 'none'} onValueChange={(v) => setForm(f => ({ ...f, instructorId: v === 'none' ? '' : v }))}>
+                <SelectTrigger><SelectValue placeholder="Select instructor" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No instructor</SelectItem>
+                  {instructors.map(i => (
+                    <SelectItem key={i.id} value={i.id}>
+                      {i.name}{i.title ? ` — ${i.title}` : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Objectives */}
+            <div className="space-y-1.5">
+              <Label>What You'll Learn</Label>
+              <p className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>One item per line</p>
+              <Textarea
+                value={form.objectives}
+                onChange={(e) => setForm(f => ({ ...f, objectives: e.target.value }))}
+                rows={4}
+                placeholder={"Master core SAT Math concepts\nSolve real exam-style problems\nBuild exam-day confidence"}
+              />
+            </div>
+
+            {/* Requirements */}
+            <div className="space-y-1.5">
+              <Label>Requirements</Label>
+              <p className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>One item per line</p>
+              <Textarea
+                value={form.requirements}
+                onChange={(e) => setForm(f => ({ ...f, requirements: e.target.value }))}
+                rows={3}
+                placeholder={"Basic algebra knowledge\nA scientific calculator"}
+              />
+            </div>
+
+            {/* Tags */}
+            <div className="space-y-1.5">
+              <Label>Tags</Label>
+              <p className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>One tag per line</p>
+              <Textarea
+                value={form.tags}
+                onChange={(e) => setForm(f => ({ ...f, tags: e.target.value }))}
+                rows={3}
+                placeholder={"SAT Math\nAlgebra\nTest Prep"}
+              />
             </div>
 
             {formError && <p className="text-sm" style={{ color: 'var(--color-danger)' }}>{formError}</p>}
