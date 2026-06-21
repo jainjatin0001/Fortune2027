@@ -8,19 +8,31 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { APP_NAME } from '@/constants';
+import { useSidebar } from './DashboardSidebarProvider';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
-  { icon: BookOpen, label: 'My Courses', href: '/dashboard/courses' },
-  { icon: Brain, label: 'Practice', href: '/dashboard/practice' },
-  { icon: BarChart2, label: 'Progress', href: '/dashboard/progress' },
-  { icon: Trophy, label: 'Quizzes', href: '/dashboard/quizzes' },
-  { icon: Bookmark, label: 'Bookmarks', href: '/dashboard/bookmarks' },
-  { icon: Play, label: 'Demo', href: '/dashboard/demo' },
+  { icon: BookOpen,        label: 'My Courses', href: '/dashboard/courses' },
+  { icon: Brain,           label: 'Practice',   href: '/dashboard/practice' },
+  { icon: BarChart2,       label: 'Progress',   href: '/dashboard/progress' },
+  { icon: Trophy,          label: 'Quizzes',    href: '/dashboard/quizzes' },
+  { icon: Bookmark,        label: 'Bookmarks',  href: '/dashboard/bookmarks' },
+  { icon: Play,            label: 'Demo',       href: '/dashboard/demo' },
+];
+
+const examItems = [
+  { icon: GraduationCap, label: 'SAT Practice Exam', href: '/dashboard/sat-exam', color: '#7c3aed' },
+  { icon: GraduationCap, label: 'ACT Practice Exam', href: '/dashboard/act-exam', color: '#0891b2' },
+];
+
+const quickItems = [
+  { icon: BookOpen,      label: 'SAT Prep', href: '/sat-prep' },
+  { icon: FlaskConical,  label: 'AP Exams', href: '/ap-prep' },
+  { icon: Code2,         label: 'Coding',   href: '/coding' },
 ];
 
 const bottomItems = [
-  { icon: User, label: 'Profile', href: '/profile' },
+  { icon: User,     label: 'Profile',  href: '/profile' },
   { icon: Settings, label: 'Settings', href: '/settings' },
 ];
 
@@ -30,15 +42,132 @@ interface DashboardSidebarProps {
 
 export function DashboardSidebar({ role }: DashboardSidebarProps) {
   const pathname = usePathname();
+  const { open } = useSidebar();
 
+  // ── Collapsed: icon-only rail ─────────────────────────────────
+  if (!open) {
+    return (
+      <aside
+        className="hidden lg:flex flex-col h-screen sticky top-0 overflow-hidden shrink-0"
+        style={{
+          width: 'var(--sidebar-collapsed)',
+          background: 'var(--sidebar-bg)',
+          borderRight: '1px solid var(--sidebar-border)',
+        }}
+      >
+        {/* Logo mark */}
+        <div
+          className="flex items-center justify-center h-16 border-b shrink-0"
+          style={{ borderColor: 'var(--sidebar-border)' }}
+        >
+          <Link href="/">
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm"
+              style={{ background: 'var(--gradient-primary)' }}
+            >
+              E
+            </div>
+          </Link>
+        </div>
+
+        {/* Nav icons */}
+        <nav className="flex-1 flex flex-col items-center py-3 gap-0.5 overflow-y-auto" aria-label="Dashboard navigation">
+          {navItems.map(({ icon: Icon, label, href }) => {
+            const active = pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
+            return (
+              <Link
+                key={href}
+                href={href}
+                title={label}
+                className={cn(
+                  'w-10 h-10 flex items-center justify-center rounded-xl transition-colors',
+                  active
+                    ? 'bg-[var(--sidebar-item-active)] text-[var(--sidebar-item-active-text)]'
+                    : 'text-[var(--color-muted-foreground)] hover:bg-[var(--sidebar-item-hover)] hover:text-[var(--color-foreground)]',
+                )}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+              </Link>
+            );
+          })}
+
+          <div className="w-8 border-t my-2" style={{ borderColor: 'var(--sidebar-border)' }} />
+
+          {examItems.map(({ icon: Icon, label, href, color }) => {
+            const active = pathname.startsWith(href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                title={label}
+                className={cn(
+                  'w-10 h-10 flex items-center justify-center rounded-xl transition-colors',
+                  active
+                    ? 'bg-[var(--sidebar-item-active)] text-[var(--sidebar-item-active-text)]'
+                    : 'text-[var(--color-muted-foreground)] hover:bg-[var(--sidebar-item-hover)] hover:text-[var(--color-foreground)]',
+                )}
+              >
+                <Icon className="h-4 w-4 shrink-0" style={{ color: active ? undefined : color }} />
+              </Link>
+            );
+          })}
+
+          <div className="w-8 border-t my-2" style={{ borderColor: 'var(--sidebar-border)' }} />
+
+          {quickItems.map(({ icon: Icon, label, href }) => (
+            <Link
+              key={href}
+              href={href}
+              title={label}
+              className="w-10 h-10 flex items-center justify-center rounded-xl text-[var(--color-muted-foreground)] hover:bg-[var(--sidebar-item-hover)] hover:text-[var(--color-foreground)] transition-colors"
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+            </Link>
+          ))}
+        </nav>
+
+        {/* Bottom icons */}
+        <div
+          className="flex flex-col items-center py-3 gap-0.5 border-t"
+          style={{ borderColor: 'var(--sidebar-border)' }}
+        >
+          {bottomItems.map(({ icon: Icon, label, href }) => (
+            <Link
+              key={href}
+              href={href}
+              title={label}
+              className="w-10 h-10 flex items-center justify-center rounded-xl text-[var(--color-muted-foreground)] hover:bg-[var(--sidebar-item-hover)] hover:text-[var(--color-foreground)] transition-colors"
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+            </Link>
+          ))}
+          {role === 'SUPER_ADMIN' && (
+            <Link
+              href="/admin"
+              title="Admin Panel"
+              className="w-10 h-10 flex items-center justify-center rounded-xl transition-colors"
+              style={{
+                color: 'var(--color-danger)',
+                background: 'color-mix(in srgb, var(--color-danger) 10%, transparent)',
+              }}
+            >
+              <Shield className="h-4 w-4 shrink-0" />
+            </Link>
+          )}
+        </div>
+      </aside>
+    );
+  }
+
+  // ── Expanded: full sidebar ────────────────────────────────────
   return (
     <aside
       className="hidden lg:flex flex-col h-screen sticky top-0 overflow-y-auto"
       style={{
         width: 'var(--sidebar-width)',
+        minWidth: 'var(--sidebar-width)',
         background: 'var(--sidebar-bg)',
         borderRight: '1px solid var(--sidebar-border)',
-        minWidth: 'var(--sidebar-width)',
       }}
     >
       {/* Logo */}
@@ -58,9 +187,13 @@ export function DashboardSidebar({ role }: DashboardSidebarProps) {
 
       {/* Nav */}
       <nav className="flex-1 p-4 space-y-1" aria-label="Dashboard navigation">
-        <div className="text-xs font-semibold mb-3 px-3" style={{ color: 'var(--color-muted-foreground)' }}>
+        <div
+          className="text-xs font-semibold mb-3 px-3"
+          style={{ color: 'var(--color-muted-foreground)' }}
+        >
           MAIN MENU
         </div>
+
         {navItems.map(({ icon: Icon, label, href }) => {
           const active = pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
           return (
@@ -71,7 +204,7 @@ export function DashboardSidebar({ role }: DashboardSidebarProps) {
                 'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors',
                 active
                   ? 'bg-[var(--sidebar-item-active)] text-[var(--sidebar-item-active-text)]'
-                  : 'text-[var(--color-muted-foreground)] hover:bg-[var(--sidebar-item-hover)] hover:text-[var(--color-foreground)]'
+                  : 'text-[var(--color-muted-foreground)] hover:bg-[var(--sidebar-item-hover)] hover:text-[var(--color-foreground)]',
               )}
             >
               <Icon className="h-4 w-4 shrink-0" />
@@ -80,13 +213,14 @@ export function DashboardSidebar({ role }: DashboardSidebarProps) {
           );
         })}
 
-        <div className="text-xs font-semibold mt-6 mb-3 px-3 pt-2 border-t" style={{ color: 'var(--color-muted-foreground)', borderColor: 'var(--sidebar-border)' }}>
+        <div
+          className="text-xs font-semibold mt-6 mb-3 px-3 pt-2 border-t"
+          style={{ color: 'var(--color-muted-foreground)', borderColor: 'var(--sidebar-border)' }}
+        >
           PRACTICE EXAMS
         </div>
-        {[
-          { icon: GraduationCap, label: 'SAT Practice Exam', href: '/dashboard/sat-exam', color: '#7c3aed' },
-          { icon: GraduationCap, label: 'ACT Practice Exam', href: '/dashboard/act-exam', color: '#0891b2' },
-        ].map(({ icon: Icon, label, href, color }) => {
+
+        {examItems.map(({ icon: Icon, label, href, color }) => {
           const active = pathname.startsWith(href);
           return (
             <Link
@@ -96,7 +230,7 @@ export function DashboardSidebar({ role }: DashboardSidebarProps) {
                 'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors',
                 active
                   ? 'bg-[var(--sidebar-item-active)] text-[var(--sidebar-item-active-text)]'
-                  : 'text-[var(--color-muted-foreground)] hover:bg-[var(--sidebar-item-hover)] hover:text-[var(--color-foreground)]'
+                  : 'text-[var(--color-muted-foreground)] hover:bg-[var(--sidebar-item-hover)] hover:text-[var(--color-foreground)]',
               )}
             >
               <Icon className="h-4 w-4 shrink-0" style={{ color: active ? undefined : color }} />
@@ -105,14 +239,14 @@ export function DashboardSidebar({ role }: DashboardSidebarProps) {
           );
         })}
 
-        <div className="text-xs font-semibold mt-6 mb-3 px-3 pt-2 border-t" style={{ color: 'var(--color-muted-foreground)', borderColor: 'var(--sidebar-border)' }}>
+        <div
+          className="text-xs font-semibold mt-6 mb-3 px-3 pt-2 border-t"
+          style={{ color: 'var(--color-muted-foreground)', borderColor: 'var(--sidebar-border)' }}
+        >
           QUICK ACCESS
         </div>
-        {[
-          { icon: BookOpen, label: 'SAT Prep', href: '/sat-prep' },
-          { icon: FlaskConical, label: 'AP Exams', href: '/ap-prep' },
-          { icon: Code2, label: 'Coding', href: '/coding' },
-        ].map(({ icon: Icon, label, href }) => (
+
+        {quickItems.map(({ icon: Icon, label, href }) => (
           <Link
             key={href}
             href={href}
@@ -141,7 +275,10 @@ export function DashboardSidebar({ role }: DashboardSidebarProps) {
           <Link
             href="/admin"
             className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors"
-            style={{ color: 'var(--color-danger)', background: 'color-mix(in srgb, var(--color-danger) 10%, transparent)' }}
+            style={{
+              color: 'var(--color-danger)',
+              background: 'color-mix(in srgb, var(--color-danger) 10%, transparent)',
+            }}
           >
             <Shield className="h-4 w-4 shrink-0" />
             Admin Panel
