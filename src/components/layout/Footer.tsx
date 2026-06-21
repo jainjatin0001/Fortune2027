@@ -1,4 +1,8 @@
+'use client';
+
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useUser } from '@clerk/nextjs';
 import { Mail, Phone } from 'lucide-react';
 import { APP_NAME, FOOTER_LINKS } from '@/constants';
 
@@ -21,6 +25,14 @@ const footerSections = [
 ] as const;
 
 export function Footer() {
+  const { isSignedIn } = useUser();
+  const router = useRouter();
+
+  function handlePracticeTestClick(e: React.MouseEvent) {
+    e.preventDefault();
+    router.push(isSignedIn ? '/dashboard' : '/sign-up');
+  }
+
   return (
     <footer
       className="border-t"
@@ -74,13 +86,23 @@ export function Footer() {
               <ul className="space-y-3">
                 {links.map((link) => (
                   <li key={link.label}>
-                    <Link
-                      href={link.href}
-                      className="text-sm transition-colors hover:text-[var(--color-primary)]"
-                      style={{ color: 'var(--color-muted-foreground)' }}
-                    >
-                      {link.label}
-                    </Link>
+                    {title === 'Test Prep' && link.label === 'Practice Tests' ? (
+                      <button
+                        onClick={handlePracticeTestClick}
+                        className="text-sm transition-colors hover:text-[var(--color-primary)] cursor-pointer"
+                        style={{ color: 'var(--color-muted-foreground)' }}
+                      >
+                        {link.label}
+                      </button>
+                    ) : (
+                      <Link
+                        href={link.href}
+                        className="text-sm transition-colors hover:text-[var(--color-primary)]"
+                        style={{ color: 'var(--color-muted-foreground)' }}
+                      >
+                        {link.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>

@@ -38,10 +38,10 @@ export const FOOTER_LINKS = {
     { label: 'Practice Tests', href: '/practice' },
   ],
   coding: [
-    { label: 'Python', href: '/coding/python' },
-    { label: 'Machine Learning', href: '/coding/machine-learning' },
-    { label: 'Data Science', href: '/coding/data-science' },
-    { label: 'Web Development', href: '/coding/web-development' },
+    { label: 'Python', href: '/coding' },
+    { label: 'Machine Learning', href: '/coding' },
+    { label: 'Data Science', href: '/coding' },
+    { label: 'Web Development', href: '/coding' },
   ],
   support: [
     { label: 'Help Center', href: '/help' },

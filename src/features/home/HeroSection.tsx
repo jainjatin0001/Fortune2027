@@ -55,8 +55,8 @@ export function HeroSection() {
                 <Button
                   variant="outline"
                   size="lg"
-                  className="h-12 font-semibold text-base px-8"
-                  style={{ borderColor: 'rgba(255,255,255,0.3)', color: 'white' }}
+                  className="h-12 font-semibold text-base px-8 bg-transparent text-white hover:bg-white/10"
+                  style={{ borderColor: 'rgba(255,255,255,0.3)' }}
                 >
                   <Play className="h-4 w-4 mr-2" />
                   Explore Courses

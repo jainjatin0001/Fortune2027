@@ -94,7 +94,7 @@ export default async function SATPage() {
                 </Button>
               </Link>
               <Link href="/dashboard/sat-exam">
-                <Button variant="outline" size="lg" className="text-white" style={{ borderColor: 'rgba(255,255,255,0.3)' }}>
+                <Button variant="outline" size="lg" className="bg-transparent text-white hover:bg-white/10" style={{ borderColor: 'rgba(255,255,255,0.3)' }}>
                   Take Practice Exam
                 </Button>
               </Link>

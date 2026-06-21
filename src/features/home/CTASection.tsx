@@ -50,7 +50,7 @@ export function CTASection() {
                 <Button
                   variant="outline"
                   size="lg"
-                  className="h-12 px-8 text-base font-semibold text-white"
+                  className="h-12 px-8 text-base font-semibold bg-transparent text-white hover:bg-white/10"
                   style={{ borderColor: 'rgba(255,255,255,0.3)' }}
                 >
                   View Pricing
