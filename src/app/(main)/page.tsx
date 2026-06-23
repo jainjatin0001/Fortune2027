@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
 import { HeroSection } from '@/features/home/HeroSection';
 import { TrustSection } from '@/features/home/TrustSection';
+import { FeaturesSection } from '@/features/home/FeaturesSection';
 import { CourseCategoriesSection } from '@/features/home/CourseCategoriesSection';
 import { FeaturedCoursesSection } from '@/features/home/FeaturedCoursesSection';
+import { PracticeTestBanner } from '@/features/home/PracticeTestBanner';
 import { TestimonialsSection } from '@/features/home/TestimonialsSection';
-import { StatsSection } from '@/features/home/StatsSection';
-import { FAQSection } from '@/features/home/FAQSection';
+import { HomePricingSection } from '@/features/home/HomePricingSection';
 import { CTASection } from '@/features/home/CTASection';
 import { APP_NAME, APP_DESCRIPTION } from '@/constants';
 
@@ -19,12 +20,13 @@ export default function HomePage() {
     <>
       <HeroSection />
       <TrustSection />
+      <FeaturesSection />
       <CourseCategoriesSection />
-      <FeaturedCoursesSection />
-      <StatsSection />
+      {/* <FeaturedCoursesSection /> */}
+      <PracticeTestBanner />
       <TestimonialsSection />
-      <FAQSection />
-      <CTASection />
+      <HomePricingSection />
+      {/* <CTASection /> */}
     </>
   );
 }

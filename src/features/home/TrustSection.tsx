@@ -1,27 +1,31 @@
-import { Shield, CheckCircle, Star, Clock } from 'lucide-react';
+const exams = ['SAT®', 'ACT®', 'AP®', 'IB', 'PSAT', 'CLEP'];
 
-const trustPoints = [
-  { icon: Shield, title: 'College Board Aligned', desc: 'Content mirrors actual SAT & AP curriculum.' },
-  { icon: CheckCircle, title: 'ACT Official Standards', desc: 'Comprehensive coverage of all ACT test areas.' },
-  { icon: Star, title: '18,000+ Five-Star Reviews', desc: 'Consistently top-rated by students & parents.' },
-  { icon: Clock, title: 'Study at Your Own Pace', desc: 'Access content any time, on any device.' },
+const stats = [
+  { value: '250,000+', label: 'Students Enrolled' },
+  { value: '98%', label: 'Score Improvement' },
+  { value: '1,400+', label: 'Practice Questions' },
+  { value: '500+', label: 'Practice Tests' },
+  { value: '4.9/5', label: 'Average Rating' },
 ];
 
 export function TrustSection() {
   return (
     <section className="section-padding-sm" style={{ background: 'var(--color-background-alt)' }}>
       <div className="container-app">
-        {/* Partners strip */}
-        <div className="text-center mb-10">
-          <p className="text-label mb-6" style={{ color: 'var(--color-muted-foreground)' }}>
+        {/* Exam logos strip */}
+        <div className="text-center mb-8">
+          <p
+            className="text-xs font-semibold uppercase tracking-widest mb-6"
+            style={{ color: 'var(--color-muted-foreground)' }}
+          >
             Trusted by Students Preparing For
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-8 opacity-60">
-            {['SAT®', 'ACT®', 'AP®', 'IB', 'PSAT', 'CLEP'].map((exam) => (
+          <div className="flex flex-wrap items-center justify-center gap-8">
+            {exams.map((exam) => (
               <span
                 key={exam}
                 className="text-lg font-black tracking-wider"
-                style={{ color: 'var(--color-foreground)' }}
+                style={{ color: 'var(--color-foreground)', opacity: 0.55 }}
               >
                 {exam}
               </span>
@@ -29,19 +33,21 @@ export function TrustSection() {
           </div>
         </div>
 
-        {/* Trust points */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
-          {trustPoints.map(({ icon: Icon, title, desc }) => (
-            <div key={title} className="flex gap-4 items-start">
+        {/* Stats row */}
+        <div
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 pt-8"
+          style={{ borderTop: '1px solid var(--color-border)' }}
+        >
+          {stats.map(({ value, label }) => (
+            <div key={label} className="text-center">
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary)' }}
+                className="text-2xl font-black mb-0.5"
+                style={{ color: 'var(--color-foreground)' }}
               >
-                <Icon className="h-5 w-5" />
+                {value}
               </div>
-              <div>
-                <div className="font-semibold text-sm mb-1" style={{ color: 'var(--color-foreground)' }}>{title}</div>
-                <div className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>{desc}</div>
+              <div className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>
+                {label}
               </div>
             </div>
           ))}

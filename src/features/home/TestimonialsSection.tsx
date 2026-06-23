@@ -1,58 +1,101 @@
-import { Star, Quote } from 'lucide-react';
+import { Star } from 'lucide-react';
 import { SectionHeader } from '@/components/shared/SectionHeader';
-import { TESTIMONIALS } from '@/constants';
+
+const testimonials = [
+  {
+    id: '1',
+    name: 'Sarah J.',
+    role: 'High School Junior',
+    flag: '🇺🇸',
+    avatarColor: '#7c3aed',
+    content:
+      '"EduReach helped me improve my SAT score by 220 points. The practice tests were exactly like the real thing — all in one place."',
+    rating: 5,
+  },
+  {
+    id: '2',
+    name: 'David M.',
+    role: 'High School Senior',
+    flag: '🇨🇦',
+    avatarColor: '#2563eb',
+    content:
+      '"The detailed explanations and score analytics helped me focus on my weak areas and hit my target score."',
+    rating: 5,
+  },
+  {
+    id: '3',
+    name: 'Jennifer L.',
+    role: 'Parent',
+    flag: '🇺🇸',
+    avatarColor: '#059669',
+    content:
+      '"Excellent platform! The live test interface made my daughter feel fully prepared and confident on exam day."',
+    rating: 5,
+  },
+];
 
 export function TestimonialsSection() {
   return (
     <section className="section-padding" style={{ background: 'var(--color-background)' }}>
       <div className="container-app">
         <SectionHeader
-          eyebrow="Student Stories"
-          title="Real Results, Real Students"
+          eyebrow="What Students & Parents Say"
+          title="Real Stories from Real Achievers"
           subtitle="Join hundreds of thousands of students who improved their scores and launched their careers with EduReach."
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {TESTIMONIALS.map((t) => (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {testimonials.map((t) => (
             <div key={t.id} className="card-base p-6 flex flex-col">
-              {/* Quote icon */}
-              <Quote className="h-6 w-6 mb-4 opacity-30" style={{ color: 'var(--color-primary)' }} />
-
               {/* Stars */}
               <div className="flex gap-0.5 mb-4">
-                {Array.from({ length: t.rating }, (_, i) => (
+                {Array.from({ length: t.rating }).map((_, i) => (
                   <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                 ))}
               </div>
 
-              <p className="text-sm leading-relaxed flex-1 mb-4" style={{ color: 'var(--color-muted-foreground)' }}>
-                "{t.content}"
+              {/* Quote */}
+              <p
+                className="text-sm leading-relaxed flex-1 mb-6 italic"
+                style={{ color: 'var(--color-muted-foreground)' }}
+              >
+                {t.content}
               </p>
 
-              {/* Score badge */}
-              <div
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold mb-4"
-                style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary)' }}
-              >
-                <span>{t.score}</span>
-                <span>·</span>
-                <span className="text-green-600">{t.improvement}</span>
-              </div>
-
               {/* Author */}
-              <div className="flex items-center gap-3 pt-4 border-t" style={{ borderColor: 'var(--color-border)' }}>
+              <div className="flex items-center gap-3">
                 <div
-                  className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0"
-                  style={{ background: 'var(--gradient-primary)' }}
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0"
+                  style={{ background: t.avatarColor }}
                 >
                   {t.name.charAt(0)}
                 </div>
                 <div>
-                  <div className="text-sm font-semibold" style={{ color: 'var(--color-foreground)' }}>{t.name}</div>
-                  <div className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>{t.school}</div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-semibold" style={{ color: 'var(--color-foreground)' }}>
+                      {t.name}
+                    </span>
+                    <span>{t.flag}</span>
+                  </div>
+                  <div className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>
+                    {t.role}
+                  </div>
                 </div>
               </div>
             </div>
+          ))}
+        </div>
+
+        {/* Dot indicators */}
+        <div className="flex justify-center gap-2 mt-8">
+          {testimonials.map((t, i) => (
+            <div
+              key={t.id}
+              className="w-2 h-2 rounded-full"
+              style={{
+                background: i === 1 ? 'var(--color-accent)' : 'var(--color-border)',
+              }}
+            />
           ))}
         </div>
       </div>
