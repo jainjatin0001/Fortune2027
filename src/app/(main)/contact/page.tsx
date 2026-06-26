@@ -4,7 +4,7 @@ import { ContactForm } from './ContactForm';
 
 export const metadata: Metadata = {
   title: 'Contact Us',
-  description: "Get in touch with the EduReach team. We're here to help students, parents, and educators.",
+  description: "Get in touch with the Delta Tutors team. We're here to help students, parents, and educators.",
 };
 
 const contactInfo = [

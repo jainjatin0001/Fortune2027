@@ -45,16 +45,22 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-10">
           {/* Brand */}
           <div className="lg:col-span-2">
-            <Link href="/" className="flex items-center gap-2 mb-4">
-              <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold"
-                style={{ background: 'var(--gradient-primary)' }}
-              >
-                E
+            <Link href="/" className="flex items-center gap-3 mb-4">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/images/logos/logo_5.png" alt="Delta Tutors" className="h-12 w-auto object-contain" />
+              <div className="flex flex-col items-start gap-[3px]">
+                <span className="text-xl font-bold leading-none" style={{ color: '#17356D' }}>
+                  Delta Tutors
+                </span>
+                <div className="flex items-center w-full gap-1.5">
+                  <div className="h-px flex-1" style={{ background: '#C7A14B' }} />
+                  <span style={{ color: '#C7A14B', fontSize: '8px', lineHeight: 1 }}>✦</span>
+                  <div className="h-px flex-1" style={{ background: '#C7A14B' }} />
+                </div>
+                <span className="text-[11px] font-medium tracking-wider italic" style={{ color: '#C7A14B' }}>
+                  Pursuit of Excellence
+                </span>
               </div>
-              <span className="text-xl font-bold" style={{ color: 'var(--color-foreground)' }}>
-                {APP_NAME}
-              </span>
             </Link>
             <p className="text-sm leading-relaxed mb-6 max-w-xs" style={{ color: 'var(--color-muted-foreground)' }}>
               Premium academic preparation for students in the United States and Canada. SAT, ACT, AP, Coding & High School — all in one place.

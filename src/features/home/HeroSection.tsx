@@ -109,13 +109,9 @@ export function HeroSection() {
                 className="px-4 py-2.5 flex items-center gap-3"
                 style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}
               >
-                <div
-                  className="w-7 h-7 rounded-lg flex items-center justify-center text-white font-black text-xs shrink-0"
-                  style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #2563eb 100%)' }}
-                >
-                  E
-                </div>
-                <span className="text-sm font-bold" style={{ color: '#0f172a' }}>EduReach</span>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/images/logos/logo_5.png" alt="Delta Tutors" className="w-7 h-7 object-contain shrink-0" />
+                <span className="text-sm font-bold" style={{ color: '#17356D' }}>Delta Tutors</span>
                 <div
                   className="flex-1 mx-3 h-7 rounded-lg flex items-center px-3 text-xs"
                   style={{ background: '#e2e8f0', color: '#94a3b8' }}

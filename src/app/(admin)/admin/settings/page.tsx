@@ -26,7 +26,7 @@ export default function AdminSettingsPage() {
       title: 'Platform Settings',
       color: '#7c3aed',
       fields: [
-        { label: 'Platform Name', placeholder: 'EduReach', name: 'platformName' },
+        { label: 'Platform Name', placeholder: 'Delta Tutors', name: 'platformName' },
         { label: 'Support Email', placeholder: 'support@edureach.com', name: 'supportEmail' },
         { label: 'Domain', placeholder: 'https://edureach.com', name: 'domain' },
       ],

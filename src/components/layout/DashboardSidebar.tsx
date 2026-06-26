@@ -61,12 +61,8 @@ export function DashboardSidebar({ role }: DashboardSidebarProps) {
           style={{ borderColor: 'var(--sidebar-border)' }}
         >
           <Link href="/">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm"
-              style={{ background: 'var(--gradient-primary)' }}
-            >
-              E
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/images/logos/logo_5.png" alt="Delta Tutors" className="w-8 h-8 object-contain" />
           </Link>
         </div>
 
@@ -172,16 +168,22 @@ export function DashboardSidebar({ role }: DashboardSidebarProps) {
     >
       {/* Logo */}
       <div className="p-5 border-b" style={{ borderColor: 'var(--sidebar-border)' }}>
-        <Link href="/" className="flex items-center gap-2">
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm"
-            style={{ background: 'var(--gradient-primary)' }}
-          >
-            E
+        <Link href="/" className="flex items-center gap-2.5">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/logos/logo_5.png" alt="Delta Tutors" className="w-9 h-9 object-contain shrink-0" />
+          <div className="flex flex-col items-start gap-[2px]">
+            <span className="text-[15px] font-bold leading-none" style={{ color: '#17356D' }}>
+              {APP_NAME}
+            </span>
+            <div className="flex items-center w-full gap-1">
+              <div className="h-px flex-1" style={{ background: '#C7A14B' }} />
+              <span style={{ color: '#C7A14B', fontSize: '7px', lineHeight: 1 }}>✦</span>
+              <div className="h-px flex-1" style={{ background: '#C7A14B' }} />
+            </div>
+            <span className="text-[9px] font-medium tracking-widest" style={{ color: '#C7A14B' }}>
+              Pursuit of Excellence
+            </span>
           </div>
-          <span className="text-base font-bold" style={{ color: 'var(--color-foreground)' }}>
-            {APP_NAME}
-          </span>
         </Link>
       </div>
 

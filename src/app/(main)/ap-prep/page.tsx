@@ -17,8 +17,8 @@ const AP_AMBER_DARK = '#b45309';
 const AP_AMBER_LIGHT = '#fef3c7';
 
 export const metadata: Metadata = {
-  title: 'AP Exam Preparation | EduReach',
-  description: 'Comprehensive AP preparation for 20+ subjects. 98% pass rate among EduReach students.',
+  title: 'AP Exam Preparation | Delta Tutors',
+  description: 'Comprehensive AP preparation for 20+ subjects. 98% pass rate among Delta Tutors students.',
 };
 
 const whyReasons = [
@@ -47,7 +47,7 @@ const scoreReportSubjects = [
 
 const testimonials = [
   {
-    quote: 'EduReach helped me score a 5 in AP Calculus AB. The practice tests were incredibly close to the real exam!',
+    quote: 'Delta Tutors helped me score a 5 in AP Calculus AB. The practice tests were incredibly close to the real exam!',
     name: 'Sarah J.',    role: 'High School Student', flag: '🇺🇸', avatar: 'SJ',
   },
   {

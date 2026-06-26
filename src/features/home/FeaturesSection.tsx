@@ -73,7 +73,7 @@ export function FeaturesSection() {
     <section className="section-padding" style={{ background: '#f8fafc' }}>
       <div className="container-app">
         <SectionHeader
-          eyebrow="Why EduReach?"
+          eyebrow="Why Delta Tutors?"
           title="Everything You Need to Succeed"
           subtitle="Powerful tools, expert guidance, and personalized support — all in one platform."
         />

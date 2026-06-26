@@ -1,4 +1,4 @@
-export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? 'EduReach';
+export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? 'Delta Tutors';
 export const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 export const APP_DESCRIPTION =
   'Premium SAT, ACT, AP, and Coding prep platform for students in the United States and Canada.';
@@ -66,7 +66,7 @@ export const TESTIMONIALS = [
     school: 'Westfield High School, NJ',
     avatarUrl: '/images/instructors/avatar-1.jpg',
     content:
-      'I improved my SAT score by 240 points after 3 months on EduReach. The adaptive practice system knew exactly where I was weak and focused my prep there.',
+      'I improved my SAT score by 240 points after 3 months on Delta Tutors. The adaptive practice system knew exactly where I was weak and focused my prep there.',
     score: '1580',
     improvement: '+240',
     rating: 5,
@@ -102,7 +102,7 @@ export const TESTIMONIALS = [
     school: 'Lincoln Prep, TX',
     avatarUrl: '/images/instructors/avatar-4.jpg',
     content:
-      "My ACT composite jumped from 28 to 34. EduReach's mock tests were nearly identical to the real thing — I felt completely prepared on test day.",
+      "My ACT composite jumped from 28 to 34. Delta Tutors' mock tests were nearly identical to the real thing — I felt completely prepared on test day.",
     score: '34 Composite',
     improvement: '+6 points',
     rating: 5,

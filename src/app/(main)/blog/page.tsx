@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 
 export const metadata: Metadata = {
   title: 'Blog',
-  description: 'SAT strategies, ACT tips, AP study guides, coding tutorials, and college admissions advice from the EduReach team.',
+  description: 'SAT strategies, ACT tips, AP study guides, coding tutorials, and college admissions advice from the Delta Tutors team.',
 };
 
 function readTimeMin(content: string) {
@@ -105,7 +105,7 @@ export default async function BlogPage({
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-5"
             style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary)' }}>
             <BookOpen className="w-3.5 h-3.5" />
-            EduReach Blog
+            <strong style={{ color: '#17356D' }}>Delta Tutors</strong> Blog
           </div>
           <h1 className="text-heading-1 mb-3" style={{ color: 'var(--color-foreground)' }}>
             Insights. Strategies. Success.

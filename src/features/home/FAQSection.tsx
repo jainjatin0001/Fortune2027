@@ -3,7 +3,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 
 const faqs = [
   {
-    q: 'Is EduReach free to use?',
+    q: 'Is Delta Tutors free to use?',
     a: 'We offer a free plan that includes 3 practice tests per month and access to selected free courses. Our Plus and Pro plans unlock unlimited tests, all courses, and premium features starting at $19.99/month.',
   },
   {
@@ -23,12 +23,12 @@ const faqs = [
     a: 'Coding courses include video lessons, interactive coding exercises, real projects, and automated code feedback. You can run code directly in the browser — no software installation needed.',
   },
   {
-    q: 'Are EduReach courses aligned with College Board and ACT standards?',
+    q: 'Are Delta Tutors courses aligned with College Board and ACT standards?',
     a: 'All SAT and AP content is developed based on College Board\'s official curriculum and question formats. ACT content mirrors the official ACT test specifications. We update content every semester.',
   },
   {
-    q: 'Can I access EduReach on my phone or tablet?',
-    a: 'Yes. EduReach is fully responsive and works on all devices. Our mobile experience is optimized for on-the-go studying, including offline access on Pro plans.',
+    q: 'Can I access Delta Tutors on my phone or tablet?',
+    a: 'Yes. Delta Tutors is fully responsive and works on all devices. Our mobile experience is optimized for on-the-go studying, including offline access on Pro plans.',
   },
 ];
 
@@ -39,7 +39,7 @@ export function FAQSection() {
         <SectionHeader
           eyebrow="FAQ"
           title="Common Questions"
-          subtitle="Everything you need to know about EduReach."
+          subtitle="Everything you need to know about Delta Tutors."
         />
 
         <Accordion type="single" collapsible className="space-y-3">

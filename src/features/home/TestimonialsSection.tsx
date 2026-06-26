@@ -9,7 +9,7 @@ const testimonials = [
     flag: '🇺🇸',
     avatarColor: '#7c3aed',
     content:
-      '"EduReach helped me improve my SAT score by 220 points. The practice tests were exactly like the real thing — all in one place."',
+      '"Delta Tutors helped me improve my SAT score by 220 points. The practice tests were exactly like the real thing — all in one place."',
     rating: 5,
   },
   {
@@ -41,7 +41,7 @@ export function TestimonialsSection() {
         <SectionHeader
           eyebrow="What Students & Parents Say"
           title="Real Stories from Real Achievers"
-          subtitle="Join hundreds of thousands of students who improved their scores and launched their careers with EduReach."
+          subtitle="Join hundreds of thousands of students who improved their scores and launched their careers with Delta Tutors."
         />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

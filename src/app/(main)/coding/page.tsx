@@ -74,7 +74,7 @@ const stepColors = [
 
 const testimonials = [
   {
-    quote: 'EduReach helped me build my first ML project which really impressed the colleges I applied to!',
+    quote: 'Delta Tutors helped me build my first ML project which really impressed the colleges I applied to!',
     name: 'Jason L.',
     school: 'University of Toronto',
     flag: '🇨🇦',
@@ -237,7 +237,7 @@ export default async function CodingPage() {
           <SectionHeader
             eyebrow="Why Learn Coding?"
             title="Skills that open doors"
-            subtitle="Coding is the most in-demand skill of the 21st century. Here's why students choose EduReach."
+            subtitle="Coding is the most in-demand skill of the 21st century. Here's why students choose Delta Tutors."
           />
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {benefits.map(({ icon: Icon, title, desc, color, light }) => (

@@ -14,7 +14,7 @@ const satGradient = 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)';
 const SAT_COLOR = '#7c3aed';
 
 export const metadata: Metadata = {
-  title: 'SAT Preparation — EduReach',
+  title: 'SAT Preparation — Delta Tutors',
   description:
     'Comprehensive SAT preparation with 1,400+ practice questions, 10 full-length mock tests, and a personalized study plan that helps you score higher.',
 };
@@ -85,7 +85,7 @@ const testimonials = [
     role: 'High School Junior',
     flag: '🇺🇸',
     quote:
-      'EduReach helped me improve my SAT score by 220 points. The practice tests were exactly like the real thing!',
+      'Delta Tutors helped me improve my SAT score by 220 points. The practice tests were exactly like the real thing!',
   },
   {
     name: 'David M.',

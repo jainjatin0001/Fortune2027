@@ -183,7 +183,7 @@ export async function generateMetadata({
   const course = await getCourse(slug);
   if (!course) return { title: 'Course Not Found' };
   return {
-    title: `${course.title} | EduReach`,
+    title: `${course.title} | Delta Tutors`,
     description: course.shortDesc ?? course.description?.slice(0, 160),
   };
 }

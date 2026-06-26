@@ -6,7 +6,7 @@ import { SectionHeader } from '@/components/shared/SectionHeader';
 
 export const metadata: Metadata = {
   title: 'About Us',
-  description: 'Learn about EduReach\'s mission to make premium test prep and coding education accessible to all US and Canadian students.',
+  description: 'Learn about Delta Tutors\'s mission to make premium test prep and coding education accessible to all US and Canadian students.',
 };
 
 const values = [
@@ -45,11 +45,11 @@ export default function AboutPage() {
       {/* Story */}
       <section className="section-padding">
         <div className="container-narrow">
-          <SectionHeader eyebrow="Our Story" title="Why We Built EduReach" align="left" />
+          <SectionHeader eyebrow="Our Story" title="Why We Built Delta Tutors" align="left" />
           <div className="space-y-4 text-body" style={{ color: 'var(--color-muted-foreground)' }}>
-            <p>EduReach was founded in 2022 by two former students who experienced firsthand the gap between high-quality SAT tutoring available to wealthy families and the mediocre free resources available to everyone else.</p>
+            <p><strong style={{ color: '#17356D' }}>Delta Tutors</strong> was founded in 2026 by two former students who experienced firsthand the gap between high-quality SAT tutoring available to wealthy families and the mediocre free resources available to everyone else.</p>
             <p>After achieving top scores through intensive self-study using fragmented, low-quality materials, they set out to build what they wished had existed: a single, beautifully designed platform that combines the depth of expensive private tutoring with the accessibility of a free product.</p>
-            <p>Today, EduReach serves over 250,000 students across the US and Canada, with an average SAT score improvement of 220 points and a 98% AP pass rate among active users.</p>
+            <p>Today, <strong style={{ color: '#17356D' }}>Delta Tutors</strong> serves over 250,000 students across the US and Canada, with an average SAT score improvement of 220 points and a 98% AP pass rate among active users.</p>
           </div>
         </div>
       </section>

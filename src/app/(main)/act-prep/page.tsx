@@ -14,7 +14,7 @@ import { formatPrice, getCategoryBadgeClass, getCategoryLabel } from '@/lib/util
 const actGradient = 'linear-gradient(135deg, #0891b2 0%, #0284c7 100%)';
 
 export const metadata: Metadata = {
-  title: 'ACT Preparation — EduReach',
+  title: 'ACT Preparation — Delta Tutors',
   description:
     'Comprehensive ACT prep for all four sections — English, Math, Reading, and Science. Improve your score and open doors to top universities.',
 };
@@ -129,7 +129,7 @@ const testimonials = [
     role: 'High School Junior',
     flag: '🇺🇸',
     quote:
-      'EduReach helped me improve my ACT score by 6 points. The practice tests are just like the real thing!',
+      'Delta Tutors helped me improve my ACT score by 6 points. The practice tests are just like the real thing!',
   },
   {
     name: 'David M.',

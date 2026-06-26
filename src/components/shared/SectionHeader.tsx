@@ -21,8 +21,8 @@ export function SectionHeader({
     <div className={cn('mb-12', align === 'center' && 'text-center', className)}>
       {eyebrow && (
         <span
-          className="text-label inline-block mb-3"
-          style={{ color: 'var(--color-accent)' }}
+          className="font-bold inline-block mb-3 text-sm"
+          style={{ color: '#17356D', textTransform: 'none', letterSpacing: 'normal' }}
         >
           {eyebrow}
         </span>

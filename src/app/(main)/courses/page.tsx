@@ -7,7 +7,7 @@ import type { CourseCategory } from '@/types';
 
 export const metadata: Metadata = {
   title: 'All Courses',
-  description: 'Browse all SAT, ACT, AP, High School, and Coding courses on EduReach.',
+  description: 'Browse all SAT, ACT, AP, High School, and Coding courses on Delta Tutors.',
 };
 
 // Static courses (commented out — replaced by DB query below)

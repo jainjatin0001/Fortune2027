@@ -64,8 +64,8 @@ export function PracticeTestBanner() {
                     {/* Header row */}
                     <div className="flex items-center justify-between mb-1.5">
                       <div className="flex items-center gap-1.5">
-                        <div className="w-4 h-4 rounded flex items-center justify-center text-white text-[8px] font-black"
-                          style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}>E</div>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="/images/logos/logo_5.png" alt="Delta Tutors" className="w-4 h-4 object-contain rounded" />
                         <span className="text-[9px] font-bold" style={{ color: '#0f172a' }}>SAT Practice Test — Section 2</span>
                       </div>
                       <div className="text-[8px] font-semibold px-1.5 py-0.5 rounded" style={{ background: '#fef3c7', color: '#d97706' }}>

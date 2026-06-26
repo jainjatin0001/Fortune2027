@@ -8,7 +8,6 @@ import { Menu, X, ChevronDown, BookOpen, GraduationCap, Code2, FlaskConical, Moo
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { APP_NAME, NAV_LINKS } from '@/constants';
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -48,19 +47,28 @@ export function Navbar() {
     >
       <div className="container-app h-full flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 shrink-0">
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm"
-            style={{ background: 'var(--gradient-primary)' }}
-          >
-            E
+        <Link href="/" className="flex items-center gap-2.5 shrink-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/logos/logo_5.png" alt="Delta Tutors" className="h-10 w-auto object-contain" />
+          <div className="hidden sm:flex flex-col items-start justify-center gap-[2px]">
+            <span
+              className="text-[15px] font-bold leading-none"
+              style={{ color: '#17356D' }}
+            >
+              Delta Tutors
+            </span>
+            <div className="flex items-center w-full gap-1">
+              <div className="h-px flex-1" style={{ background: '#C7A14B' }} />
+              <span style={{ color: '#C7A14B', fontSize: '7px', lineHeight: 1 }}>✦</span>
+              <div className="h-px flex-1" style={{ background: '#C7A14B' }} />
+            </div>
+            <span
+              className="text-[9px] font-medium tracking-widest"
+              style={{ color: '#C7A14B' }}
+            >
+              Pursuit of Excellence
+            </span>
           </div>
-          <span
-            className="text-xl font-bold hidden sm:block"
-            style={{ fontFamily: 'var(--font-primary)', color: 'var(--nav-text)' }}
-          >
-            {APP_NAME}
-          </span>
         </Link>
 
         {/* Desktop Nav */}
