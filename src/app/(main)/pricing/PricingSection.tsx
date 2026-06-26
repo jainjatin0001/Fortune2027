@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Zap, Square, CheckSquare, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Zap, Square, CheckSquare, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PRICING_PLANS, HOURLY_RATE } from '@/constants';
 
@@ -287,9 +288,33 @@ const SELLING_POINTS = [
 ];
 
 export default function PricingSection() {
+  const router = useRouter();
   const [modalOpen, setModalOpen] = useState(false);
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
   const [activeCol, setActiveCol] = useState<'foundation' | 'scholar' | 'elite' | null>(null);
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+
+  async function handleCheckout(planId: string) {
+    setLoadingPlan(planId);
+    try {
+      const res = await fetch('/api/checkout/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planId }),
+      });
+
+      if (res.status === 401) {
+        router.push('/sign-in');
+        return;
+      }
+
+      const data = await res.json();
+      if (!res.ok || !data.url) throw new Error(data.error ?? 'Failed to create checkout session');
+      window.location.href = data.url;
+    } catch {
+      setLoadingPlan(null);
+    }
+  }
 
   return (
     <>
@@ -365,8 +390,14 @@ export default function PricingSection() {
               className="w-full font-semibold"
               variant={plan.isPopular ? 'default' : 'outline'}
               style={plan.isPopular ? { background: 'var(--gradient-primary)', color: '#fff' } : {}}
+              disabled={loadingPlan !== null}
+              onClick={() => handleCheckout(plan.id)}
             >
-              {`Pay now $${plan.price}`}
+              {loadingPlan === plan.id ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                `Pay now $${plan.price}`
+              )}
             </Button>
           </div>
         ))}

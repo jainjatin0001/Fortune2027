@@ -26,6 +26,7 @@ import {
 } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { CourseCurriculum } from './_components/CourseCurriculum';
+import { EnrollButton } from './EnrollButton';
 import type { CourseCategory } from '@/types';
 
 // ─── Meta parser ─────────────────────────────────────────────────────────────
@@ -771,12 +772,7 @@ export default async function CourseDetailPage({
 
                   {/* CTAs */}
                   <div className="space-y-3 mb-5">
-                    <Button
-                      className="w-full h-12 text-base font-bold text-white shadow-md hover:opacity-90 transition-opacity"
-                      style={{ background: 'var(--gradient-primary)' }}
-                    >
-                      {course.isFree ? 'Enroll for Free' : 'Enroll Now'}
-                    </Button>
+                    <EnrollButton courseId={course.id} isFree={course.isFree} />
                     <Button
                       variant="outline"
                       className="w-full h-11 font-medium"
