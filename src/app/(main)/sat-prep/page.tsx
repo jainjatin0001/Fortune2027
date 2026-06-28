@@ -165,7 +165,7 @@ export default async function SATPage() {
                 that helps you score higher.
               </p>
               <div className="flex flex-wrap gap-3 mb-8">
-                <Link href="/sign-up">
+                <Link href={isSignedIn ? '/dashboard/sat-exam' : '/sign-up?redirect_url=/dashboard/sat-exam'}>
                   <Button
                     size="lg"
                     className="font-bold text-white"
@@ -174,14 +174,14 @@ export default async function SATPage() {
                     Start SAT Prep Free <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
                 </Link>
-                <Link href="/dashboard/sat-exam">
+                <Link href="/courses">
                   <Button
                     size="lg"
                     variant="outline"
                     className="font-bold bg-transparent text-white hover:bg-white/10"
                     style={{ borderColor: 'rgba(255,255,255,0.3)' }}
                   >
-                    Take Practice Test
+                    Explore Courses
                   </Button>
                 </Link>
               </div>
@@ -531,7 +531,7 @@ export default async function SATPage() {
 
       {/* ── TRY FULL SAT PRACTICE BANNER ─────────────────────────── */}
       <section
-        className="py-14 overflow-hidden"
+        className="py-10 overflow-hidden"
         style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 55%, #4f46e5 120%)' }}
       >
         <div className="container-app">
@@ -614,7 +614,7 @@ export default async function SATPage() {
 
             {/* CTA */}
             <div className="flex-shrink-0">
-              <Link href={isSignedIn ? '/dashboard/sat-exam' : '/sign-up'}>
+              <Link href={isSignedIn ? '/dashboard/sat-exam' : '/sign-up?redirect_url=/dashboard/sat-exam'}>
                 <Button
                   size="lg"
                   className="font-semibold text-white whitespace-nowrap"

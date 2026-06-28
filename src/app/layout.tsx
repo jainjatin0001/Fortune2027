@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { ClerkProvider } from '@clerk/nextjs';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
+import NextTopLoader from 'nextjs-toploader';
 import { APP_NAME, APP_DESCRIPTION, APP_URL } from '@/constants';
 import './globals.css';
 
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <head />
         <body>
           <ThemeProvider>
+            <NextTopLoader color="#2563eb" height={3} showSpinner={false} />
             {children}
           </ThemeProvider>
         </body>

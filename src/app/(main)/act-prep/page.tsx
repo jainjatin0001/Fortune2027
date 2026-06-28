@@ -209,7 +209,7 @@ export default async function ACTPage() {
                 Improve your score and open doors to top universities.
               </p>
               <div className="flex flex-wrap gap-3 mb-8">
-                <Link href="/sign-up">
+                <Link href={isSignedIn ? '/dashboard/act-exam' : '/sign-up?redirect_url=/dashboard/act-exam'}>
                   <Button
                     size="lg"
                     className="font-bold"
@@ -218,14 +218,14 @@ export default async function ACTPage() {
                     Start ACT Prep Free <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
                 </Link>
-                <Link href="/dashboard/act-exam">
+                <Link href="/courses">
                   <Button
                     size="lg"
                     variant="outline"
                     className="font-bold bg-transparent text-white hover:bg-white/10"
                     style={{ borderColor: 'rgba(255,255,255,0.3)' }}
                   >
-                    Take Practice Exam
+                    Explore Courses
                   </Button>
                 </Link>
               </div>
@@ -606,7 +606,7 @@ export default async function ACTPage() {
 
             {/* CTA */}
             <div className="flex-shrink-0">
-              <Link href={isSignedIn ? '/dashboard/act-exam' : '/sign-up'}>
+              <Link href={isSignedIn ? '/dashboard/act-exam' : '/sign-up?redirect_url=/dashboard/act-exam'}>
                 <Button
                   size="lg"
                   className="font-semibold text-white whitespace-nowrap"

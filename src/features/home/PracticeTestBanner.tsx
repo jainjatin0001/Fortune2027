@@ -14,7 +14,7 @@ const badges = [
 
 export function PracticeTestBanner() {
   const { isSignedIn } = useAuth();
-  const ctaHref = isSignedIn ? '/dashboard' : '/sign-up';
+  const ctaHref = isSignedIn ? '/dashboard/sat-exam' : '/sign-up';
 
   return (
     <section

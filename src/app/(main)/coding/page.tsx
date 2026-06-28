@@ -117,7 +117,7 @@ async function getCodingCourses() {
 
 export default async function CodingPage() {
   const [user, codingCourses] = await Promise.all([currentUser(), getCodingCourses()]);
-  const practiceHref = user ? '/dashboard' : '/sign-up';
+  const practiceHref = user ? '/dashboard' : '/sign-up?redirect_url=/dashboard';
 
   return (
     <div style={{ background: 'var(--color-background)' }}>
@@ -145,7 +145,7 @@ export default async function CodingPage() {
                     Explore Courses <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
                 </Link>
-                <Link href={practiceHref}>
+                {/* <Link href={practiceHref}>
                   <Button
                     size="lg"
                     className="font-semibold text-white"
@@ -156,7 +156,7 @@ export default async function CodingPage() {
                   >
                     Try Coding Practice
                   </Button>
-                </Link>
+                </Link> */}
               </div>
               <div className="flex flex-wrap gap-5">
                 {['No Install Required', 'Beginner to Advanced', 'US & Canada Curriculum'].map((item) => (

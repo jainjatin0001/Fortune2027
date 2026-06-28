@@ -99,7 +99,7 @@ async function getAPCourses() {
 export default async function APPage() {
   const [user, apCourses] = await Promise.all([currentUser(), getAPCourses()]);
   const isSignedIn = !!user;
-  const practiceHref = isSignedIn ? '/dashboard' : '/sign-up';
+  const practiceHref = isSignedIn ? '/dashboard' : '/sign-up?redirect_url=/dashboard';
 
   return (
     <div style={{ background: 'var(--color-background)' }}>
