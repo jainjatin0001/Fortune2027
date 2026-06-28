@@ -162,6 +162,7 @@ async function getACTCourses() {
         difficulty: true,
         price: true,
         isFree: true,
+        thumbnailUrl: true,
         program: { select: { name: true, slug: true } },
         _count: { select: { enrollments: true } },
       },
@@ -633,10 +634,15 @@ export default async function ACTPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {actCourses.map((course) => (
               <Link key={course.id} href={`/courses/${course.slug}`} className="card-base overflow-hidden group block">
-                <div className="h-40 relative" style={{ background: actGradient }}>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <BookOpen className="h-12 w-12 text-white opacity-30" />
-                  </div>
+                <div className="h-40 relative" style={{ background: course.thumbnailUrl ? undefined : actGradient }}>
+                  {course.thumbnailUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={course.thumbnailUrl} alt={course.title} className="absolute inset-0 w-full h-full object-cover" />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <BookOpen className="h-12 w-12 text-white opacity-30" />
+                    </div>
+                  )}
                   {course.isFree && (
                     <span className="absolute top-3 left-3 px-2 py-1 rounded-md text-xs font-bold text-white bg-green-600">FREE</span>
                   )}

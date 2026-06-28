@@ -29,6 +29,7 @@ export default function ProgressPage() {
       <div>
         <h1 className="text-heading-2 mb-1" style={{ color: 'var(--color-foreground)' }}>My Progress</h1>
         <p className="text-body" style={{ color: 'var(--color-muted-foreground)' }}>Track your learning journey across all courses.</p>
+        <p className="text-xs mt-1" style={{ color: '#ef4444' }}><span className="font-bold">*</span> Progress metrics are tracked and updated only for active course enrollments.</p>
       </div>
 
       {/* Summary cards */}

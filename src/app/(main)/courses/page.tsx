@@ -56,6 +56,7 @@ async function getCoursesData(category?: string, q?: string) {
         difficulty: true,
         price: true,
         isFree: true,
+        thumbnailUrl: true,
         program: { select: { name: true, slug: true } },
         _count: { select: { enrollments: true } },
       },
@@ -296,13 +297,19 @@ export default async function CoursesPage({
                       {/* Card header */}
                       <div style={{
                         height: '7.5rem',
-                        background: gradients[course.category],
+                        background: course.thumbnailUrl ? undefined : gradients[course.category],
                         position: 'relative',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
+                        overflow: 'hidden',
                       }}>
-                        <Icon style={{ width: '2.75rem', height: '2.75rem', color: 'rgba(255,255,255,0.28)' }} />
+                        {course.thumbnailUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={course.thumbnailUrl} alt={course.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          <Icon style={{ width: '2.75rem', height: '2.75rem', color: 'rgba(255,255,255,0.28)' }} />
+                        )}
 
                         {course.isFree && (
                           <span style={{
