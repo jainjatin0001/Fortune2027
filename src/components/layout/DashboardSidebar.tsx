@@ -15,7 +15,7 @@ import { useSidebar } from './DashboardSidebarProvider';
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard',  href: '/dashboard' },
   { icon: BookOpen,        label: 'My Courses', href: '/dashboard/courses' },
-  { icon: Brain,           label: 'Practice',   href: '/dashboard/practice' },
+  // { icon: Brain,           label: 'Practice',   href: '/dashboard/practice' },
   { icon: Trophy,          label: 'Quizzes',    href: '/dashboard/quizzes',  requiresPurchase: true },
   { icon: Bookmark,        label: 'PYQs',       href: '/dashboard/pyqs',     requiresPurchase: true },
   { icon: BarChart2,       label: 'Progress',   href: '/dashboard/progress' },
@@ -25,6 +25,7 @@ const navItems = [
 const examItems = [
   { icon: GraduationCap, label: 'SAT Practice Exam', href: '/dashboard/sat-exam', color: '#7c3aed' },
   { icon: GraduationCap, label: 'ACT Practice Exam', href: '/dashboard/act-exam', color: '#0891b2' },
+  { icon: FlaskConical,  label: 'AP Exams',          href: '/dashboard/ap-exam',  color: '#b45309' },
 ];
 
 const quickItems = [

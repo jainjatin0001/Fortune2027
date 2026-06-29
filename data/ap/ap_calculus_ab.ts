@@ -1,0 +1,198 @@
+import type { DemoQuestion } from '@/types';
+
+export const AP_CALCULUS_AB: DemoQuestion[] = [
+  {
+    id: 'ap-calc-ab-01',
+    subject: 'AP Calculus AB',
+    topic: 'Limits',
+    category: 'AP_EXAM',
+    difficulty: 'MEDIUM',
+    question: 'What is lim(x→2) of (x² − 4)/(x − 2)?',
+    options: [
+      { id: 'a', content: '0' },
+      { id: 'b', content: '2' },
+      { id: 'c', content: '4' },
+      { id: 'd', content: 'Undefined' },
+    ],
+    correctAnswerId: 'c',
+    explanation:
+      'Factor: (x² − 4)/(x − 2) = (x + 2)(x − 2)/(x − 2) = x + 2 for x ≠ 2. As x → 2: limit = 2 + 2 = 4.',
+    points: 2,
+    tags: ['limits', 'factoring', 'ap-calc-ab'],
+  },
+  {
+    id: 'ap-calc-ab-02',
+    subject: 'AP Calculus AB',
+    topic: 'Derivatives — Power Rule',
+    category: 'AP_EXAM',
+    difficulty: 'EASY',
+    question: "Find f'(x) if f(x) = 4x³ − 3x² + 7x − 2.",
+    options: [
+      { id: 'a', content: "f'(x) = 12x² − 6x + 7" },
+      { id: 'b', content: "f'(x) = 4x² − 3x + 7" },
+      { id: 'c', content: "f'(x) = 12x² − 6x − 2" },
+      { id: 'd', content: "f'(x) = 12x³ − 6x² + 7" },
+    ],
+    correctAnswerId: 'a',
+    explanation:
+      "Power rule: d/dx[xⁿ] = nxⁿ⁻¹. So: d/dx[4x³] = 12x², d/dx[−3x²] = −6x, d/dx[7x] = 7, d/dx[−2] = 0. Therefore f'(x) = 12x² − 6x + 7.",
+    points: 1,
+    tags: ['derivatives', 'power-rule', 'ap-calc-ab'],
+  },
+  {
+    id: 'ap-calc-ab-03',
+    subject: 'AP Calculus AB',
+    topic: 'Derivatives — Chain Rule',
+    category: 'AP_EXAM',
+    difficulty: 'MEDIUM',
+    question: "What is the derivative of f(x) = sin(3x²)?",
+    options: [
+      { id: 'a', content: 'cos(3x²)' },
+      { id: 'b', content: '6x · cos(3x²)' },
+      { id: 'c', content: '3x · cos(3x²)' },
+      { id: 'd', content: '6x · sin(3x²)' },
+    ],
+    correctAnswerId: 'b',
+    explanation:
+      "Chain rule: d/dx[sin(u)] = cos(u) · u'. Here u = 3x², so u' = 6x. Therefore f'(x) = cos(3x²) · 6x = 6x·cos(3x²).",
+    points: 2,
+    tags: ['chain-rule', 'derivatives', 'ap-calc-ab'],
+  },
+  {
+    id: 'ap-calc-ab-04',
+    subject: 'AP Calculus AB',
+    topic: 'Integrals — Basic',
+    category: 'AP_EXAM',
+    difficulty: 'MEDIUM',
+    question: 'Evaluate ∫(3x² + 2x − 5) dx.',
+    options: [
+      { id: 'a', content: 'x³ + x² − 5x + C' },
+      { id: 'b', content: '6x + 2 + C' },
+      { id: 'c', content: '3x³ + 2x² − 5x + C' },
+      { id: 'd', content: 'x³ + x² + C' },
+    ],
+    correctAnswerId: 'a',
+    explanation:
+      'Integrate term by term: ∫3x² dx = x³, ∫2x dx = x², ∫(−5) dx = −5x. Result: x³ + x² − 5x + C.',
+    points: 2,
+    tags: ['integration', 'antiderivatives', 'ap-calc-ab'],
+  },
+  {
+    id: 'ap-calc-ab-05',
+    subject: 'AP Calculus AB',
+    topic: 'Definite Integrals',
+    category: 'AP_EXAM',
+    difficulty: 'MEDIUM',
+    question: 'Evaluate ∫₀² (x² + 1) dx.',
+    options: [
+      { id: 'a', content: '4' },
+      { id: 'b', content: '14/3' },
+      { id: 'c', content: '6' },
+      { id: 'd', content: '10/3' },
+    ],
+    correctAnswerId: 'b',
+    explanation:
+      '∫₀²(x² + 1) dx = [x³/3 + x]₀² = (8/3 + 2) − (0 + 0) = 8/3 + 6/3 = 14/3.',
+    points: 2,
+    tags: ['definite-integrals', 'fundamental-theorem', 'ap-calc-ab'],
+  },
+  {
+    id: 'ap-calc-ab-06',
+    subject: 'AP Calculus AB',
+    topic: 'Derivatives — Implicit',
+    category: 'AP_EXAM',
+    difficulty: 'HARD',
+    question: "Given x² + y² = 25, find dy/dx.",
+    options: [
+      { id: 'a', content: '2x/2y' },
+      { id: 'b', content: '−x/y' },
+      { id: 'c', content: 'y/x' },
+      { id: 'd', content: '−y/x' },
+    ],
+    correctAnswerId: 'b',
+    explanation:
+      'Implicit differentiation: d/dx[x²] + d/dx[y²] = 0 → 2x + 2y(dy/dx) = 0 → dy/dx = −2x/2y = −x/y.',
+    points: 2,
+    tags: ['implicit-differentiation', 'derivatives', 'ap-calc-ab'],
+  },
+  {
+    id: 'ap-calc-ab-07',
+    subject: 'AP Calculus AB',
+    topic: 'Related Rates',
+    category: 'AP_EXAM',
+    difficulty: 'HARD',
+    question:
+      'A sphere\'s radius is increasing at 2 cm/min. When the radius is 5 cm, at what rate is the volume increasing? (V = 4/3 πr³)',
+    options: [
+      { id: 'a', content: '40π cm³/min' },
+      { id: 'b', content: '100π cm³/min' },
+      { id: 'c', content: '200π cm³/min' },
+      { id: 'd', content: '500π cm³/min' },
+    ],
+    correctAnswerId: 'c',
+    explanation:
+      'dV/dt = 4πr² · (dr/dt). When r = 5 and dr/dt = 2: dV/dt = 4π(25)(2) = 200π cm³/min.',
+    points: 2,
+    tags: ['related-rates', 'derivatives', 'ap-calc-ab'],
+  },
+  {
+    id: 'ap-calc-ab-08',
+    subject: 'AP Calculus AB',
+    topic: 'Mean Value Theorem',
+    category: 'AP_EXAM',
+    difficulty: 'MEDIUM',
+    question:
+      'The Mean Value Theorem states that if f is continuous on [a, b] and differentiable on (a, b), then there exists c in (a, b) such that f\'(c) equals:',
+    options: [
+      { id: 'a', content: 'f(a) + f(b)' },
+      { id: 'b', content: '[f(b) − f(a)] / (b − a)' },
+      { id: 'c', content: 'f(b) / f(a)' },
+      { id: 'd', content: '(a + b) / 2' },
+    ],
+    correctAnswerId: 'b',
+    explanation:
+      'The MVT guarantees a c where f\'(c) equals the average rate of change over [a, b]: f\'(c) = [f(b) − f(a)] / (b − a). This is the slope of the secant line between (a, f(a)) and (b, f(b)).',
+    points: 2,
+    tags: ['mean-value-theorem', 'theorems', 'ap-calc-ab'],
+  },
+  {
+    id: 'ap-calc-ab-09',
+    subject: 'AP Calculus AB',
+    topic: 'Continuity',
+    category: 'AP_EXAM',
+    difficulty: 'MEDIUM',
+    question:
+      'A function f(x) is continuous at x = a if and only if:',
+    options: [
+      { id: 'a', content: 'f(a) exists' },
+      { id: 'b', content: 'lim(x→a) f(x) exists' },
+      { id: 'c', content: 'f(a) exists, lim(x→a) f(x) exists, and lim(x→a) f(x) = f(a)' },
+      { id: 'd', content: 'f is differentiable at x = a' },
+    ],
+    correctAnswerId: 'c',
+    explanation:
+      'Three conditions must all hold for continuity at x = a: (1) f(a) is defined, (2) lim(x→a) f(x) exists, (3) the limit equals f(a). Note: differentiability implies continuity, but continuity does not imply differentiability.',
+    points: 2,
+    tags: ['continuity', 'limits', 'definitions', 'ap-calc-ab'],
+  },
+  {
+    id: 'ap-calc-ab-10',
+    subject: 'AP Calculus AB',
+    topic: 'Applications — Optimization',
+    category: 'AP_EXAM',
+    difficulty: 'HARD',
+    question:
+      'A farmer has 120 meters of fencing to enclose a rectangular field alongside a river (one side needs no fencing). What width maximizes the enclosed area?',
+    options: [
+      { id: 'a', content: '20 m' },
+      { id: 'b', content: '30 m' },
+      { id: 'c', content: '40 m' },
+      { id: 'd', content: '60 m' },
+    ],
+    correctAnswerId: 'b',
+    explanation:
+      'Let width = x (the two sides perpendicular to the river) and length = L (parallel to river). Constraint: 2x + L = 120 → L = 120 − 2x. Area = xL = x(120 − 2x) = 120x − 2x². dA/dx = 120 − 4x = 0 → x = 30. Maximum area at width = 30 m.',
+    points: 2,
+    tags: ['optimization', 'max-min', 'applications', 'ap-calc-ab'],
+  },
+];

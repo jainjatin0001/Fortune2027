@@ -365,3 +365,7 @@ export function getRandomDemoQuestions(count: number, category?: string): DemoQu
   const shuffled = [...pool].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, Math.min(count, shuffled.length));
 }
+
+
+export { DEMO_QUIZZES, getDemoQuiz, ALL_DEMO_QUESTIONS as ALL_QUIZ_DEMO_QUESTIONS } from './demo/index';
+export type { DemoQuiz } from './demo/index';
