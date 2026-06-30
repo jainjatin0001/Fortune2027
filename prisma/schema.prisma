@@ -32,6 +32,13 @@ enum AssetType {
   ARTICLE
   QUIZ
   QUESTION_SET
+  MOCK_TEST
+}
+
+enum MockTestAttemptStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
 }
 
 enum QuestionType {
@@ -168,23 +175,24 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  profile          Profile?
-  enrollments      Enrollment[]
-  quizAttempts     QuizAttempt[]
-  questionAttempts UserQuestionAttempt[]
-  bookmarks        Bookmark[]
-  reviews          Review[]
-  notifications    Notification[]
-  certificates     Certificate[]
-  blogPosts        BlogPost[]
-  auditLogs        AuditLog[]
-  orders           Order[]
-  payments         Payment[]
-  subscriptions    Subscription[]
-  feedbacks        Feedback[]
-  leads            Lead[]
-  parentRelations  ParentStudent[]       @relation("ParentRelation")
-  studentRelations ParentStudent[]       @relation("StudentRelation")
+  profile           Profile?
+  enrollments       Enrollment[]
+  quizAttempts      QuizAttempt[]
+  questionAttempts  UserQuestionAttempt[]
+  mockTestAttempts  MockTestAttempt[]
+  bookmarks         Bookmark[]
+  reviews           Review[]
+  notifications     Notification[]
+  certificates      Certificate[]
+  blogPosts         BlogPost[]
+  auditLogs         AuditLog[]
+  orders            Order[]
+  payments          Payment[]
+  subscriptions     Subscription[]
+  feedbacks         Feedback[]
+  leads             Lead[]
+  parentRelations   ParentStudent[]       @relation("ParentRelation")
+  studentRelations  ParentStudent[]       @relation("StudentRelation")
 
   @@index([clerkId])
   @@index([email])
@@ -242,10 +250,11 @@ model Program {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  subjects Subject[]
-  courses  Course[]
-  exams    Exam[]
-  leads    Lead[]
+  subjects   Subject[]
+  courses    Course[]
+  exams      Exam[]
+  leads      Lead[]
+  mockTests  MockTest[]
 
   @@index([slug])
   @@map("programs")
@@ -433,12 +442,16 @@ model LearningAsset {
   // QUESTION_SET reference (nullable FK)
   questionSetId String?
 
+  // MOCK_TEST reference (nullable FK)
+  mockTestId String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   module      Module       @relation(fields: [moduleId],      references: [id], onDelete: Cascade)
   quiz        Quiz?        @relation(fields: [quizId],        references: [id])
   questionSet QuestionSet? @relation(fields: [questionSetId], references: [id])
+  mockTest    MockTest?    @relation(fields: [mockTestId],    references: [id])
   progress    LearningAssetProgress[]
 
   @@index([moduleId])
@@ -468,15 +481,17 @@ model Question {
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
 
-  subject       Subject               @relation(fields: [subjectId], references: [id])
-  topic         Topic?                @relation(fields: [topicId],   references: [id])
-  options       QuestionOption[]
-  quizQuestions QuizQuestion[]
-  setItems      QuestionSetItem[]
-  examQuestions ExamQuestion[]
-  userAttempts  UserQuestionAttempt[]
-  analytics     QuestionAnalytics?
-  bookmarks     Bookmark[]
+  subject               Subject               @relation(fields: [subjectId], references: [id])
+  topic                 Topic?                @relation(fields: [topicId],   references: [id])
+  options               QuestionOption[]
+  quizQuestions         QuizQuestion[]
+  setItems              QuestionSetItem[]
+  examQuestions         ExamQuestion[]
+  userAttempts          UserQuestionAttempt[]
+  mockTestSectionItems  MockTestSectionQuestion[]
+  mockTestAttempts      MockTestQuestionAttempt[]
+  analytics             QuestionAnalytics?
+  bookmarks             Bookmark[]
 
   @@index([subjectId])
   @@index([topicId])
@@ -639,6 +654,140 @@ model ExamQuestion {
 }
 
 // ─────────────────────────────────────────────
+// MOCK TEST (Full-Length Exam)
+// ─────────────────────────────────────────────
+
+// A MockTest is a complete full-length exam (SAT Mock 1, ACT Mock 3, etc.)
+// It is fully configurable — sections, timing, calculator access, and question
+// mapping are all admin-controlled. No exam logic is hardcoded.
+model MockTest {
+  id           String   @id @default(uuid())
+  programId    String?
+  title        String
+  description  String?
+  instructions String?
+  passingScore Int      @default(70)
+  isPublished  Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  program  Program?          @relation(fields: [programId], references: [id])
+  sections MockTestSection[]
+  assets   LearningAsset[]
+  attempts MockTestAttempt[]
+
+  @@index([programId])
+  @@map("mock_tests")
+}
+
+// Each section of a mock test (e.g. "Reading & Writing Module 1")
+// sortOrder controls the sequence; all timing and calculator settings live here
+model MockTestSection {
+  id            String   @id @default(uuid())
+  mockTestId    String
+  name          String
+  shortName     String
+  sortOrder     Int      @default(0)
+  timeLimit     Int      // seconds
+  hasCalculator Boolean  @default(false)
+  instructions  String?
+  totalMarks    Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  mockTest        MockTest                 @relation(fields: [mockTestId],  references: [id], onDelete: Cascade)
+  questions       MockTestSectionQuestion[]
+  sectionAttempts MockTestSectionAttempt[]
+
+  @@index([mockTestId])
+  @@map("mock_test_sections")
+}
+
+// Junction — maps questions into a section with ordering and per-question points
+model MockTestSectionQuestion {
+  id         String @id @default(uuid())
+  sectionId  String
+  questionId String
+  sortOrder  Int    @default(0)
+  points     Int    @default(1)
+
+  section  MockTestSection @relation(fields: [sectionId],  references: [id], onDelete: Cascade)
+  question Question        @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([sectionId, questionId])
+  @@index([sectionId])
+  @@map("mock_test_section_questions")
+}
+
+// One attempt record per student per mock test asset
+model MockTestAttempt {
+  id           String                 @id @default(uuid())
+  userId       String
+  mockTestId   String
+  assetId      String?
+  enrollmentId String?
+  status       MockTestAttemptStatus  @default(IN_PROGRESS)
+  startedAt    DateTime               @default(now())
+  completedAt  DateTime?
+  timeTaken    Int?
+  totalScore   Float?
+  earnedScore  Float?
+  scaledScore  Float?
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+
+  user            User                     @relation(fields: [userId],       references: [id], onDelete: Cascade)
+  mockTest        MockTest                 @relation(fields: [mockTestId],   references: [id], onDelete: Cascade)
+  enrollment      Enrollment?              @relation(fields: [enrollmentId], references: [id])
+  sectionAttempts MockTestSectionAttempt[]
+
+  @@index([userId])
+  @@index([mockTestId])
+  @@index([enrollmentId])
+  @@map("mock_test_attempts")
+}
+
+// Per-section attempt data: time, score, correct/incorrect counts
+model MockTestSectionAttempt {
+  id           String    @id @default(uuid())
+  attemptId    String
+  sectionId    String
+  timeTaken    Int       @default(0)
+  submittedAt  DateTime?
+  earnedScore  Float     @default(0)
+  totalScore   Float     @default(0)
+  correctCount   Int     @default(0)
+  incorrectCount Int     @default(0)
+  skippedCount   Int     @default(0)
+
+  attempt          MockTestAttempt          @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  section          MockTestSection          @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  questionAttempts MockTestQuestionAttempt[]
+
+  @@unique([attemptId, sectionId])
+  @@index([attemptId])
+  @@map("mock_test_section_attempts")
+}
+
+// Per-question attempt: which option was selected, correctness, and time spent
+model MockTestQuestionAttempt {
+  id                String   @id @default(uuid())
+  sectionAttemptId  String
+  questionId        String
+  selectedOptionIds String[]
+  isCorrect         Boolean?
+  isSkipped         Boolean  @default(false)
+  timeTaken         Int?
+  attemptedAt       DateTime @default(now())
+
+  sectionAttempt MockTestSectionAttempt @relation(fields: [sectionAttemptId], references: [id], onDelete: Cascade)
+  question       Question               @relation(fields: [questionId],        references: [id], onDelete: Cascade)
+
+  @@index([sectionAttemptId])
+  @@map("mock_test_question_attempts")
+}
+
+// ─────────────────────────────────────────────
 // LEARNING & PROGRESS
 // ─────────────────────────────────────────────
 
@@ -654,12 +803,13 @@ model Enrollment {
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 
-  user           User                    @relation(fields: [userId],   references: [id], onDelete: Cascade)
-  course         Course                  @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  courseProgress CourseProgress?
-  moduleProgress ModuleProgress[]
-  assetProgress  LearningAssetProgress[]
-  quizAttempts   QuizAttempt[]
+  user             User                    @relation(fields: [userId],   references: [id], onDelete: Cascade)
+  course           Course                  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseProgress   CourseProgress?
+  moduleProgress   ModuleProgress[]
+  assetProgress    LearningAssetProgress[]
+  quizAttempts     QuizAttempt[]
+  mockTestAttempts MockTestAttempt[]
 
   @@unique([userId, courseId])
   @@index([userId])

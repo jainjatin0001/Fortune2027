@@ -11,12 +11,13 @@ interface QuizInterfaceProps {
   questions: DemoQuestion[];
   title?: string;
   timeLimit?: number; // seconds; defaults to 90s per question
+  passingScore?: number; // percentage, default 70
   onComplete?: (score: number, answers: Record<string, string>) => void;
 }
 
 type QuizState = 'idle' | 'active' | 'review' | 'complete';
 
-export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, onComplete }: QuizInterfaceProps) {
+export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, passingScore = 70, onComplete }: QuizInterfaceProps) {
   const [state, setState] = useState<QuizState>('idle');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -109,7 +110,7 @@ export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, o
 
   // Complete state
   if (state === 'complete') {
-    const passed = finalScore >= 70;
+    const passed = finalScore >= passingScore;
     return (
       <div className="card-base p-8 text-center max-w-lg mx-auto">
         <div

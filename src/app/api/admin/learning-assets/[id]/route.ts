@@ -31,7 +31,8 @@ export async function PATCH(
     const body = await req.json();
     const allowed = [
       'title', 'description', 'assetType', 'sortOrder', 'isFree', 'isPublished',
-      'videoUrl', 'videoDuration', 'videoProvider', 'pdfUrl', 'articleContent', 'quizId', 'questionSetId',
+      'videoUrl', 'videoDuration', 'videoProvider', 'pdfUrl', 'articleContent',
+      'quizId', 'questionSetId', 'mockTestId',
     ];
     const data = Object.fromEntries(
       Object.entries(body)
@@ -46,6 +47,7 @@ export async function PATCH(
         module: { select: { title: true, course: { select: { title: true } } } },
         quiz: { select: { title: true } },
         questionSet: { select: { title: true } },
+        mockTest: { select: { title: true } },
       },
     });
     return NextResponse.json({ asset });

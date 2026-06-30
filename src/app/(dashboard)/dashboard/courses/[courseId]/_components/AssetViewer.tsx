@@ -4,10 +4,11 @@ import { useState, useTransition } from 'react';
 import { CheckCircle, ChevronRight, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { QuizInterface } from '@/components/shared/QuizInterface';
+import { MockTestPlayer } from '@/components/shared/MockTestPlayer';
 import { markAssetComplete } from '../actions';
 import type { DemoQuestion } from '@/types';
 
-type AssetType = 'VIDEO' | 'PDF' | 'ARTICLE' | 'QUIZ' | 'QUESTION_SET';
+type AssetType = 'VIDEO' | 'PDF' | 'ARTICLE' | 'QUIZ' | 'QUESTION_SET' | 'MOCK_TEST';
 
 type QuestionData = {
   id: string;
@@ -41,6 +42,7 @@ export type AssetData = {
     title: string;
     questions: QuizItem[];
   } | null;
+  mockTest: { id: string; title: string } | null;
 };
 
 interface AssetViewerProps {
@@ -241,7 +243,13 @@ export function AssetViewer({
             questions={adaptQuestions(asset.quiz.questions)}
             title={asset.quiz.title}
             timeLimit={asset.quiz.timeLimit ?? undefined}
-            onComplete={complete}
+            passingScore={asset.quiz.passingScore}
+            onComplete={(score) => {
+              const pct = asset.quiz!.questions.length > 0
+                ? Math.round((score / asset.quiz!.questions.length) * 100)
+                : 0;
+              if (pct >= asset.quiz!.passingScore) complete();
+            }}
           />
         );
 
@@ -252,6 +260,16 @@ export function AssetViewer({
           <QuizInterface
             questions={adaptQuestions(asset.questionSet.questions)}
             title={asset.questionSet.title}
+            onComplete={complete}
+          />
+        );
+
+      case 'MOCK_TEST':
+        return (
+          <MockTestPlayer
+            assetId={asset.id}
+            enrollmentId={enrollmentId}
+            color={color}
             onComplete={complete}
           />
         );

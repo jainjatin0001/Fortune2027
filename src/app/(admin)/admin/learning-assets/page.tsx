@@ -28,10 +28,12 @@ interface LearningAsset {
   articleContent: string | null;
   quizId: string | null;
   questionSetId: string | null;
+  mockTestId: string | null;
   createdAt: string;
   module: { title: string; course: { title: string } };
   quiz: { title: string } | null;
   questionSet: { title: string } | null;
+  mockTest: { title: string } | null;
 }
 
 interface CourseModule {
@@ -50,7 +52,12 @@ interface QuestionSet {
   title: string;
 }
 
-const ASSET_TYPES = ['VIDEO', 'PDF', 'ARTICLE', 'QUIZ', 'QUESTION_SET'] as const;
+interface MockTestOption {
+  id: string;
+  title: string;
+}
+
+const ASSET_TYPES = ['VIDEO', 'PDF', 'ARTICLE', 'QUIZ', 'QUESTION_SET', 'MOCK_TEST'] as const;
 type AssetType = typeof ASSET_TYPES[number];
 
 const assetTypeColors: Record<string, { background: string; color: string }> = {
@@ -59,6 +66,7 @@ const assetTypeColors: Record<string, { background: string; color: string }> = {
   ARTICLE:      { background: '#dcfce7', color: '#16a34a' },
   QUIZ:         { background: '#fef3c7', color: '#d97706' },
   QUESTION_SET: { background: '#ede9fe', color: '#7c3aed' },
+  MOCK_TEST:    { background: '#fce7f3', color: '#9d174d' },
 };
 
 const emptyForm = {
@@ -81,6 +89,8 @@ const emptyForm = {
   quizId: '',
   // QUESTION_SET
   questionSetId: '',
+  // MOCK_TEST
+  mockTestId: '',
 };
 
 export default function AdminLearningAssetsPage() {
@@ -88,6 +98,7 @@ export default function AdminLearningAssetsPage() {
   const [modules, setModules] = useState<CourseModule[]>([]);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [questionSets, setQuestionSets] = useState<QuestionSet[]>([]);
+  const [mockTests, setMockTests] = useState<MockTestOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -126,6 +137,7 @@ export default function AdminLearningAssetsPage() {
     fetch('/api/admin/modules?limit=200').then(r => r.json()).then(d => setModules(d.modules ?? []));
     fetch('/api/admin/quizzes?limit=200&published=true').then(r => r.json()).then(d => setQuizzes(d.quizzes ?? []));
     fetch('/api/admin/question-sets?limit=200&published=true').then(r => r.json()).then(d => setQuestionSets(d.questionSets ?? []));
+    fetch('/api/admin/mock-tests?limit=200').then(r => r.json()).then(d => setMockTests(d.mockTests ?? []));
   }, [fetchAssets]);
 
   const openAdd = () => {
@@ -152,6 +164,7 @@ export default function AdminLearningAssetsPage() {
       articleContent: a.articleContent ?? '',
       quizId: a.quizId ?? '',
       questionSetId: a.questionSetId ?? '',
+      mockTestId: a.mockTestId ?? '',
     });
     setFormError('');
     setModalOpen(true);
@@ -172,6 +185,7 @@ export default function AdminLearningAssetsPage() {
       articleContent: null as string | null,
       quizId: null as string | null,
       questionSetId: null as string | null,
+      mockTestId: null as string | null,
     };
     if (form.assetType === 'VIDEO') {
       base.videoUrl = form.videoUrl || null;
@@ -185,6 +199,8 @@ export default function AdminLearningAssetsPage() {
       base.quizId = form.quizId || null;
     } else if (form.assetType === 'QUESTION_SET') {
       base.questionSetId = form.questionSetId || null;
+    } else if (form.assetType === 'MOCK_TEST') {
+      base.mockTestId = form.mockTestId || null;
     }
     return base;
   };
@@ -267,7 +283,7 @@ export default function AdminLearningAssetsPage() {
       label: 'Linked To',
       render: (a) => (
         <span className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>
-          {a.quiz?.title ?? a.questionSet?.title ?? '—'}
+          {a.quiz?.title ?? a.questionSet?.title ?? a.mockTest?.title ?? '—'}
         </span>
       ),
     },
@@ -425,6 +441,20 @@ export default function AdminLearningAssetsPage() {
                   </SelectContent>
                 </Select>
                 <p className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>Only published question sets are shown.</p>
+              </div>
+            )}
+
+            {form.assetType === 'MOCK_TEST' && (
+              <div className="space-y-1.5">
+                <Label>Link to Mock Test</Label>
+                <Select value={form.mockTestId || 'none'} onValueChange={(v) => setForm(f => ({ ...f, mockTestId: v === 'none' ? '' : v }))}>
+                  <SelectTrigger><SelectValue placeholder="Select a mock test" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {mockTests.map(mt => <SelectItem key={mt.id} value={mt.id}>{mt.title}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>Links this asset to a configured mock test.</p>
               </div>
             )}
 

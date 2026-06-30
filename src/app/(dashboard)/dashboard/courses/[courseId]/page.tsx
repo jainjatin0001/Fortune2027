@@ -80,6 +80,7 @@ export default async function CoursePlayerPage({
                   },
                 },
               },
+              mockTest: { select: { id: true, title: true } },
             },
           },
         },
@@ -176,6 +177,7 @@ export default async function CoursePlayerPage({
           })),
         }
       : null,
+    mockTest: a.mockTest ? { id: a.mockTest.id, title: a.mockTest.title } : null,
   }));
 
   const sidebarModules: SidebarModule[] = course.modules

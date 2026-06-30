@@ -6,11 +6,12 @@ export type UserRole = 'STUDENT' | 'INSTRUCTOR' | 'PARENT' | 'ADMIN' | 'SUPER_AD
 export type DifficultyLevel = 'EASY' | 'MEDIUM' | 'HARD' | 'EXPERT';
 // Kept for static display pages (courses/page.tsx, FeaturedCoursesSection)
 export type CourseCategory = 'SAT_PREP' | 'ACT_PREP' | 'AP_EXAM' | 'HIGH_SCHOOL' | 'CODING' | 'OTHER';
-export type AssetType = 'VIDEO' | 'PDF' | 'ARTICLE' | 'QUIZ' | 'QUESTION_SET';
+export type AssetType = 'VIDEO' | 'PDF' | 'ARTICLE' | 'QUIZ' | 'QUESTION_SET' | 'MOCK_TEST';
 export type QuestionType = 'SINGLE_CORRECT' | 'MULTIPLE_CORRECT' | 'NUMERIC' | 'TEXT';
 export type QuizType = 'CHAPTER_TEST' | 'PRACTICE' | 'DAILY_QUIZ' | 'MOCK_TEST';
 export type EnrollmentStatus = 'ACTIVE' | 'COMPLETED' | 'CANCELLED' | 'PAUSED' | 'EXPIRED';
 export type QuizAttemptStatus = 'IN_PROGRESS' | 'COMPLETED' | 'ABANDONED';
+export type MockTestAttemptStatus = 'IN_PROGRESS' | 'COMPLETED' | 'ABANDONED';
 
 // ─────────────────────────────────────────────
 // USER
@@ -152,6 +153,7 @@ export interface LearningAsset {
   articleContent?: string;
   quizId?: string;
   questionSetId?: string;
+  mockTestId?: string;
 }
 
 // ─────────────────────────────────────────────
@@ -274,6 +276,161 @@ export interface UserQuestionAttempt {
   timeTaken?: number;
   isSkipped: boolean;
   attemptedAt: Date;
+}
+
+// ─────────────────────────────────────────────
+// MOCK TEST (Full-Length Exam)
+// ─────────────────────────────────────────────
+
+export interface MockTestSection {
+  id: string;
+  mockTestId: string;
+  name: string;
+  shortName: string;
+  sortOrder: number;
+  timeLimit: number;
+  hasCalculator: boolean;
+  instructions?: string;
+  totalMarks: number;
+  questions?: MockTestSectionQuestion[];
+}
+
+export interface MockTestSectionQuestion {
+  id: string;
+  sectionId: string;
+  questionId: string;
+  sortOrder: number;
+  points: number;
+  question?: Question;
+}
+
+export interface MockTest {
+  id: string;
+  programId?: string;
+  title: string;
+  description?: string;
+  instructions?: string;
+  passingScore: number;
+  isPublished: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  sections?: MockTestSection[];
+}
+
+export interface MockTestAttempt {
+  id: string;
+  userId: string;
+  mockTestId: string;
+  assetId?: string;
+  enrollmentId?: string;
+  status: MockTestAttemptStatus;
+  startedAt: Date;
+  completedAt?: Date;
+  timeTaken?: number;
+  totalScore?: number;
+  earnedScore?: number;
+  scaledScore?: number;
+  mockTest?: Pick<MockTest, 'id' | 'title'>;
+  sectionAttempts?: MockTestSectionAttempt[];
+}
+
+export interface MockTestSectionAttempt {
+  id: string;
+  attemptId: string;
+  sectionId: string;
+  timeTaken: number;
+  submittedAt?: Date;
+  earnedScore: number;
+  totalScore: number;
+  correctCount: number;
+  incorrectCount: number;
+  skippedCount: number;
+  section?: Pick<MockTestSection, 'id' | 'name' | 'shortName' | 'totalMarks'>;
+  questionAttempts?: MockTestQuestionAttempt[];
+}
+
+export interface MockTestQuestionAttempt {
+  id: string;
+  sectionAttemptId: string;
+  questionId: string;
+  selectedOptionIds: string[];
+  isCorrect?: boolean;
+  isSkipped: boolean;
+  timeTaken?: number;
+  attemptedAt: Date;
+}
+
+// Full structured report returned by the report API
+export interface MockTestReport {
+  attempt: MockTestAttempt;
+  mockTest: MockTest;
+  overall: {
+    totalQuestions: number;
+    correctCount: number;
+    incorrectCount: number;
+    skippedCount: number;
+    accuracy: number;
+    earnedScore: number;
+    totalScore: number;
+    percentage: number;
+    scaledScore?: number;
+    passed: boolean;
+    timeTaken: number;
+  };
+  sections: MockTestReportSection[];
+  questionDetails: MockTestReportQuestion[];
+  topicAnalysis: MockTestTopicAnalysis[];
+  timeAnalysis: {
+    totalTime: number;
+    avgTimePerQuestion: number;
+    fastestQuestion: { questionId: string; timeTaken: number } | null;
+    slowestQuestion: { questionId: string; timeTaken: number } | null;
+    timeBySection: { sectionName: string; timeTaken: number }[];
+  };
+  insights: string[];
+}
+
+export interface MockTestReportSection {
+  sectionId: string;
+  sectionName: string;
+  shortName: string;
+  earnedScore: number;
+  totalScore: number;
+  percentage: number;
+  accuracy: number;
+  timeTaken: number;
+  avgTimePerQuestion: number;
+  correctCount: number;
+  incorrectCount: number;
+  skippedCount: number;
+  totalQuestions: number;
+  strength: 'strong' | 'average' | 'weak';
+}
+
+export interface MockTestReportQuestion {
+  questionId: string;
+  sectionName: string;
+  questionNumber: number;
+  statement: string;
+  correctOptionId: string;
+  selectedOptionIds: string[];
+  isCorrect: boolean;
+  isSkipped: boolean;
+  timeTaken: number;
+  difficulty: DifficultyLevel;
+  topic?: string;
+  subject: string;
+  explanation?: string;
+  options: { id: string; content: string; isCorrect: boolean }[];
+}
+
+export interface MockTestTopicAnalysis {
+  topicName: string;
+  subjectName: string;
+  totalQuestions: number;
+  correctCount: number;
+  accuracy: number;
+  avgTimeTaken: number;
 }
 
 // ─────────────────────────────────────────────

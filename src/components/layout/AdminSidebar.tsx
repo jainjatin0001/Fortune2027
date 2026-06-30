@@ -32,6 +32,7 @@ const NAV_GROUPS = [
     { icon: ListChecks, label: 'Question Sets', href: '/admin/question-sets' },
     { icon: ClipboardList, label: 'Quizzes', href: '/admin/quizzes' },
     { icon: GraduationCap, label: 'Exams', href: '/admin/exams' },
+    { icon: ClipboardList, label: 'Mock Tests', href: '/admin/mock-tests' },
   ]},
   { group: 'CONTENT', items: [
     { icon: FileText, label: 'Blog Posts', href: '/admin/blog' },

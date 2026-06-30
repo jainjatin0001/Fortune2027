@@ -20,11 +20,30 @@ import { Button } from '@/components/ui/button';
 import type { DemoQuestion } from '@/types';
 
 export interface ExamSection {
+  id?: string;
   name: string;
   shortName: string;
   questions: DemoQuestion[];
   timeLimit: number; // seconds
   hasCalculator?: boolean;
+}
+
+// Emitted by onAttemptComplete — carries per-section and per-question data
+export interface ExamSectionResult {
+  sectionId?: string;
+  sectionName: string;
+  timeTaken: number;
+  questions: {
+    questionId: string;
+    selectedOptionIds: string[];
+    isSkipped: boolean;
+    timeTaken: number;
+  }[];
+}
+
+export interface ExamAttemptResult {
+  totalTimeTaken: number;
+  sections: ExamSectionResult[];
 }
 
 interface ExamInterfaceProps {
@@ -33,6 +52,8 @@ interface ExamInterfaceProps {
   subtitle?: string;
   accentColor?: string;
   sections: ExamSection[];
+  /** Called when the exam completes with full attempt data for persistence */
+  onAttemptComplete?: (result: ExamAttemptResult) => void;
 }
 
 type ExamState = 'intro' | 'active' | 'complete';
@@ -43,6 +64,7 @@ export function ExamInterface({
   subtitle,
   accentColor = '#4f46e5',
   sections,
+  onAttemptComplete,
 }: ExamInterfaceProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
 
@@ -58,6 +80,13 @@ export function ExamInterface({
   const [calcDisplay, setCalcDisplay] = useState('0');
   const [calcPrev, setCalcPrev] = useState('');
   const [calcOp, setCalcOp] = useState('');
+
+  // Time tracking — refs only (don't affect render)
+  const questionStartRef = useRef<number>(0);
+  const sectionStartRef = useRef<number>(0);
+  const examStartRef = useRef<number>(0);
+  const questionTimesRef = useRef<Record<string, number>>({});
+  const sectionTimesRef = useRef<Record<number, number>>({});
 
   const currentSection = sections[sectionIdx];
   const currentQuestion = currentSection?.questions[questionIdx];
@@ -76,16 +105,47 @@ export function ExamInterface({
   };
 
   const advanceSection = useCallback(() => {
+    // Flush the time for the current question into the ref
+    if (currentQuestion) {
+      const elapsed = Math.round((Date.now() - questionStartRef.current) / 1000);
+      questionTimesRef.current[currentQuestion.id] =
+        (questionTimesRef.current[currentQuestion.id] ?? 0) + elapsed;
+    }
+    // Record total time for the section being submitted
+    const secTime = Math.round((Date.now() - sectionStartRef.current) / 1000);
+    sectionTimesRef.current[sectionIdx] = secTime;
+
     if (sectionIdx + 1 < sections.length) {
       const next = sectionIdx + 1;
       setSectionIdx(next);
       setQuestionIdx(0);
       setTimeLeft(sections[next].timeLimit);
+      sectionStartRef.current = Date.now();
+      questionStartRef.current = Date.now();
     } else {
+      // Final section done — build result and notify parent
+      const totalTimeTaken = Math.round((Date.now() - examStartRef.current) / 1000);
+      if (onAttemptComplete) {
+        const result: ExamAttemptResult = {
+          totalTimeTaken,
+          sections: sections.map((section, si) => ({
+            sectionId: section.id,
+            sectionName: section.name,
+            timeTaken: sectionTimesRef.current[si] ?? 0,
+            questions: section.questions.map(q => ({
+              questionId: q.id,
+              selectedOptionIds: answers[q.id] ? [answers[q.id]] : [],
+              isSkipped: !answers[q.id],
+              timeTaken: questionTimesRef.current[q.id] ?? 0,
+            })),
+          })),
+        };
+        onAttemptComplete(result);
+      }
       setState('complete');
     }
     setShowConfirm(false);
-  }, [sectionIdx, sections]);
+  }, [sectionIdx, sections, currentQuestion, answers, onAttemptComplete]);
 
   useEffect(() => {
     if (state !== 'active') return;
@@ -112,7 +172,21 @@ export function ExamInterface({
     }
   }, []);
 
+  const flushQuestionTime = () => {
+    if (!currentQuestion) return;
+    const elapsed = Math.round((Date.now() - questionStartRef.current) / 1000);
+    questionTimesRef.current[currentQuestion.id] =
+      (questionTimesRef.current[currentQuestion.id] ?? 0) + elapsed;
+    questionStartRef.current = Date.now();
+  };
+
   const startExam = () => {
+    const now = Date.now();
+    examStartRef.current = now;
+    sectionStartRef.current = now;
+    questionStartRef.current = now;
+    questionTimesRef.current = {};
+    sectionTimesRef.current = {};
     setState('active');
     setSectionIdx(0);
     setQuestionIdx(0);
@@ -122,6 +196,8 @@ export function ExamInterface({
   };
 
   const resetExam = () => {
+    questionTimesRef.current = {};
+    sectionTimesRef.current = {};
     setState('intro');
     setSectionIdx(0);
     setQuestionIdx(0);
@@ -144,11 +220,17 @@ export function ExamInterface({
   };
 
   const goNext = () => {
-    if (questionIdx + 1 < currentSection.questions.length) setQuestionIdx((i) => i + 1);
+    if (questionIdx + 1 < currentSection.questions.length) {
+      flushQuestionTime();
+      setQuestionIdx((i) => i + 1);
+    }
   };
 
   const goPrev = () => {
-    if (questionIdx > 0) setQuestionIdx((i) => i - 1);
+    if (questionIdx > 0) {
+      flushQuestionTime();
+      setQuestionIdx((i) => i - 1);
+    }
   };
 
   const isLastQuestion = questionIdx === currentSection?.questions.length - 1;
@@ -487,6 +569,7 @@ export function ExamInterface({
                         key={q.id}
                         onClick={() => {
                           if (isPastSection) return;
+                          flushQuestionTime();
                           setSectionIdx(si);
                           setQuestionIdx(qi);
                         }}

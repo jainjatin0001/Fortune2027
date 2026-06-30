@@ -3,11 +3,11 @@
 import { useState } from 'react';
 import {
   ChevronDown, ChevronRight, Play, FileText, BookOpen,
-  HelpCircle, ListOrdered, CheckCircle, Circle,
+  HelpCircle, ListOrdered, CheckCircle, Circle, ClipboardList,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-type AssetType = 'VIDEO' | 'PDF' | 'ARTICLE' | 'QUIZ' | 'QUESTION_SET';
+type AssetType = 'VIDEO' | 'PDF' | 'ARTICLE' | 'QUIZ' | 'QUESTION_SET' | 'MOCK_TEST';
 
 type SidebarAsset = {
   id: string;
@@ -43,6 +43,7 @@ const ASSET_LABEL: Record<AssetType, string> = {
   ARTICLE: 'Article',
   QUIZ: 'Quiz',
   QUESTION_SET: 'Question Set',
+  MOCK_TEST: 'Mock Test',
 };
 
 function AssetIcon({ type, className, color }: { type: AssetType; className?: string; color?: string }) {
@@ -53,6 +54,7 @@ function AssetIcon({ type, className, color }: { type: AssetType; className?: st
     case 'ARTICLE': return <BookOpen {...props} />;
     case 'QUIZ': return <HelpCircle {...props} />;
     case 'QUESTION_SET': return <ListOrdered {...props} />;
+    case 'MOCK_TEST': return <ClipboardList {...props} />;
   }
 }
 

@@ -27,31 +27,31 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const page = Math.max(1, parseInt(searchParams.get('page') ?? '1'));
     const limit = Math.min(50, parseInt(searchParams.get('limit') ?? '20'));
-    const moduleId = searchParams.get('moduleId');
     const search = searchParams.get('search') ?? '';
+    const programId = searchParams.get('programId');
+    const published = searchParams.get('published');
 
     const where = {
-      ...(moduleId && { moduleId }),
+      ...(programId && { programId }),
       ...(search && { title: { contains: search, mode: 'insensitive' as const } }),
+      ...(published !== null && published !== '' && { isPublished: published === 'true' }),
     };
 
-    const [assets, total] = await Promise.all([
-      prisma.learningAsset.findMany({
+    const [mockTests, total] = await Promise.all([
+      prisma.mockTest.findMany({
         where,
         include: {
-          module: { select: { title: true, course: { select: { title: true } } } },
-          quiz: { select: { title: true } },
-          questionSet: { select: { title: true } },
-          mockTest: { select: { title: true } },
+          program: { select: { name: true, slug: true } },
+          _count: { select: { sections: true, attempts: true } },
         },
-        orderBy: [{ moduleId: 'asc' }, { sortOrder: 'asc' }],
+        orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
       }),
-      prisma.learningAsset.count({ where }),
+      prisma.mockTest.count({ where }),
     ]);
 
-    return NextResponse.json({ assets, total, page, pages: Math.ceil(total / limit) });
+    return NextResponse.json({ mockTests, total, page, pages: Math.ceil(total / limit) });
   } catch (e) {
     return authError(e) ?? NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
@@ -61,44 +61,26 @@ export async function POST(req: NextRequest) {
   try {
     await withAdmin();
     const body = await req.json();
-    const {
-      moduleId, title, description, assetType, sortOrder, isFree, isPublished,
-      videoUrl, videoDuration, videoProvider, pdfUrl, articleContent, quizId, questionSetId, mockTestId,
-    } = body;
+    const { title, description, instructions, programId, passingScore, isPublished } = body;
 
-    if (!moduleId) return badRequest('moduleId is required');
     if (!title) return badRequest('title is required');
-    if (!assetType) return badRequest('assetType is required');
 
-    const count = await prisma.learningAsset.count({ where: { moduleId } });
-
-    const asset = await prisma.learningAsset.create({
+    const mockTest = await prisma.mockTest.create({
       data: {
-        moduleId,
         title,
         description: description ?? null,
-        assetType,
-        sortOrder: sortOrder ?? count,
-        isFree: isFree ?? false,
+        instructions: instructions ?? null,
+        programId: programId || null,
+        passingScore: passingScore ? parseInt(passingScore) : 70,
         isPublished: isPublished ?? false,
-        videoUrl: videoUrl ?? null,
-        videoDuration: videoDuration ?? null,
-        videoProvider: videoProvider ?? null,
-        pdfUrl: pdfUrl ?? null,
-        articleContent: articleContent ?? null,
-        quizId: quizId ?? null,
-        questionSetId: questionSetId ?? null,
-        mockTestId: mockTestId ?? null,
       },
       include: {
-        module: { select: { title: true, course: { select: { title: true } } } },
-        quiz: { select: { title: true } },
-        questionSet: { select: { title: true } },
-        mockTest: { select: { title: true } },
+        program: { select: { name: true, slug: true } },
+        _count: { select: { sections: true, attempts: true } },
       },
     });
 
-    return NextResponse.json({ asset }, { status: 201 });
+    return NextResponse.json({ mockTest }, { status: 201 });
   } catch (e) {
     return authError(e) ?? NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
