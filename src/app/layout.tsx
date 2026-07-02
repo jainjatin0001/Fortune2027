@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { ClerkProvider } from '@clerk/nextjs';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import NextTopLoader from 'nextjs-toploader';
+import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
+import { MicrosoftClarity } from '@/components/analytics/MicrosoftClarity';
 import { APP_NAME, APP_DESCRIPTION, APP_URL } from '@/constants';
 import './globals.css';
 
@@ -52,6 +54,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <html lang="en" suppressHydrationWarning>
         <head />
         <body>
+          <GoogleAnalytics />
+          <MicrosoftClarity />
           <ThemeProvider>
             <NextTopLoader color="#2563eb" height={3} showSpinner={false} />
             {children}
