@@ -1,5 +1,21 @@
 export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? 'Delta Tutors';
-export const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+
+// Resolve the canonical site URL. Prefer an explicit env var; on Vercel fall
+// back to the auto-provided production domain so localhost never leaks into
+// production metadata / sitemap / robots. Only default to localhost in dev.
+const PRODUCTION_URL = 'https://www.deltatutors.us';
+
+function resolveAppUrl(): string {
+  if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL;
+  if (process.env.VERCEL_ENV === 'production') return PRODUCTION_URL;
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL)
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  if (process.env.NEXT_PUBLIC_VERCEL_URL)
+    return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
+  return 'http://localhost:3000';
+}
+
+export const APP_URL = resolveAppUrl();
 export const APP_DESCRIPTION =
   'Premium SAT, ACT, AP, and Coding prep platform for students in the United States and Canada.';
 
