@@ -15,10 +15,26 @@ export const getDbUser = cache(async () => {
   const clerkUser = await currentUser();
   if (!clerkUser) return null;
 
+  const email = clerkUser.emailAddresses[0]?.emailAddress ?? '';
+
+  // A row with this email may already exist from a different Clerk instance
+  // (e.g. a test-instance account created before the production instance).
+  // Reconcile by re-pointing that row to the current clerkId instead of
+  // creating a duplicate, which would violate the unique-email constraint.
+  const byEmail = email
+    ? await prisma.user.findUnique({ where: { email } })
+    : null;
+  if (byEmail) {
+    return prisma.user.update({
+      where: { id: byEmail.id },
+      data: { clerkId: clerkUser.id },
+    });
+  }
+
   return prisma.user.create({
     data: {
       clerkId: clerkUser.id,
-      email: clerkUser.emailAddresses[0]?.emailAddress ?? '',
+      email,
       firstName: clerkUser.firstName ?? 'User',
       lastName: clerkUser.lastName ?? '',
       avatarUrl: clerkUser.imageUrl,

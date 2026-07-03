@@ -19,7 +19,6 @@ const isPublicRoute = createRouteMatcher([
   '/api/contact',
   '/api/newsletter',
   '/api/questions',
-  '/api/whoami',
   '/sitemap.xml',
   '/robots.txt',
 ]);
