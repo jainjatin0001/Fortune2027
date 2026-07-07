@@ -19,9 +19,9 @@ export const metadata: Metadata = {
 };
 
 const stats = [
-  { icon: Users,    value: '500+',    label: 'Students Enrolled' },
-  { icon: Code2,    value: '1,200+',  label: 'Projects Built' },
-  { icon: BookOpen, value: '25,000+', label: 'Coding Exercises Solved' },
+  { icon: Users,    value: '1:1 Live',    label: 'Coding & Project Support' },
+  { icon: Code2,    value: '100+',  label: 'Projects Built' },
+  { icon: BookOpen, value: '2500+', label: 'Coding Question Bank' },
   { icon: Trophy,   value: '95%',     label: 'Completion Rate' },
 ];
 
@@ -159,7 +159,7 @@ export default async function CodingPage() {
                 </Link> */}
               </div>
               <div className="flex flex-wrap gap-5">
-                {['No Install Required', 'Beginner to Advanced', 'US & Canada Curriculum'].map((item) => (
+                {[  'Beginner to Advanced', 'No Pre requisite Required', 'Advanced Curriculum'].map((item) => (
                   <div key={item} className="flex items-center gap-2 text-sm" style={{ color: 'rgba(203,213,225,0.9)' }}>
                     <CheckCircle className="h-4 w-4 text-green-400 shrink-0" />{item}
                   </div>

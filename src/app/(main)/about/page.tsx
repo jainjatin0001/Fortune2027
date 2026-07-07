@@ -14,9 +14,9 @@ export const metadata: Metadata = {
 };
 
 const heroFeatures = [
-  { icon: GraduationCap, label: 'Expert-Led',     desc: 'IITians & industry experts',   pos: 'top-left' },
+  { icon: GraduationCap, label: 'Expert-Led',     desc: 'IITians & Subject Matter Experts',   pos: 'top-left' },
   { icon: Target,        label: 'Personalized',   desc: 'Learning paths that work',     pos: 'top-right' },
-  { icon: BarChart2,     label: 'Proven Results', desc: '250,000+ students trust us',   pos: 'bottom-left' },
+  { icon: BarChart2,     label: 'Proven Results', desc: 'Get Perfect Score in exams',   pos: 'bottom-left' },
   { icon: Globe,         label: 'Accessible',     desc: 'Premium education for all',    pos: 'bottom-right' },
 ];
 
@@ -37,15 +37,15 @@ const values = [
 ];
 
 const team = [
-  { name: 'Divyansh', role: 'Founder & CEO', school: 'IIT Bombay', prev: 'Ex-Software Engineer, Google',        initials: 'DJ', color: '#1e3a8a', linkedin: 'https://www.linkedin.com/in/jatin-jain' },
-  { name: 'Jatin',  role: 'Founder & CTO', school: 'IIT Delhi',  prev: 'Machine Learning Engineer, Meta',    initials: 'JJ', color: '#0f766e', linkedin: 'https://www.linkedin.com/in/divyansh-jain' },
+  { name: 'Divyansh Jain', role: 'Founder & CEO', school: 'Dalhousie University , Canada ', prev: 'AP & High School Expert',        initials: 'DJ', color: '#1e3a8a', linkedin: 'https://www.linkedin.com/in/divyanshjain10/' },
+  { name: 'Jatin Jain',  role: 'Founder & CTO', school: 'IIT Dhanbad',  prev: 'AI &  Machine Learning Expert ',    initials: 'JJ', color: '#0f766e', linkedin: 'https://www.linkedin.com/in/jatin-jain-9a6907195/' },
 ];
 
 const stats = [
-  { icon: Users,    value: '250,000+', label: 'Students Empowered' },
   { icon: BarChart2,value: '220+',     label: 'Average SAT Score Increase' },
+  { icon: Users,    value: '10+', label: 'Subjects Covered' },
   { icon: BookOpen, value: '98%',      label: 'AP Pass Rate' },
-  { icon: Globe,    value: '2',        label: 'Countries Served US & Canada' },
+  { icon: Globe,    value: '5',        label: 'Countries Served US, Canada, Europe, Middle East & Europe' },
 ];
 
 function LinkedInIcon({ className }: { className?: string }) {
@@ -74,8 +74,10 @@ export default function AboutPage() {
               <h1 className="text-4xl lg:text-5xl" style={{ color: '#ffffff', fontWeight: 800, lineHeight: 1.15, marginBottom: '1.25rem' }}>
                 Excellence is<br />Our Standard
               </h1>
-              <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '1rem', lineHeight: 1.7, marginBottom: '2rem', maxWidth: '420px' }}>
-                Delta Tutors was founded with a simple belief — every student deserves world-class academic preparation, regardless of their background or where they live.
+              <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '1.2rem', lineHeight: 1.7, marginBottom: '2rem', maxWidth: '420px' }}>
+                {/* Delta Tutors was founded with a simple belief — every student deserves world-class academic preparation, regardless of their background or where they live. */}
+                <b> Delta Tutors </b>   was founded on a simple belief: <b>   every student has the potential to excel in any exam with the right approach. </b>
+                {/* Our expert-led test-taking strategies have consistently delivered proven results, helping countless students achieve outstanding scores and secure admission to their desired universities.  */}
               </p>
               <div className="flex flex-wrap gap-3">
                 <Link href="/sign-up">

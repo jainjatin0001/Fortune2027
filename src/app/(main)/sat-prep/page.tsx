@@ -192,8 +192,8 @@ export default async function SATPage() {
                 {[
                   { value: '+220', label: 'Avg Score Increase' },
                   { value: '1,400+', label: 'Practice Questions' },
-                  { value: '10', label: 'Full-Length Tests' },
-                  { value: '50,000+', label: 'Students Trusted' },
+                  { value: '50+', label: 'Full-Length Tests' },
+                  // { value: '50,000+', label: 'Students Trusted' },
                 ].map((stat) => (
                   <div key={stat.label}>
                     <div className="text-2xl font-extrabold text-white leading-none">{stat.value}</div>

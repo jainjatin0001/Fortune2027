@@ -250,7 +250,7 @@ export function HomePricingSection() {
                 <div>
                   <span className="text-sm font-bold" style={{ color: '#0f172a' }}>
                     Trusted by{' '}
-                    <span style={{ color: '#2563eb' }}>250,000+ students &amp; parents</span>
+                    <span style={{ color: '#2563eb' }}> Students &amp; Parents</span>
                   </span>
                   <div className="text-xs" style={{ color: '#64748b' }}>Across the US &amp; Canada</div>
                 </div>

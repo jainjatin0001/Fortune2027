@@ -54,7 +54,7 @@ const features = [
     number: '7',
     icon: Users,
     title: 'Expert Instructors',
-    desc: 'Learn from IT graduates and industry experts with years of teaching experience.',
+    desc: 'Learn from university graduates and best in class tutors with years of experience.',
     color: '#be185d',
     bg: '#fdf2f8',
   },
