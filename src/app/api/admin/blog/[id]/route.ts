@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, unauthorized, forbidden, badRequest } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { sanitizeHtml } from '@/components/admin/RichEditor/utils/sanitize';
 
 async function withAdmin() {
   try {
@@ -33,8 +32,11 @@ export async function PATCH(
     const allowed = ['title', 'content', 'excerpt', 'categoryId', 'coverImage', 'tags', 'isPublished', 'isFeatured'];
     const data: Record<string, unknown> = Object.fromEntries(Object.entries(body).filter(([k]) => allowed.includes(k)));
 
-    if (typeof data.content === 'string') data.content = sanitizeHtml(data.content);
-    if (typeof data.excerpt === 'string') data.excerpt = sanitizeHtml(data.excerpt);
+    if (typeof data.content === 'string' || typeof data.excerpt === 'string') {
+      const { sanitizeHtml } = await import('@/components/admin/RichEditor/utils/sanitize');
+      if (typeof data.content === 'string') data.content = sanitizeHtml(data.content);
+      if (typeof data.excerpt === 'string') data.excerpt = sanitizeHtml(data.excerpt);
+    }
 
     if (typeof data.isPublished === 'boolean' && data.isPublished) {
       data.publishedAt = new Date();

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, unauthorized, forbidden, badRequest } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { sanitizeHtml } from '@/components/admin/RichEditor/utils/sanitize';
 
 async function withAdmin() {
   try {
@@ -67,6 +66,7 @@ export async function POST(req: NextRequest) {
     const existing = await prisma.blogPost.findUnique({ where: { slug } });
     if (existing) return NextResponse.json({ error: 'Slug already in use' }, { status: 409 });
 
+    const { sanitizeHtml } = await import('@/components/admin/RichEditor/utils/sanitize');
     const post = await prisma.blogPost.create({
       data: {
         authorId: admin.id,
