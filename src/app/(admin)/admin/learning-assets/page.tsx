@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminTable, type Column } from '@/components/admin/AdminTable';
 import { ConfirmDeleteDialog } from '@/components/admin/ConfirmDeleteDialog';
@@ -110,6 +110,57 @@ export default function AdminLearningAssetsPage() {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoFileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setFormError('');
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Upload failed');
+      setForm(f => ({ ...f, pdfUrl: data.url }));
+      toast('success', 'File uploaded successfully');
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Upload failed');
+      toast('error', err instanceof Error ? err.message : 'Upload failed');
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setFormError('');
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Upload failed');
+      setForm(f => ({ 
+        ...f, 
+        videoUrl: data.url,
+        videoProvider: '' // Empty provider for R2/native video player
+      }));
+      toast('success', 'Video uploaded successfully');
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Upload failed');
+      toast('error', err instanceof Error ? err.message : 'Upload failed');
+    } finally {
+      setUploading(false);
+      if (videoFileInputRef.current) videoFileInputRef.current.value = '';
+    }
+  };
 
   const [deleteAsset, setDeleteAsset] = useState<LearningAsset | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -386,8 +437,31 @@ export default function AdminLearningAssetsPage() {
             {form.assetType === 'VIDEO' && (
               <div className="space-y-3 p-3 rounded-lg border" style={{ borderColor: 'var(--color-border)' }}>
                 <div className="space-y-1.5">
-                  <Label>Video URL</Label>
-                  <Input value={form.videoUrl} onChange={(e) => setForm(f => ({ ...f, videoUrl: e.target.value }))} placeholder="https://..." />
+                  <Label>Video URL / File</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={form.videoUrl}
+                      onChange={(e) => setForm(f => ({ ...f, videoUrl: e.target.value }))}
+                      placeholder="Paste YouTube/Vimeo URL, direct link or upload video"
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={uploading}
+                      onClick={() => videoFileInputRef.current?.click()}
+                    >
+                      {uploading ? 'Uploading…' : 'Upload Video'}
+                    </Button>
+                  </div>
+                  <input
+                    ref={videoFileInputRef}
+                    type="file"
+                    accept="video/*"
+                    className="hidden"
+                    onChange={handleVideoUpload}
+                  />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
@@ -396,7 +470,7 @@ export default function AdminLearningAssetsPage() {
                   </div>
                   <div className="space-y-1.5">
                     <Label>Provider</Label>
-                    <Input value={form.videoProvider} onChange={(e) => setForm(f => ({ ...f, videoProvider: e.target.value }))} placeholder="youtube, vimeo..." />
+                    <Input value={form.videoProvider} onChange={(e) => setForm(f => ({ ...f, videoProvider: e.target.value }))} placeholder="youtube, vimeo (leave empty for uploaded videos)..." />
                   </div>
                 </div>
               </div>
@@ -404,8 +478,31 @@ export default function AdminLearningAssetsPage() {
 
             {form.assetType === 'PDF' && (
               <div className="space-y-1.5">
-                <Label>PDF URL</Label>
-                <Input value={form.pdfUrl} onChange={(e) => setForm(f => ({ ...f, pdfUrl: e.target.value }))} placeholder="https://..." />
+                <Label>PDF Document</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={form.pdfUrl}
+                    onChange={(e) => setForm(f => ({ ...f, pdfUrl: e.target.value }))}
+                    placeholder="Paste URL or upload file"
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={uploading}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {uploading ? 'Uploading…' : 'Upload File'}
+                  </Button>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.csv"
+                  className="hidden"
+                  onChange={handleFileUpload}
+                />
               </div>
             )}
 
