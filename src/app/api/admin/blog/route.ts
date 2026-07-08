@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, unauthorized, forbidden, badRequest } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { sanitizeHtml } from '@/components/admin/RichEditor/utils/sanitize';
 
 async function withAdmin() {
   try {
@@ -71,8 +72,8 @@ export async function POST(req: NextRequest) {
         authorId: admin.id,
         title,
         slug,
-        content,
-        excerpt: excerpt ?? null,
+        content: sanitizeHtml(content),
+        excerpt: excerpt ? sanitizeHtml(excerpt) : null,
         categoryId: categoryId || null,
         coverImage: coverImage || null,
         tags: tags ?? [],

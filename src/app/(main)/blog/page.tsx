@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Clock, ArrowRight, BookOpen, ChevronRight } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
-import { sanitizeHtml } from '@/components/admin/RichEditor/utils/sanitize';
 
 export const metadata: Metadata = {
   title: 'Blog',
@@ -190,7 +189,7 @@ export default async function BlogPage({
                         {heroPost.title}
                       </h3>
                       {heroPost.excerpt && (
-                        <div className="text-sm line-clamp-2 mb-5 rich-content" style={{ color: 'rgba(255,255,255,0.78)' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(heroPost.excerpt) }} />
+                        <div className="text-sm line-clamp-2 mb-5 rich-content" style={{ color: 'rgba(255,255,255,0.78)' }} dangerouslySetInnerHTML={{ __html: heroPost.excerpt }} />
                       )}
                       <div className="flex items-center justify-between">
                         <span className="flex items-center gap-1.5 text-xs" style={{ color: 'rgba(255,255,255,0.65)' }}>

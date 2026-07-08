@@ -1,9 +1,9 @@
-import { sanitizeHtml } from '@/components/admin/RichEditor/utils/sanitize';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Clock, ArrowLeft, BookOpen, Tag, ChevronRight } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
+import { htmlToText } from '@/components/admin/RichEditor/utils/htmlToText';
 
 export const dynamic = 'force-dynamic';
 
@@ -187,7 +187,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
             {/* Excerpt */}
             {post.excerpt && (
-                <p className="text-body-lg mb-6 font-medium" style={{ color: 'var(--color-muted-foreground)' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.excerpt) }} />
+                <div className="text-body-lg mb-6 font-medium" style={{ color: 'var(--color-muted-foreground)' }} dangerouslySetInnerHTML={{ __html: post.excerpt }} />
             )}
 
             {/* Author row */}
@@ -217,7 +217,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               className="max-w-none rich-content prose"
               style={{ fontFamily: 'var(--font-secondary)', lineHeight: 1.85 }}
             >
-              <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }} />
+              <div dangerouslySetInnerHTML={{ __html: post.content }} />
             </div>
 
             {/* Tags */}
@@ -305,7 +305,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                         </p>
                         {sp.excerpt && (
                           <p className="text-xs line-clamp-2 mb-2 leading-relaxed" style={{ color: 'var(--color-muted-foreground)' }}>
-                            {sp.excerpt}
+                            {htmlToText(sp.excerpt, 120)}
                           </p>
                         )}
                         <div className="flex items-center gap-1 text-xs" style={{ color: 'var(--color-muted-foreground)' }}>

@@ -26,6 +26,7 @@ const nextConfig: NextConfig = {
     remotePatterns: getRemotePatterns(),
     formats: ['image/avif', 'image/webp'],
   },
+  serverExternalPackages: ['isomorphic-dompurify'],
   experimental: {
     optimizePackageImports: ['lucide-react', 'framer-motion', '@radix-ui/react-icons'],
   },
