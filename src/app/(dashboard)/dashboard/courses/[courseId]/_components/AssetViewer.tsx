@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { QuizInterface } from '@/components/shared/QuizInterface';
 import { MockTestPlayer } from '@/components/shared/MockTestPlayer';
 import { markAssetComplete } from '../actions';
+import { sanitizeHtml } from '@/components/admin/RichEditor';
 import type { DemoQuestion } from '@/types';
 
 type AssetType = 'VIDEO' | 'PDF' | 'ARTICLE' | 'QUIZ' | 'QUESTION_SET' | 'MOCK_TEST';
@@ -139,23 +140,16 @@ function VideoPlayer({ videoUrl, videoProvider }: { videoUrl: string; videoProvi
 
 function PDFViewer({ pdfUrl }: { pdfUrl: string }) {
   return (
-    <div className="flex flex-col gap-3">
+    <div
+      className="w-full rounded-xl overflow-hidden border"
+      style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)', minHeight: '80vh' }}
+    >
       <iframe
         src={pdfUrl}
-        className="w-full rounded-xl border"
-        style={{ height: '72vh', borderColor: 'var(--color-border)' }}
+        className="w-full h-full"
+        style={{ minHeight: '80vh', height: 'calc(100vh - 160px)', border: 'none' }}
         title="PDF document"
       />
-      <a
-        href={pdfUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-1.5 text-sm hover:underline"
-        style={{ color: 'var(--color-accent)' }}
-      >
-        <ExternalLink className="h-3.5 w-3.5" />
-        Open in new tab
-      </a>
     </div>
   );
 }
@@ -163,13 +157,13 @@ function PDFViewer({ pdfUrl }: { pdfUrl: string }) {
 function ArticleViewer({ content }: { content: string }) {
   return (
     <div
-      className="rounded-xl p-6 border"
+      className="rounded-xl p-6 border rich-content prose max-w-none"
       style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)' }}
     >
       <div
-        className="prose max-w-none text-sm leading-relaxed"
+        className="text-sm leading-relaxed"
         style={{ color: 'var(--color-foreground)' }}
-        dangerouslySetInnerHTML={{ __html: content }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
       />
     </div>
   );
@@ -285,9 +279,7 @@ export function AssetViewer({
             {asset.title}
           </h1>
           {asset.description && (
-            <p className="text-body mt-1" style={{ color: 'var(--color-muted-foreground)' }}>
-              {asset.description}
-            </p>
+            <p className="text-body mt-1" style={{ color: 'var(--color-muted-foreground)' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(asset.description) }} />
           )}
         </div>
         {completed && (

@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import RichEditor from '@/components/admin/RichEditor';
 
 interface Program {
   id: string;
@@ -188,7 +188,7 @@ export default function AdminProgramsPage() {
             </div>
             <div className="space-y-1.5">
               <Label>Description</Label>
-              <Textarea value={form.description} onChange={(e) => setForm(f => ({ ...f, description: e.target.value }))} rows={2} />
+              <RichEditor value={form.description} onChange={(html) => setForm(f => ({ ...f, description: html }))} placeholder="Describe this program..." mode="simple" minHeight={110} />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">

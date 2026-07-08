@@ -1,3 +1,4 @@
+import { sanitizeHtml } from '@/components/admin/RichEditor/utils/sanitize';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -106,9 +107,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       take: 6,
     }),
   ]);
-
+    if (!post) notFound();
   if (!post) notFound();
-
   const catMeta = getCategoryMeta(post.category?.name ?? '');
   const authorName = `${post.author.firstName} ${post.author.lastName}`;
   const postDate = post.publishedAt ?? post.createdAt;
@@ -187,9 +187,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
             {/* Excerpt */}
             {post.excerpt && (
-              <p className="text-body-lg mb-6 font-medium" style={{ color: 'var(--color-muted-foreground)' }}>
-                {post.excerpt}
-              </p>
+                <p className="text-body-lg mb-6 font-medium" style={{ color: 'var(--color-muted-foreground)' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.excerpt) }} />
             )}
 
             {/* Author row */}
@@ -216,10 +214,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
             {/* Body content */}
             <div
-              className="max-w-none"
+              className="max-w-none rich-content prose"
               style={{ fontFamily: 'var(--font-secondary)', lineHeight: 1.85 }}
             >
-              {renderContent(post.content)}
+              <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }} />
             </div>
 
             {/* Tags */}

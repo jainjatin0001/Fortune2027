@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import RichEditor from '@/components/admin/RichEditor';
 
 interface Instructor {
   id: string;
@@ -225,7 +225,7 @@ export default function AdminInstructorsPage() {
             </div>
             <div className="space-y-1.5">
               <Label>Bio</Label>
-              <Textarea value={form.bio} onChange={(e) => setForm(f => ({ ...f, bio: e.target.value }))} rows={3} placeholder="Brief instructor bio..." />
+              <RichEditor value={form.bio} onChange={(html) => setForm(f => ({ ...f, bio: html }))} placeholder="Brief instructor bio..." mode="simple" minHeight={120} />
             </div>
             <div className="space-y-1.5">
               <Label>LinkedIn URL</Label>

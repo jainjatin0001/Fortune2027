@@ -7,6 +7,7 @@ import {
   ChevronDown, ChevronRight, Printer, ArrowLeft, Trophy, AlertTriangle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { sanitizeHtml } from '@/components/admin/RichEditor';
 
 interface ReportQuestion {
   questionId: string;
@@ -227,7 +228,7 @@ export function ReportView({ report }: { report: MockTestReport }) {
                         >
                           <span className="text-xs font-bold w-6 shrink-0 pt-0.5" style={{ color: 'var(--color-muted-foreground)' }}>{qi + 1}</span>
                           {statusIcon}
-                          <span className="flex-1 text-sm line-clamp-2 text-left" style={{ color: 'var(--color-foreground)' }}>{q.statement}</span>
+                          <span className="flex-1 text-sm line-clamp-2 text-left" style={{ color: 'var(--color-foreground)' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(q.statement) }} />
                           <div className="flex items-center gap-2 shrink-0">
                             <span className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>
                               {q.timeTaken ? fmtTime(q.timeTaken) : '—'}
@@ -242,7 +243,7 @@ export function ReportView({ report }: { report: MockTestReport }) {
                         {/* Question detail */}
                         {isQOpen && (
                           <div className="px-4 pb-4 space-y-3" style={{ background: 'var(--color-muted)' }}>
-                            <p className="text-sm font-medium pt-2" style={{ color: 'var(--color-foreground)' }}>{q.statement}</p>
+                            <div className="text-sm font-medium pt-2" style={{ color: 'var(--color-foreground)' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(q.statement) }} />
                             <div className="space-y-1.5">
                               {q.options.map((opt) => {
                                 const wasSelected = q.selectedOptionIds.includes(opt.id);
@@ -262,7 +263,7 @@ export function ReportView({ report }: { report: MockTestReport }) {
                                       : wasSelected
                                         ? <XCircle className="h-4 w-4 shrink-0 mt-0.5" style={{ color: '#dc2626' }} />
                                         : <span className="h-4 w-4 shrink-0" />}
-                                    <span style={{ color: 'var(--color-foreground)' }}>{opt.content}</span>
+                                    <span style={{ color: 'var(--color-foreground)' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(opt.content) }} />
                                   </div>
                                 );
                               })}
@@ -270,7 +271,7 @@ export function ReportView({ report }: { report: MockTestReport }) {
                             {q.explanation && (
                               <div className="p-3 rounded-lg" style={{ background: '#eff6ff', borderLeft: '3px solid #3b82f6' }}>
                                 <p className="text-xs font-semibold mb-1" style={{ color: '#1d4ed8' }}>Explanation</p>
-                                <p className="text-sm" style={{ color: '#1e40af' }}>{q.explanation}</p>
+                                <div className="text-sm" style={{ color: '#1e40af' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(q.explanation) }} />
                               </div>
                             )}
                           </div>

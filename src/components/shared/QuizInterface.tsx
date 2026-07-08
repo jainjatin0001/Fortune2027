@@ -6,6 +6,7 @@ import { cn, getDifficultyLabel, getDifficultyClass } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import type { DemoQuestion } from '@/types';
+import { sanitizeHtml } from '@/components/admin/RichEditor';
 
 interface QuizInterfaceProps {
   questions: DemoQuestion[];
@@ -199,12 +200,11 @@ export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, p
             {current.subject} · {current.topic}
           </span>
         </div>
-        <p
+        <div
           className="text-base font-medium mb-6 leading-relaxed whitespace-pre-wrap"
           style={{ color: 'var(--color-foreground)' }}
-        >
-          {current.question}
-        </p>
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(current.question ?? '') }}
+        />
 
         {/* Options */}
         <div className="space-y-3">
@@ -242,9 +242,7 @@ export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, p
                 >
                   {option.id.toUpperCase()}
                 </span>
-                <span className="text-sm" style={{ color: 'var(--color-foreground)' }}>
-                  {option.content}
-                </span>
+                <span className="text-sm" style={{ color: 'var(--color-foreground)' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(option.content ?? '') }} />
                 {optionState === 'correct' && <CheckCircle className="h-4 w-4 ml-auto shrink-0 text-[var(--color-success)]" />}
                 {optionState === 'incorrect' && <XCircle className="h-4 w-4 ml-auto shrink-0 text-[var(--color-danger)]" />}
               </button>
@@ -262,16 +260,15 @@ export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, p
               {showExplanation ? 'Hide' : 'Show'} Explanation
             </button>
             {showExplanation && (
-              <div
-                className="mt-3 p-4 rounded-xl text-sm leading-relaxed"
-                style={{
-                  background: 'var(--color-info-light)',
-                  color: 'var(--color-foreground)',
-                  borderLeft: '3px solid var(--color-info)',
-                }}
-              >
-                {current.explanation}
-              </div>
+                <div
+                  className="mt-3 p-4 rounded-xl text-sm leading-relaxed"
+                  style={{
+                    background: 'var(--color-info-light)',
+                    color: 'var(--color-foreground)',
+                    borderLeft: '3px solid var(--color-info)',
+                  }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(current.explanation ?? '') }}
+                />
             )}
           </div>
         )}

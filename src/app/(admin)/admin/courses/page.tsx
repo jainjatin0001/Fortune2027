@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import RichEditor from '@/components/admin/RichEditor';
 
 interface Course {
   id: string;
@@ -324,7 +325,7 @@ export default function AdminCoursesPage() {
 
             <div className="space-y-1.5">
               <Label>Description *</Label>
-              <Textarea value={form.description} onChange={(e) => setForm(f => ({ ...f, description: e.target.value }))} rows={3} />
+              <RichEditor value={form.description} onChange={(html) => setForm(f => ({ ...f, description: html }))} placeholder="Describe this course..." mode="simple" minHeight={130} />
             </div>
 
             <div className="space-y-1.5">

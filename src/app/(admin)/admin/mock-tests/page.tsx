@@ -9,10 +9,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Trash2, GripVertical, Edit2, Search, ChevronDown, ChevronRight, X } from 'lucide-react';
+import RichEditor from '@/components/admin/RichEditor';
 
 interface Program { id: string; name: string; slug: string }
 interface Subject { id: string; name: string }
@@ -354,20 +354,11 @@ export default function AdminMockTestsPage() {
             </div>
             <div className="space-y-1.5">
               <Label>Description</Label>
-              <Textarea
-                value={form.description}
-                onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                rows={2}
-              />
+              <RichEditor value={form.description} onChange={(html) => setForm(f => ({ ...f, description: html }))} placeholder="Describe this mock test..." mode="simple" minHeight={110} />
             </div>
             <div className="space-y-1.5">
               <Label>Instructions</Label>
-              <Textarea
-                value={form.instructions}
-                onChange={e => setForm(f => ({ ...f, instructions: e.target.value }))}
-                rows={3}
-                placeholder="Shown to student before starting the exam"
-              />
+              <RichEditor value={form.instructions} onChange={(html) => setForm(f => ({ ...f, instructions: html }))} placeholder="Shown to student before starting the exam" mode="full" minHeight={140} />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
@@ -472,12 +463,7 @@ export default function AdminMockTestsPage() {
               </div>
               <div className="space-y-1.5">
                 <Label>Instructions</Label>
-                <Textarea
-                  value={sectionForm.instructions}
-                  onChange={e => setSectionForm(f => ({ ...f, instructions: e.target.value }))}
-                  rows={2}
-                  placeholder="Shown to student at the start of this section"
-                />
+                <RichEditor value={sectionForm.instructions} onChange={(html) => setSectionForm(f => ({ ...f, instructions: html }))} placeholder="Shown to student at the start of this section" mode="simple" minHeight={110} />
               </div>
               <label className="flex items-center gap-2 text-sm cursor-pointer">
                 <Checkbox

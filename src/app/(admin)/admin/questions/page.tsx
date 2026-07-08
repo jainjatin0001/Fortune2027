@@ -11,8 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import RichEditor, { htmlToText } from '@/components/admin/RichEditor';
 
 interface QuestionOption {
   id?: string;
@@ -23,6 +23,7 @@ interface QuestionOption {
 interface Question {
   id: string;
   statement: string;
+  explanation?: string | null;
   difficulty: string;
   questionType: string;
   sourceType: string;
@@ -135,7 +136,7 @@ export default function AdminQuestionsPage() {
     setOptionKeys(opts.map((_, i) => q.options[i]?.id ?? genKey()));
     setForm({
       statement: q.statement,
-      explanation: '',
+      explanation: q.explanation ?? '',
       difficulty: q.difficulty,
       questionType: q.questionType,
       sourceType: q.sourceType,
@@ -230,7 +231,7 @@ export default function AdminQuestionsPage() {
       label: 'Question',
       render: (q) => (
         <div className="max-w-sm">
-          <div className="text-sm font-medium line-clamp-2">{q.statement}</div>
+          <div className="text-sm font-medium line-clamp-2">{htmlToText(q.statement, 120)}</div>
           <div className="text-xs mt-0.5" style={{ color: 'var(--color-muted-foreground)' }}>
             {q.subject?.name ?? 'No subject'} · {q.questionType}
           </div>
@@ -312,12 +313,12 @@ export default function AdminQuestionsPage() {
           <div className="space-y-4">
             <div className="space-y-1.5">
               <Label>Question Statement *</Label>
-              <Textarea value={form.statement} onChange={(e) => setForm(f => ({ ...f, statement: e.target.value }))} rows={3} placeholder="Enter the question text..." />
+              <RichEditor value={form.statement} onChange={(html) => setForm(f => ({ ...f, statement: html }))} placeholder="Enter the question text..." mode="full" minHeight={140} />
             </div>
 
             <div className="space-y-1.5">
               <Label>Explanation (shown after attempt)</Label>
-              <Textarea value={form.explanation} onChange={(e) => setForm(f => ({ ...f, explanation: e.target.value }))} rows={2} />
+              <RichEditor value={form.explanation} onChange={(html) => setForm(f => ({ ...f, explanation: html }))} placeholder="Add an explanation..." mode="simple" minHeight={110} />
             </div>
 
             <div className="grid grid-cols-2 gap-3">

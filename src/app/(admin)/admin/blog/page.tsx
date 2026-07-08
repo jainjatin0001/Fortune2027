@@ -9,9 +9,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import RichEditor from '@/components/admin/RichEditor';
 
 interface BlogPost {
   id: string;
@@ -82,7 +82,7 @@ export default function AdminBlogPage() {
 
   const openEdit = (p: BlogPost) => {
     setEditPost(p);
-    setForm({ title: p.title, slug: p.slug, excerpt: p.excerpt ?? '', content: '', categoryId: p.categoryId ?? '', coverImage: p.coverImage ?? '', isPublished: p.isPublished, isFeatured: p.isFeatured });
+    setForm({ title: p.title, slug: p.slug, excerpt: p.excerpt ?? '', content: p.content ?? '', categoryId: p.categoryId ?? '', coverImage: p.coverImage ?? '', isPublished: p.isPublished, isFeatured: p.isFeatured });
     setFormError('');
     setModalOpen(true);
   };
@@ -276,11 +276,11 @@ export default function AdminBlogPage() {
             </div>
             <div className="space-y-1.5">
               <Label>Excerpt</Label>
-              <Textarea value={form.excerpt} onChange={(e) => setForm(f => ({ ...f, excerpt: e.target.value }))} rows={2} />
+              <RichEditor value={form.excerpt} onChange={(html) => setForm(f => ({ ...f, excerpt: html }))} placeholder="Write a short excerpt..." mode="simple" minHeight={90} />
             </div>
             <div className="space-y-1.5">
-              <Label>{editPost ? 'Content (leave blank to keep existing)' : 'Content *'}</Label>
-              <Textarea value={form.content} onChange={(e) => setForm(f => ({ ...f, content: e.target.value }))} rows={6} placeholder="Write your post content here..." />
+              <Label>{editPost ? 'Content' : 'Content *'}</Label>
+              <RichEditor value={form.content} onChange={(html) => setForm(f => ({ ...f, content: html }))} placeholder="Write your post content here..." mode="full" minHeight={220} />
             </div>
             <div className="flex gap-6">
               <label className="flex items-center gap-2 text-sm cursor-pointer">

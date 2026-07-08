@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { sanitizeHtml } from '@/components/admin/RichEditor';
 import type { DemoQuestion } from '@/types';
 
 export interface ExamSection {
@@ -641,12 +642,11 @@ export function ExamInterface({
 
             {/* Scrollable question + options */}
             <div className="flex-1 overflow-y-auto px-8 py-6">
-              <p
+              <div
                 className="text-base leading-relaxed whitespace-pre-wrap mb-8"
                 style={{ color: '#0f172a' }}
-              >
-                {currentQuestion?.question}
-              </p>
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(currentQuestion?.question ?? '') }}
+              />
 
               <div className="space-y-3 max-w-2xl pb-4">
                 {currentQuestion?.options.map((option) => {
@@ -674,9 +674,8 @@ export function ExamInterface({
                       <span
                         className="text-sm leading-relaxed pt-1"
                         style={{ color: '#0f172a' }}
-                      >
-                        {option.content}
-                      </span>
+                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(option.content ?? '') }}
+                      />
                     </button>
                   );
                 })}

@@ -9,9 +9,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import RichEditor from '@/components/admin/RichEditor';
 
 interface LearningAsset {
   id: string;
@@ -414,7 +414,7 @@ export default function AdminLearningAssetsPage() {
 
             <div className="space-y-1.5">
               <Label>Description</Label>
-              <Textarea value={form.description} onChange={(e) => setForm(f => ({ ...f, description: e.target.value }))} rows={2} />
+              <RichEditor value={form.description} onChange={(html) => setForm(f => ({ ...f, description: html }))} placeholder="Describe this asset..." mode="simple" minHeight={100} />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -509,7 +509,7 @@ export default function AdminLearningAssetsPage() {
             {form.assetType === 'ARTICLE' && (
               <div className="space-y-1.5">
                 <Label>Article Content</Label>
-                <Textarea value={form.articleContent} onChange={(e) => setForm(f => ({ ...f, articleContent: e.target.value }))} rows={6} placeholder="Write article content or paste HTML/markdown..." />
+                <RichEditor value={form.articleContent} onChange={(html) => setForm(f => ({ ...f, articleContent: html }))} placeholder="Write article content or paste HTML/markdown..." mode="full" minHeight={220} />
               </div>
             )}
 
