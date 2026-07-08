@@ -19,6 +19,7 @@ interface BlogPost {
   slug: string;
   excerpt: string | null;
   coverImage: string | null;
+  content: string | null;
   isPublished: boolean;
   isFeatured: boolean;
   viewCount: number;

@@ -38,7 +38,6 @@ export function getExtensions(mode: EditorMode = 'full', placeholder?: string) {
       // Disable code block from StarterKit — we replace it with lowlight version
       codeBlock: false,
       // We provide our own history via starter kit
-      history: {},
     }),
     Underline,
     Link.configure({

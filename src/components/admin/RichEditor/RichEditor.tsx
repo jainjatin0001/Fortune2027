@@ -66,7 +66,7 @@ export default function RichEditor({
   // Keep editor content in sync with outer value if changed externally
   useEffect(() => {
     if (editor && value !== editor.getHTML()) {
-      editor.commands.setContent(value, false);
+      editor.commands.setContent(value);
     }
   }, [value, editor]);
 
