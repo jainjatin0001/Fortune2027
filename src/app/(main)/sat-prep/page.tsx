@@ -646,7 +646,7 @@ export default async function SATPage() {
                   href={`/courses/${course.slug}`}
                   className="card-base overflow-hidden group block"
                 >
-                  <div className="h-40 relative" style={{ background: course.thumbnailUrl ? undefined : satGradient }}>
+                  <div className="relative" style={{ aspectRatio: '16/9', background: course.thumbnailUrl ? undefined : satGradient }}>
                     {course.thumbnailUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={course.thumbnailUrl} alt={course.title} className="absolute inset-0 w-full h-full object-cover" />

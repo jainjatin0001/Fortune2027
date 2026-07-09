@@ -147,7 +147,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           <article>
 
             {/* Cover image */}
-            <div className="w-full rounded-2xl overflow-hidden mb-8" style={{ aspectRatio: '16/7', background: catMeta.gradient }}>
+            <div className="w-full rounded-2xl overflow-hidden mb-8" style={{ aspectRatio: '16/9', background: catMeta.gradient }}>
               {post.coverImage ? (
                 <img
                   src={post.coverImage}

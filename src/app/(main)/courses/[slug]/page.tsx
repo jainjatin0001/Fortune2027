@@ -30,14 +30,43 @@ import { EnrollButton } from './EnrollButton';
 import type { CourseCategory } from '@/types';
 
 // ─── Meta parser ─────────────────────────────────────────────────────────────
+// `description` comes out of the Tiptap RichEditor as HTML (e.g. "<p>...</p>"),
+// not plain text with literal "\n" line breaks, so the meta block has to be
+// unwrapped from its <p>/<br> tags before it can be split into "key: value" lines.
 const SEP = '---META---';
+
+function htmlToLines(html: string): string[] {
+  return html
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|li|h[1-6])>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
 
 function parseMeta(description: string): { descText: string; meta: Record<string, string> } {
   const idx = description.indexOf(SEP);
   if (idx === -1) return { descText: description.trim(), meta: {} };
-  const descText = description.slice(0, idx).trim();
+
+  // Cut descText at the start of the block (<p>/<div>/<li>/<h1-6>) that holds the
+  // marker, so we don't leave a dangling unclosed tag in the rendered HTML.
+  const blockOpenRegex = /<(p|div|li|h[1-6])[^>]*>/gi;
+  let cutAt = 0;
+  let match: RegExpExecArray | null;
+  while ((match = blockOpenRegex.exec(description)) && match.index < idx) {
+    cutAt = match.index;
+  }
+  const descText = description.slice(0, cutAt).trim();
+
   const meta: Record<string, string> = {};
-  for (const line of description.slice(idx + SEP.length).split('\n')) {
+  for (const line of htmlToLines(description.slice(idx + SEP.length))) {
     const colon = line.indexOf(':');
     if (colon === -1) continue;
     const key = line.slice(0, colon).trim().toLowerCase();
@@ -399,7 +428,7 @@ export default async function CourseDetailPage({
           )}
 
           {/* Meta row */}
-          <div
+          {/* <div
             className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm"
             style={{ color: 'rgba(255,255,255,0.75)' }}
           >
@@ -429,7 +458,7 @@ export default async function CourseDetailPage({
               <Clock className="h-4 w-4" />
               <span>Updated May 2024</span>
             </div>
-          </div>
+          </div> */}
         </div>
       </section>
 
@@ -525,20 +554,11 @@ export default async function CourseDetailPage({
               <h2 className="text-heading-3 mb-4" style={{ color: 'var(--color-foreground)' }}>
                 About This Course
               </h2>
-              <div className="space-y-3">
-                {descText
-                  .split('\n')
-                  .filter(Boolean)
-                  .map((para, i) => (
-                    <p
-                      key={i}
-                      className="text-sm leading-relaxed"
-                      style={{ color: 'var(--color-foreground)' }}
-                    >
-                      {para}
-                    </p>
-                  ))}
-              </div>
+              <div
+                className="text-sm leading-relaxed rich-content max-w-none"
+                style={{ color: 'var(--color-foreground)' }}
+                dangerouslySetInnerHTML={{ __html: descText }}
+              />
             </div>
 
             {/* Course Stats Bar */}
@@ -610,37 +630,14 @@ export default async function CourseDetailPage({
                     </p>
 
                     {/* Credentials */}
-                    <div className="flex flex-wrap gap-x-5 gap-y-2 mb-4">
-                      {(
-                        instructor?.credentials?.length
-                          ? instructor.credentials
-                          : [
-                              '12+ years teaching experience',
-                              '18,000+ students taught',
-                              'Former AP Exam grader',
-                            ]
-                      ).map((cred, i) => (
-                        <div
-                          key={i}
-                          className="flex items-center gap-1.5 text-sm"
-                          style={{ color: 'var(--color-muted-foreground)' }}
-                        >
-                          <CheckCircle2
-                            className="h-4 w-4 shrink-0"
-                            style={{ color: 'var(--color-success)' }}
-                          />
-                          {cred}
-                        </div>
-                      ))}
-                    </div>
+                    
 
                     {instructor?.bio && (
-                      <p
-                        className="text-sm leading-relaxed"
+                      <div
+                        className="text-sm leading-relaxed rich-content max-w-none"
                         style={{ color: 'var(--color-muted-foreground)' }}
-                      >
-                        {instructor.bio}
-                      </p>
+                        dangerouslySetInnerHTML={{ __html: instructor.bio }}
+                      />
                     )}
                   </div>
                 </div>
@@ -663,10 +660,10 @@ export default async function CourseDetailPage({
                     className="text-2xl font-extrabold"
                     style={{ color: 'var(--color-foreground)' }}
                   >
-                    4.8
+                    {/* 4.8 */}
                   </span>
                   <span className="text-sm" style={{ color: 'var(--color-muted-foreground)' }}>
-                    (342 reviews)
+                    {/* (342 reviews) */}
                   </span>
                 </div>
               </div>
@@ -773,22 +770,22 @@ export default async function CourseDetailPage({
                   {/* CTAs */}
                   <div className="space-y-3 mb-5">
                     <EnrollButton courseId={course.id} isFree={course.isFree} />
-                    <Button
+                    {/* <Button
                       variant="outline"
                       className="w-full h-11 font-medium"
                     >
                       Add to Wishlist
-                    </Button>
+                    </Button> */}
                   </div>
 
                   {/* Guarantee */}
-                  <p
+                  {/* <p
                     className="text-xs text-center mb-5 flex items-center justify-center gap-1.5"
                     style={{ color: 'var(--color-muted-foreground)' }}
                   >
                     <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
                     30-Day Money-Back Guarantee
-                  </p>
+                  </p> */}
 
                   {/* Divider */}
                   <div

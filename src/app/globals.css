@@ -418,6 +418,13 @@ body {
 .rich-content tbody tr:nth-child(even) td {
   background: transparent;
 }
+.rich-content p {
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.rich-content p:empty {
+  display: none;
+}
 .rich-content ul,
 .rich-content ol {
   padding-left: 1.25rem;

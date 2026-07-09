@@ -296,7 +296,7 @@ export default async function CoursesPage({
                     >
                       {/* Card header */}
                       <div style={{
-                        height: '7.5rem',
+                        aspectRatio: '16/9',
                         background: course.thumbnailUrl ? undefined : gradients[course.category],
                         position: 'relative',
                         display: 'flex',

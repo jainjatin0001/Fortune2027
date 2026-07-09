@@ -303,7 +303,7 @@ export default async function CodingPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {codingCourses.map((course) => (
                 <Link key={course.id} href={`/courses/${course.slug}`} className="card-base overflow-hidden group block">
-                  <div className="h-40 relative" style={{ background: course.thumbnailUrl ? undefined : codingGradient }}>
+                  <div className="relative" style={{ aspectRatio: '16/9', background: course.thumbnailUrl ? undefined : codingGradient }}>
                     {course.thumbnailUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={course.thumbnailUrl} alt={course.title} className="absolute inset-0 w-full h-full object-cover" />
