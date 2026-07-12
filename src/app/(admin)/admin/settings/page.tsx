@@ -6,7 +6,6 @@ import { AdminToastContainer, toast } from '@/components/admin/AdminToast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 import { Database, Globe, Shield, Bell } from 'lucide-react';
 
 export default function AdminSettingsPage() {
@@ -27,8 +26,8 @@ export default function AdminSettingsPage() {
       color: '#7c3aed',
       fields: [
         { label: 'Platform Name', placeholder: 'Delta Tutors', name: 'platformName' },
-        { label: 'Support Email', placeholder: 'support@edureach.com', name: 'supportEmail' },
-        { label: 'Domain', placeholder: 'https://edureach.com', name: 'domain' },
+        { label: 'Support Email', placeholder: 'info.deltatutors@gmail.com', name: 'supportEmail' },
+        { label: 'Domain', placeholder: 'https://www.deltatutors.us', name: 'domain' },
       ],
     },
     {
@@ -45,7 +44,7 @@ export default function AdminSettingsPage() {
       title: 'Notification Settings',
       color: '#d97706',
       fields: [
-        { label: 'Admin Notification Email', placeholder: 'admin@edureach.com', name: 'adminEmail' },
+        { label: 'Admin Notification Email', placeholder: 'info.deltatutors@gmail.com', name: 'adminEmail' },
         { label: 'Webhook URL (optional)', placeholder: 'https://...', name: 'webhookUrl' },
       ],
     },

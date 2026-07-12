@@ -55,7 +55,7 @@ export function PracticeTestBanner() {
                       <div className="w-2 h-2 rounded-full bg-green-400" />
                     </div>
                     <div className="flex-1 mx-2 h-3.5 rounded text-[7px] flex items-center px-2" style={{ background: '#f1f5f9', color: '#94a3b8' }}>
-                      edureach.com/sat-practice
+                      deltatutors.us/sat-practice
                     </div>
                   </div>
 

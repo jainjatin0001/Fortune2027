@@ -1,4 +1,4 @@
-export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? 'Delta Tutors';
+export const APP_NAME = 'Delta Tutors';
 
 // Resolve the canonical site URL. Prefer an explicit env var; on Vercel fall
 // back to the auto-provided production domain so localhost never leaks into

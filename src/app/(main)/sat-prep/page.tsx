@@ -228,7 +228,7 @@ export default async function SATPage() {
                       className="flex-1 h-5 rounded-md ml-3 flex items-center px-2 text-[10px]"
                       style={{ background: '#0f172a', color: '#475569' }}
                     >
-                      edureach.com/sat-exam
+                      deltatutors.us/sat-exam
                     </div>
                     <div
                       className="ml-2 px-2 py-0.5 rounded text-[9px] font-bold"
