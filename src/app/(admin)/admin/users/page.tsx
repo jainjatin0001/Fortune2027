@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { UserPlus } from 'lucide-react';
 
 interface User {
   id: string;
@@ -20,6 +22,16 @@ interface User {
   createdAt: string;
   avatarUrl: string | null;
   _count: { enrollments: number; quizAttempts: number };
+}
+
+interface EnrollmentCourse {
+  id: string;
+  title: string;
+  price: string | number;
+  isPublished: boolean;
+  isFree: boolean;
+  programName: string;
+  enrollment: { id: string; status: string; enrolledAt: string } | null;
 }
 
 const ROLES = ['STUDENT', 'INSTRUCTOR', 'PARENT', 'ADMIN', 'SUPER_ADMIN'];
@@ -48,6 +60,13 @@ export default function AdminUsersPage() {
   const [deleteUser, setDeleteUser] = useState<User | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  const [enrollUser, setEnrollUser] = useState<User | null>(null);
+  const [courses, setCourses] = useState<EnrollmentCourse[]>([]);
+  const [coursesLoading, setCoursesLoading] = useState(false);
+  const [selectedCourseId, setSelectedCourseId] = useState('');
+  const [recordPayment, setRecordPayment] = useState(true);
+  const [enrolling, setEnrolling] = useState(false);
+
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchUsers = useCallback(async (p = page, s = search, r = roleFilter) => {
@@ -67,7 +86,10 @@ export default function AdminUsersPage() {
     }
   }, [page, search, roleFilter]);
 
-  useEffect(() => { fetchUsers(); }, [fetchUsers]);
+  useEffect(() => {
+    const timer = setTimeout(() => { fetchUsers(); }, 0);
+    return () => clearTimeout(timer);
+  }, [fetchUsers]);
 
   const handleSearchChange = (v: string) => {
     setSearch(v);
@@ -127,6 +149,66 @@ export default function AdminUsersPage() {
     }
   };
 
+  const formatPrice = (price: string | number) => {
+    const value = Number(price);
+    if (!Number.isFinite(value) || value === 0) return 'Free';
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+  };
+
+  const handleOpenEnroll = async (user: User) => {
+    setEnrollUser(user);
+    setSelectedCourseId('');
+    setRecordPayment(true);
+    setCourses([]);
+    setCoursesLoading(true);
+    try {
+      const res = await fetch(`/api/admin/users/enrollments?userId=${user.id}`);
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error ?? 'Failed to load courses');
+      }
+      const data = await res.json();
+      setCourses(data.courses);
+    } catch (e) {
+      toast('error', e instanceof Error ? e.message : 'Failed to load courses');
+    } finally {
+      setCoursesLoading(false);
+    }
+  };
+
+  const handleEnroll = async () => {
+    if (!enrollUser || !selectedCourseId) return;
+    setEnrolling(true);
+    try {
+      const res = await fetch('/api/admin/users/enrollments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: enrollUser.id,
+          courseId: selectedCourseId,
+          recordPayment,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error ?? 'Failed to enroll user');
+      }
+      const data = await res.json();
+      const paymentNote = data.paymentCreated
+        ? ' and payment marked paid'
+        : data.paymentAlreadyRecorded
+          ? ' with existing paid record'
+          : '';
+      toast('success', `User enrolled${paymentNote}`);
+      setEnrollUser(null);
+      fetchUsers();
+    } catch (e) {
+      toast('error', e instanceof Error ? e.message : 'Failed to enroll user');
+    } finally {
+      setEnrolling(false);
+    }
+  };
+
   const columns: Column<User>[] = [
     {
       key: 'name',
@@ -168,6 +250,16 @@ export default function AdminUsersPage() {
       key: 'enrollments',
       label: 'Enrollments',
       render: (u) => <span className="text-sm">{u._count.enrollments}</span>,
+    },
+    {
+      key: 'courseAccess',
+      label: 'Course Access',
+      render: (u) => (
+        <Button variant="outline" size="sm" className="h-8 px-2.5" onClick={() => handleOpenEnroll(u)}>
+          <UserPlus className="h-3.5 w-3.5" />
+          Enroll
+        </Button>
+      ),
     },
     {
       key: 'createdAt',
@@ -250,6 +342,66 @@ export default function AdminUsersPage() {
               <div className="flex justify-end gap-3 pt-2">
                 <Button variant="outline" onClick={() => setEditUser(null)} disabled={saving}>Cancel</Button>
                 <Button onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save Changes'}</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Enrollment Modal */}
+      <Dialog open={!!enrollUser} onOpenChange={(v) => !v && setEnrollUser(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Enroll User in Course</DialogTitle>
+          </DialogHeader>
+          {enrollUser && (
+            <div className="space-y-4">
+              <div>
+                <div className="font-medium text-sm">{enrollUser.firstName} {enrollUser.lastName}</div>
+                <div className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>{enrollUser.email}</div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>Course</Label>
+                <Select value={selectedCourseId} onValueChange={setSelectedCourseId} disabled={coursesLoading}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={coursesLoading ? 'Loading courses...' : 'Select course'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {courses.map((course) => (
+                      <SelectItem
+                        key={course.id}
+                        value={course.id}
+                        disabled={course.enrollment?.status === 'ACTIVE'}
+                      >
+                        {course.title} · {course.programName} · {formatPrice(course.price)}
+                        {course.enrollment?.status === 'ACTIVE' ? ' · Already enrolled' : ''}
+                        {!course.isPublished ? ' · Draft' : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <label className="flex items-start gap-3 rounded-lg border p-3 text-sm" style={{ borderColor: 'var(--color-border)' }}>
+                <Checkbox
+                  checked={recordPayment}
+                  onCheckedChange={(checked) => setRecordPayment(checked === true)}
+                  className="mt-0.5"
+                />
+                <span>
+                  <span className="block font-medium">Mark payment as paid</span>
+                  <span className="block text-xs mt-0.5" style={{ color: 'var(--color-muted-foreground)' }}>
+                    Creates a confirmed order and completed manual payment for the selected course.
+                  </span>
+                </span>
+              </label>
+
+              <div className="flex justify-end gap-3 pt-2">
+                <Button variant="outline" onClick={() => setEnrollUser(null)} disabled={enrolling}>Cancel</Button>
+                <Button onClick={handleEnroll} disabled={enrolling || !selectedCourseId}>
+                  {enrolling ? 'Enrolling...' : 'Enroll User'}
+                </Button>
               </div>
             </div>
           )}

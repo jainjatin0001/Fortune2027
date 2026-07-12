@@ -14,8 +14,8 @@ function LinkedinIcon() { return <svg className="h-4 w-4" viewBox="0 0 24 24" fi
 const socialLinks = [
   { icon: TwitterIcon, label: 'Twitter', href: '#' },
   { icon: YoutubeIcon, label: 'YouTube', href: '#' },
-  { icon: InstagramIcon, label: 'Instagram', href: '#' },
-  { icon: LinkedinIcon, label: 'LinkedIn', href: '#' },
+  { icon: InstagramIcon, label: 'Instagram', href: 'https://www.instagram.com/delta_.tutors?igsh=MXQ2NXMyNHQ0OWJzaQ%3D%3D&utm_source=qr' },
+  { icon: LinkedinIcon, label: 'LinkedIn', href: 'https://www.linkedin.com/company/deltatutors/?lipi=urn%3Ali%3Apage%3Ad_flagship3_messaging_conversation_detail%3By8AOotPJQJCANEewtetWRg%3D%3D' },
 ];
 
 const footerSections = [
@@ -70,6 +70,8 @@ export function Footer() {
                 <a
                   key={label}
                   href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   aria-label={label}
                   className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors hover:opacity-80"
                   style={{
