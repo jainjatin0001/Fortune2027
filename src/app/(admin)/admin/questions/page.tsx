@@ -48,6 +48,10 @@ const SOURCE_TYPES = ['MCQ', 'PYQ', 'PRACTICE', 'MOCK_TEST'];
 let _optKeySeq = 0;
 const genKey = () => `ok-${++_optKeySeq}`;
 const emptyOption = (): QuestionOption => ({ content: '', isCorrect: false });
+const hasRichContent = (html: string) => {
+  if (htmlToText(html).trim()) return true;
+  return /<(img|table|iframe)\b|data-type="math-(inline|block)"/i.test(html);
+};
 
 export default function AdminQuestionsPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -160,8 +164,8 @@ export default function AdminQuestionsPage() {
 
   const handleSave = async () => {
     setFormError('');
-    if (!form.statement.trim()) { setFormError('Question statement is required.'); return; }
-    const filledOptions = form.options.filter(o => o.content.trim());
+    if (!hasRichContent(form.statement)) { setFormError('Question statement is required.'); return; }
+    const filledOptions = form.options.filter(o => hasRichContent(o.content));
     if (filledOptions.length < 2) { setFormError('At least 2 options are required.'); return; }
     if (!filledOptions.some(o => o.isCorrect)) { setFormError('At least one correct answer must be selected.'); return; }
 
@@ -306,7 +310,7 @@ export default function AdminQuestionsPage() {
 
       {/* Add / Edit Modal */}
       <Dialog open={modalOpen} onOpenChange={(v) => !v && setModalOpen(false)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editQuestion ? 'Edit Question' : 'Add New Question'}</DialogTitle>
           </DialogHeader>
@@ -376,27 +380,39 @@ export default function AdminQuestionsPage() {
               </div>
               <div className="space-y-2">
                 {form.options.map((opt, i) => (
-                  <div key={optionKeys[i] ?? i} className="flex items-center gap-3">
-                    <Checkbox
-                      checked={opt.isCorrect}
-                      onCheckedChange={(v) => setOption(i, 'isCorrect', !!v)}
-                      title="Mark as correct"
-                    />
-                    <Input
-                      className="flex-1"
-                      placeholder={`Option ${i + 1}`}
+                  <div
+                    key={optionKeys[i] ?? i}
+                    className="rounded-lg border p-3"
+                    style={{ borderColor: 'var(--color-border)' }}
+                  >
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 text-sm font-medium">
+                        <Checkbox
+                          checked={opt.isCorrect}
+                          onCheckedChange={(v) => setOption(i, 'isCorrect', !!v)}
+                          title="Mark as correct"
+                        />
+                        Correct option {i + 1}
+                      </div>
+                      {form.options.length > 2 && (
+                        <button
+                          type="button"
+                          onClick={() => { setOptionKeys(k => k.filter((_, j) => j !== i)); setForm(f => ({ ...f, options: f.options.filter((_, j) => j !== i) })); }}
+                          className="cursor-pointer p-1 rounded-lg transition-colors hover:opacity-70"
+                          style={{ color: 'var(--color-danger)' }}
+                          aria-label={`Remove option ${i + 1}`}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
+                    <RichEditor
                       value={opt.content}
-                      onChange={(e) => setOption(i, 'content', e.target.value)}
+                      onChange={(html) => setOption(i, 'content', html)}
+                      placeholder={`Option ${i + 1}`}
+                      mode="full"
+                      minHeight={90}
                     />
-                    {form.options.length > 2 && (
-                      <button
-                        onClick={() => { setOptionKeys(k => k.filter((_, j) => j !== i)); setForm(f => ({ ...f, options: f.options.filter((_, j) => j !== i) })); }}
-                        className="cursor-pointer p-1 rounded-lg transition-colors hover:opacity-70"
-                        style={{ color: 'var(--color-danger)' }}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    )}
                   </div>
                 ))}
               </div>
