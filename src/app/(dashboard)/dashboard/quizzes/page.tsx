@@ -35,5 +35,30 @@ export default async function QuizzesPage() {
     }),
   ]);
 
-  return <QuizLibrary quizzes={quizzes} subjects={subjects} showDrafts={isStaff} />;
+  const attempts = await prisma.quizAttempt.findMany({
+    where: {
+      userId: user.id,
+      status: 'COMPLETED',
+      quizId: { in: quizzes.map((quiz) => quiz.id) },
+    },
+    select: { quizId: true, score: true, completedAt: true },
+    orderBy: { completedAt: 'desc' },
+  });
+
+  const attemptStatus = new Map<string, { hasPassed: boolean; lastScore: number | null }>();
+  for (const quiz of quizzes) {
+    const quizAttempts = attempts.filter((attempt) => attempt.quizId === quiz.id);
+    if (!quizAttempts.length) continue;
+    attemptStatus.set(quiz.id, {
+      hasPassed: quizAttempts.some((attempt) => (attempt.score ?? 0) >= quiz.passingScore),
+      lastScore: quizAttempts[0].score,
+    });
+  }
+
+  const quizzesWithAttempts = quizzes.map((quiz) => ({
+    ...quiz,
+    attempt: attemptStatus.get(quiz.id) ?? null,
+  }));
+
+  return <QuizLibrary quizzes={quizzesWithAttempts} subjects={subjects} showDrafts={isStaff} />;
 }

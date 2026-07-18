@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { CheckCircle, XCircle, Clock, ChevronRight, ChevronLeft, Trophy, RotateCcw } from 'lucide-react';
 import { cn, getDifficultyLabel, getDifficultyClass } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -15,11 +15,13 @@ interface QuizInterfaceProps {
   passingScore?: number; // percentage, default 70
   onComplete?: (score: number, answers: Record<string, string>) => void;
   className?: string;
+  /** Enables QuizAttempt persistence for quizzes loaded from the quiz library. */
+  quizId?: string;
 }
 
 type QuizState = 'idle' | 'active' | 'review' | 'complete';
 
-export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, passingScore = 70, onComplete, className }: QuizInterfaceProps) {
+export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, passingScore = 70, onComplete, className, quizId }: QuizInterfaceProps) {
   const [state, setState] = useState<QuizState>('idle');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -27,6 +29,11 @@ export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, p
   const [showExplanation, setShowExplanation] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [totalTime] = useState(timeLimit);
+  const attemptId = useRef<string | null>(null);
+  const startedAt = useRef<number | null>(null);
+  const pendingAnswerRequests = useRef<Promise<void>[]>([]);
+  const hasCompleted = useRef(false);
+  const isStarting = useRef(false);
 
   const current = questions[currentIndex];
   const isAnswered = selectedOption !== null;
@@ -35,20 +42,81 @@ export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, p
     ([id, ans]) => questions.find((q) => q.id === id)?.correctAnswerId === ans
   ).length;
 
-  const startQuiz = () => {
+  const startQuiz = async () => {
+    if (isStarting.current) return;
+    isStarting.current = true;
+
+    if (quizId) {
+      try {
+        const response = await fetch('/api/quiz', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ quizId }),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          isStarting.current = false;
+          return;
+        }
+        attemptId.current = data.attemptId;
+      } catch {
+        isStarting.current = false;
+        return;
+      }
+    }
+
+    startedAt.current = Date.now();
+    hasCompleted.current = false;
+    pendingAnswerRequests.current = [];
     setState('active');
     setTimeLeft(totalTime ?? null);
     setCurrentIndex(0);
     setAnswers({});
     setSelectedOption(null);
     setShowExplanation(false);
+    isStarting.current = false;
   };
 
   const selectOption = (optionId: string) => {
     if (isAnswered) return;
     setSelectedOption(optionId);
     setAnswers((prev) => ({ ...prev, [current.id]: optionId }));
+
+    const sourceOptionId = current.options.find((option) => option.id === optionId)?.sourceOptionId;
+    if (attemptId.current && sourceOptionId) {
+      const request = fetch(`/api/quiz/${attemptId.current}/answer`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ questionId: current.id, selectedOptionId: sourceOptionId }),
+      }).then(() => undefined).catch(() => undefined);
+      pendingAnswerRequests.current.push(request);
+    }
   };
+
+  const completeAttempt = useCallback(() => {
+    if (!attemptId.current || hasCompleted.current) return;
+    hasCompleted.current = true;
+
+    void Promise.all(pendingAnswerRequests.current).then(async () => {
+      try {
+        await fetch(`/api/quiz/${attemptId.current}/complete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            totalTimeTaken: startedAt.current ? Math.round((Date.now() - startedAt.current) / 1000) : 0,
+          }),
+        });
+      } catch {
+        // The quiz UI remains usable if analytics persistence is temporarily unavailable.
+      }
+    });
+  }, []);
+
+  const finishQuiz = useCallback(() => {
+    setState('complete');
+    completeAttempt();
+    onComplete?.(score, answers);
+  }, [answers, completeAttempt, onComplete, score]);
 
   const nextQuestion = useCallback(() => {
     if (currentIndex + 1 < questions.length) {
@@ -56,10 +124,9 @@ export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, p
       setSelectedOption(answers[questions[currentIndex + 1]?.id] ?? null);
       setShowExplanation(false);
     } else {
-      setState('complete');
-      onComplete?.(score, answers);
+      finishQuiz();
     }
-  }, [currentIndex, questions, answers, score, onComplete]);
+  }, [currentIndex, questions, answers, finishQuiz]);
 
   const prevQuestion = () => {
     if (currentIndex > 0) {
@@ -71,10 +138,10 @@ export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, p
 
   useEffect(() => {
     if (state !== 'active' || timeLeft === null) return;
-    if (timeLeft <= 0) { setState('complete'); return; }
+    if (timeLeft <= 0) { finishQuiz(); return; }
     const timer = setTimeout(() => setTimeLeft((t) => (t ?? 1) - 1), 1000);
     return () => clearTimeout(timer);
-  }, [state, timeLeft]);
+  }, [state, timeLeft, finishQuiz]);
 
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60).toString().padStart(2, '0');

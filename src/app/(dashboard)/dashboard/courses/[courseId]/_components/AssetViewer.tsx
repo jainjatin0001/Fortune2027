@@ -72,6 +72,7 @@ function adaptQuestions(items: QuizItem[]): DemoQuestion[] {
       const options = sorted.map((o, i) => ({
         id: LETTERS[i] ?? String(i),
         content: o.content,
+        sourceOptionId: o.id,
       }));
       const correctIdx = sorted.findIndex(o => o.isCorrect);
       const correctAnswerId = correctIdx >= 0 ? (LETTERS[correctIdx] ?? String(correctIdx)) : '';

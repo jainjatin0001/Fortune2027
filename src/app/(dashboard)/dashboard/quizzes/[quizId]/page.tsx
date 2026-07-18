@@ -61,6 +61,7 @@ export default async function QuizPage({ params }: { params: Promise<{ quizId: s
       options: question.options.map((option, index) => ({
         id: letters[index] ?? String(index),
         content: option.content,
+        sourceOptionId: option.id,
       })),
       correctAnswerId: correctIndex >= 0 ? (letters[correctIndex] ?? String(correctIndex)) : '',
       explanation: question.explanation ?? '',
@@ -75,6 +76,7 @@ export default async function QuizPage({ params }: { params: Promise<{ quizId: s
       title={quiz.title}
       timeLimit={quiz.timeLimit ? quiz.timeLimit * 60 : undefined}
       passingScore={quiz.passingScore}
+      quizId={quizId}
     />
   );
 }

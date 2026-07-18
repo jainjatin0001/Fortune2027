@@ -14,6 +14,7 @@ type Quiz = {
   isPublished: boolean;
   subject: { id: string; name: string; color: string | null } | null;
   _count: { questions: number };
+  attempt: { hasPassed: boolean; lastScore: number | null } | null;
 };
 
 type Subject = { id: string; name: string };
@@ -78,6 +79,8 @@ export function QuizLibrary({ quizzes, subjects, showDrafts }: { quizzes: Quiz[]
           {filteredQuizzes.map((quiz) => {
             const color = quiz.subject?.color || '#7c3aed';
             const QuizIcon = getQuizIcon(quiz.id);
+            const hasLastScore = quiz.attempt?.lastScore !== null && quiz.attempt?.lastScore !== undefined;
+            const resultColor = hasLastScore && !quiz.attempt?.hasPassed ? 'var(--color-danger)' : color;
             return (
               <Link key={quiz.id} href={`/dashboard/quizzes/${quiz.id}`} className="card-base p-5 flex flex-col gap-3 hover:opacity-80 transition-opacity group">
                 <div className="flex items-start justify-between gap-3">
@@ -85,6 +88,7 @@ export function QuizLibrary({ quizzes, subjects, showDrafts }: { quizzes: Quiz[]
                     <QuizIcon className="h-6 w-6" />
                   </div>
                   <div className="flex items-center gap-2">
+                    {quiz.attempt?.hasPassed && <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'var(--color-success-light)', color: 'var(--color-success)' }}>✓ Passed</span>}
                     {!quiz.isPublished && <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: '#fef3c7', color: '#b45309' }}>Draft</span>}
                     <ArrowRight className="h-4 w-4 mt-1 group-hover:translate-x-0.5 transition-transform" style={{ color }} />
                   </div>
@@ -98,7 +102,11 @@ export function QuizLibrary({ quizzes, subjects, showDrafts }: { quizzes: Quiz[]
                   <span className="flex items-center gap-1"><BookOpen className="h-3 w-3" />{quiz._count.questions} questions</span>
                   <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{formatTime(quiz.timeLimit)}</span>
                 </div>
-                <div className="text-xs font-medium" style={{ color }}>Pass score: {quiz.passingScore}%</div>
+                <div className="text-xs font-medium" style={{ color: resultColor }}>
+                  {hasLastScore
+                    ? `Last score: ${Math.round(quiz.attempt?.lastScore ?? 0)}%`
+                    : `Pass score: ${quiz.passingScore}%`}
+                </div>
               </Link>
             );
           })}

@@ -453,6 +453,8 @@ export interface DemoQuestion {
 export interface DemoOption {
   id: string;
   content: string;
+  /** Original database option ID when this display option is used in a tracked quiz. */
+  sourceOptionId?: string;
 }
 
 // ─────────────────────────────────────────────
