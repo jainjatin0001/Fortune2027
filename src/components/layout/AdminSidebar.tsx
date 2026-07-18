@@ -8,6 +8,7 @@ import {
   FileText, Bell, Settings, Shield, Database, Layers,
   BookMarked, Tag, Megaphone, Mail, ArrowLeft, ChevronDown,
   ListChecks, ClipboardList, GraduationCap, UserCheck, FolderOpen,
+  UploadCloud,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { APP_NAME } from '@/constants';
@@ -29,6 +30,7 @@ const NAV_GROUPS = [
   ]},
   { group: 'ASSESSMENT', items: [
     { icon: HelpCircle, label: 'Questions', href: '/admin/questions' },
+    { icon: UploadCloud, label: 'Question Import', href: '/admin/question-import' },
     { icon: ListChecks, label: 'Question Sets', href: '/admin/question-sets' },
     { icon: ClipboardList, label: 'Quizzes', href: '/admin/quizzes' },
     { icon: GraduationCap, label: 'Exams', href: '/admin/exams' },
@@ -57,11 +59,14 @@ export function AdminSidebar() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) setCollapsed(new Set(JSON.parse(stored) as string[]));
-    } catch {}
+    const timer = window.setTimeout(() => {
+      setMounted(true);
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) setCollapsed(new Set(JSON.parse(stored) as string[]));
+      } catch {}
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   const toggle = (group: string) => {
@@ -81,13 +86,17 @@ export function AdminSidebar() {
       g.items.some((item) => pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href)))
     );
     if (activeGroup && collapsed.has(activeGroup.group)) {
-      setCollapsed((prev) => {
-        const next = new Set(prev);
-        next.delete(activeGroup.group);
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify([...next])); } catch {}
-        return next;
-      });
+      const timer = window.setTimeout(() => {
+        setCollapsed((prev) => {
+          const next = new Set(prev);
+          next.delete(activeGroup.group);
+          try { localStorage.setItem(STORAGE_KEY, JSON.stringify([...next])); } catch {}
+          return next;
+        });
+      }, 0);
+      return () => window.clearTimeout(timer);
     }
+    return undefined;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname, mounted]);
 
