@@ -344,7 +344,7 @@ export default function PricingSection() {
           style={{ background: 'var(--gradient-primary)', color: '#fff' }}
           onClick={() => setModalOpen(true)}
         >
-          Get started
+          Contact US
         </Button>
       </div>
 

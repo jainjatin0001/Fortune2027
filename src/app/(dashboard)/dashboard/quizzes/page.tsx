@@ -1,29 +1,39 @@
-import { Trophy, Clock } from 'lucide-react';
+import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
+import { getDbUser } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import { QuizLibrary } from './QuizLibrary';
 
-export default function QuizzesPage() {
-  return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="text-center max-w-md px-4">
-        <div
-          className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5"
-          style={{ background: '#fef3c7' }}
-        >
-          <Trophy className="h-8 w-8" style={{ color: '#d97706' }} />
-        </div>
-        <h1 className="text-2xl font-bold mb-3" style={{ color: 'var(--color-foreground)' }}>
-          Quizzes — Coming Soon
-        </h1>
-        <p className="text-sm leading-relaxed mb-6" style={{ color: 'var(--color-muted-foreground)' }}>
-          We&apos;re building a comprehensive quiz system with hundreds of topic-wise questions, instant feedback, and performance tracking. Check back soon!
-        </p>
-        <div
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold"
-          style={{ background: '#fef3c7', color: '#b45309' }}
-        >
-          <Clock className="h-4 w-4" />
-          Launching Soon
-        </div>
-      </div>
-    </div>
-  );
+export const metadata: Metadata = { title: 'Quizzes' };
+
+export default async function QuizzesPage() {
+  const user = await getDbUser();
+  if (!user) redirect('/sign-in');
+
+  const isStaff = ['ADMIN', 'SUPER_ADMIN', 'INSTRUCTOR'].includes(user.role);
+  if (!isStaff) {
+    const hasEnrollment = await prisma.enrollment.count({
+      where: { userId: user.id, status: 'ACTIVE' },
+    });
+    if (!hasEnrollment) redirect('/dashboard/courses');
+  }
+
+  const quizWhere = isStaff ? {} : { isPublished: true };
+  const [quizzes, subjects] = await Promise.all([
+    prisma.quiz.findMany({
+      where: quizWhere,
+      include: {
+        subject: { select: { id: true, name: true, color: true } },
+        _count: { select: { questions: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.subject.findMany({
+      where: { quizzes: { some: quizWhere } },
+      select: { id: true, name: true },
+      orderBy: { name: 'asc' },
+    }),
+  ]);
+
+  return <QuizLibrary quizzes={quizzes} subjects={subjects} showDrafts={isStaff} />;
 }

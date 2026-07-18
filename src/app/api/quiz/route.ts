@@ -8,9 +8,20 @@ export async function GET(req: NextRequest) {
   const published = searchParams.get('published') !== 'false';
 
   try {
+    const user = await getDbUser();
+    if (!user) return unauthorized();
+
+    const canAccessAllQuizzes = ['ADMIN', 'SUPER_ADMIN', 'INSTRUCTOR'].includes(user.role);
+    if (!canAccessAllQuizzes) {
+      const hasEnrollment = await prisma.enrollment.count({
+        where: { userId: user.id, status: 'ACTIVE' },
+      });
+      if (!hasEnrollment) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const quizzes = await prisma.quiz.findMany({
       where: {
-        ...(published && { isPublished: true }),
+        ...(!canAccessAllQuizzes && published && { isPublished: true }),
         ...(subjectId && { subjectId }),
       },
       include: {
@@ -29,6 +40,13 @@ export async function POST(req: NextRequest) {
   try {
     const user = await getDbUser();
     if (!user) return unauthorized();
+    const canAccessAllQuizzes = ['ADMIN', 'SUPER_ADMIN', 'INSTRUCTOR'].includes(user.role);
+    if (!canAccessAllQuizzes) {
+      const hasEnrollment = await prisma.enrollment.count({
+        where: { userId: user.id, status: 'ACTIVE' },
+      });
+      if (!hasEnrollment) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
     const body = await req.json();
     const { quizId } = body;
@@ -48,7 +66,9 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    if (!quiz) return NextResponse.json({ error: 'Quiz not found' }, { status: 404 });
+    if (!quiz || (!canAccessAllQuizzes && !quiz.isPublished)) {
+      return NextResponse.json({ error: 'Quiz not found' }, { status: 404 });
+    }
 
     const attempt = await prisma.quizAttempt.create({
       data: {

@@ -49,7 +49,7 @@ export function DashboardSidebar({ role, isPurchased }: DashboardSidebarProps) {
   const { open } = useSidebar();
   const [showLockedModal, setShowLockedModal] = useState(false);
 
-  const isUnlocked = role === 'ADMIN' || role === 'SUPER_ADMIN' || !!isPurchased;
+  const isUnlocked = role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'INSTRUCTOR' || !!isPurchased;
 
   const lockedModal = showLockedModal ? (
     <div

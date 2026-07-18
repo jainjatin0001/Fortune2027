@@ -23,8 +23,13 @@ export async function POST(
     if (attempt.userId !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     if (attempt.status !== 'IN_PROGRESS') return badRequest('Attempt is not in progress');
 
-    const option = await prisma.questionOption.findUnique({
-      where: { id: selectedOptionId },
+    const quizQuestion = await prisma.quizQuestion.findUnique({
+      where: { quizId_questionId: { quizId: attempt.quizId, questionId } },
+    });
+    if (!quizQuestion) return badRequest('Question does not belong to this quiz');
+
+    const option = await prisma.questionOption.findFirst({
+      where: { id: selectedOptionId, questionId },
       include: { question: { include: { options: { where: { isCorrect: true } } } } },
     });
 

@@ -11,7 +11,7 @@ import { sanitizeHtml } from '@/components/admin/RichEditor';
 interface QuizInterfaceProps {
   questions: DemoQuestion[];
   title?: string;
-  timeLimit?: number; // seconds; defaults to 90s per question
+  timeLimit?: number; // seconds; omit for an untimed quiz
   passingScore?: number; // percentage, default 70
   onComplete?: (score: number, answers: Record<string, string>) => void;
 }
@@ -25,7 +25,7 @@ export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, p
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [showExplanation, setShowExplanation] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
-  const [totalTime] = useState(timeLimit ?? questions.length * 90);
+  const [totalTime] = useState(timeLimit);
 
   const current = questions[currentIndex];
   const isAnswered = selectedOption !== null;
@@ -36,7 +36,7 @@ export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, p
 
   const startQuiz = () => {
     setState('active');
-    setTimeLeft(totalTime);
+    setTimeLeft(totalTime ?? null);
     setCurrentIndex(0);
     setAnswers({});
     setSelectedOption(null);
@@ -96,7 +96,7 @@ export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, p
         </div>
         <h2 className="text-heading-3 mb-2" style={{ color: 'var(--color-foreground)' }}>{title}</h2>
         <p className="text-body mb-6" style={{ color: 'var(--color-muted-foreground)' }}>
-          {questions.length} questions · ~{Math.ceil(totalTime / 60)} minutes
+          {questions.length} questions{totalTime ? ` · ~${Math.ceil(totalTime / 60)} minutes` : ''}
         </p>
         <Button
           onClick={startQuiz}
