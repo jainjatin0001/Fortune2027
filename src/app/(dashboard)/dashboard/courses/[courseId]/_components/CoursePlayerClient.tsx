@@ -264,7 +264,7 @@ export function CoursePlayerClient({
 
         {/* Scrollable content area */}
         <div className="flex-1 overflow-y-auto">
-          <div className="p-6 max-w-4xl mx-auto">
+          <div className="p-6 max-w-4xl mx-auto w-full">
             {activeAsset ? (
               /**
                * key={activeAsset.id} remounts AssetViewer on asset change —

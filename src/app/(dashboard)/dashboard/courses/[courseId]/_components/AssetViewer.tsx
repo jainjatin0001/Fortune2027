@@ -236,8 +236,9 @@ export function AssetViewer({
           <QuizInterface
             questions={adaptQuestions(asset.quiz.questions)}
             title={asset.quiz.title}
-            timeLimit={asset.quiz.timeLimit ?? undefined}
+            timeLimit={asset.quiz.timeLimit ? asset.quiz.timeLimit * 60 : undefined}
             passingScore={asset.quiz.passingScore}
+            className="w-full max-w-none"
             onComplete={(score) => {
               const pct = asset.quiz!.questions.length > 0
                 ? Math.round((score / asset.quiz!.questions.length) * 100)
@@ -254,6 +255,7 @@ export function AssetViewer({
           <QuizInterface
             questions={adaptQuestions(asset.questionSet.questions)}
             title={asset.questionSet.title}
+            className="w-full max-w-none"
             onComplete={complete}
           />
         );

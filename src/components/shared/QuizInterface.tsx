@@ -14,11 +14,12 @@ interface QuizInterfaceProps {
   timeLimit?: number; // seconds; omit for an untimed quiz
   passingScore?: number; // percentage, default 70
   onComplete?: (score: number, answers: Record<string, string>) => void;
+  className?: string;
 }
 
 type QuizState = 'idle' | 'active' | 'review' | 'complete';
 
-export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, passingScore = 70, onComplete }: QuizInterfaceProps) {
+export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, passingScore = 70, onComplete, className }: QuizInterfaceProps) {
   const [state, setState] = useState<QuizState>('idle');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -87,7 +88,7 @@ export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, p
   // Idle state
   if (state === 'idle') {
     return (
-      <div className="card-base p-8 text-center max-w-lg mx-auto">
+      <div className={cn('card-base p-8 text-center max-w-lg mx-auto', className)}>
         <div
           className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6"
           style={{ background: 'var(--gradient-primary)' }}
@@ -113,7 +114,7 @@ export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, p
   if (state === 'complete') {
     const passed = finalScore >= passingScore;
     return (
-      <div className="card-base p-8 text-center max-w-lg mx-auto">
+      <div className={cn('card-base p-8 text-center max-w-lg mx-auto', className)}>
         <div
           className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
           style={{
@@ -157,7 +158,7 @@ export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, p
 
   // Active quiz
   return (
-    <div className="card-base overflow-hidden max-w-2xl mx-auto">
+    <div className={cn('card-base overflow-hidden', className ?? 'max-w-2xl mx-auto')}>
       {/* Header */}
       <div
         className="px-6 py-4 border-b flex items-center justify-between"

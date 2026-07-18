@@ -336,7 +336,7 @@ export default function PricingSection() {
             <span className="text-sm pb-1" style={{ color: 'var(--color-muted-foreground)' }}>/hour</span>
           </div>
           <p className="text-sm" style={{ color: 'var(--color-muted-foreground)' }}>
-            Contact us for more accurate pricing based on the needs of your student.
+            Get in touch for customized 1:1 tutoring plans, exclusive access to 1,500+ practice questions, mock exams, and flexible learning options.
           </p>
         </div>
         <Button
