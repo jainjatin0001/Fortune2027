@@ -13,12 +13,12 @@ import {
   AlertTriangle,
   XCircle,
   Calculator,
-  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { sanitizeHtml } from '@/components/admin/RichEditor';
 import type { DemoQuestion } from '@/types';
+import { DesmosCalculator } from './DesmosCalculator';
 
 export interface ExamSection {
   id?: string;
@@ -78,9 +78,7 @@ export function ExamInterface({
   const [isBrowserFullscreen, setIsBrowserFullscreen] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showCalculator, setShowCalculator] = useState(false);
-  const [calcDisplay, setCalcDisplay] = useState('0');
-  const [calcPrev, setCalcPrev] = useState('');
-  const [calcOp, setCalcOp] = useState('');
+  const desmosApiKey = process.env.NEXT_PUBLIC_DESMOS_API_KEY;
 
   // Time tracking — refs only (don't affect render)
   const questionStartRef = useRef<number>(0);
@@ -510,7 +508,7 @@ export function ExamInterface({
             <span className="text-sm" style={{ color: '#94a3b8' }}>
               Q {globalQNum} / {totalQuestions}
             </span>
-            {currentSection?.hasCalculator && (
+            {currentSection?.hasCalculator && desmosApiKey && (
               <button
                 onClick={() => setShowCalculator((v) => !v)}
                 className="p-1.5 rounded-lg transition-colors flex items-center gap-1.5 text-xs font-semibold"
@@ -732,74 +730,8 @@ export function ExamInterface({
           </div>
         </div>
 
-        {/* Floating calculator */}
-        {showCalculator && currentSection?.hasCalculator && (
-          <div
-            className="absolute bottom-24 right-6 z-20 rounded-2xl shadow-2xl border overflow-hidden"
-            style={{ background: '#1e293b', borderColor: '#334155', width: 240 }}
-          >
-            <div className="flex items-center justify-between px-3 py-2 border-b" style={{ borderColor: '#334155' }}>
-              <span className="text-xs font-semibold" style={{ color: '#94a3b8' }}>Calculator</span>
-              <button onClick={() => setShowCalculator(false)} style={{ color: '#94a3b8' }}>
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
-            {/* Display */}
-            <div className="px-3 py-3 text-right">
-              <div className="text-xs truncate" style={{ color: '#64748b', minHeight: 16 }}>
-                {calcPrev}{calcOp ? ` ${calcOp}` : ''}
-              </div>
-              <div className="text-2xl font-bold tabular-nums" style={{ color: 'white' }}>
-                {calcDisplay}
-              </div>
-            </div>
-            {/* Keys */}
-            <div className="grid grid-cols-4 gap-px p-px" style={{ background: '#334155' }}>
-              {[
-                { label: 'C', action: () => { setCalcDisplay('0'); setCalcPrev(''); setCalcOp(''); } },
-                { label: '±', action: () => setCalcDisplay((d) => d.startsWith('-') ? d.slice(1) : '-' + d) },
-                { label: '%', action: () => setCalcDisplay((d) => String(parseFloat(d) / 100)) },
-                { label: '÷', action: () => { setCalcPrev(calcDisplay); setCalcOp('÷'); setCalcDisplay('0'); }, op: true },
-                { label: '7', action: () => setCalcDisplay((d) => d === '0' ? '7' : d + '7') },
-                { label: '8', action: () => setCalcDisplay((d) => d === '0' ? '8' : d + '8') },
-                { label: '9', action: () => setCalcDisplay((d) => d === '0' ? '9' : d + '9') },
-                { label: '×', action: () => { setCalcPrev(calcDisplay); setCalcOp('×'); setCalcDisplay('0'); }, op: true },
-                { label: '4', action: () => setCalcDisplay((d) => d === '0' ? '4' : d + '4') },
-                { label: '5', action: () => setCalcDisplay((d) => d === '0' ? '5' : d + '5') },
-                { label: '6', action: () => setCalcDisplay((d) => d === '0' ? '6' : d + '6') },
-                { label: '−', action: () => { setCalcPrev(calcDisplay); setCalcOp('−'); setCalcDisplay('0'); }, op: true },
-                { label: '1', action: () => setCalcDisplay((d) => d === '0' ? '1' : d + '1') },
-                { label: '2', action: () => setCalcDisplay((d) => d === '0' ? '2' : d + '2') },
-                { label: '3', action: () => setCalcDisplay((d) => d === '0' ? '3' : d + '3') },
-                { label: '+', action: () => { setCalcPrev(calcDisplay); setCalcOp('+'); setCalcDisplay('0'); }, op: true },
-                { label: '0', action: () => setCalcDisplay((d) => d === '0' ? '0' : d + '0'), wide: true },
-                { label: '.', action: () => setCalcDisplay((d) => d.includes('.') ? d : d + '.') },
-                {
-                  label: '=',
-                  action: () => {
-                    if (!calcOp || !calcPrev) return;
-                    const a = parseFloat(calcPrev), b = parseFloat(calcDisplay);
-                    const res = calcOp === '+' ? a + b : calcOp === '−' ? a - b : calcOp === '×' ? a * b : calcOp === '÷' && b !== 0 ? a / b : NaN;
-                    const str = isNaN(res) ? 'Error' : String(parseFloat(res.toFixed(10)));
-                    setCalcDisplay(str); setCalcPrev(''); setCalcOp('');
-                  },
-                  eq: true,
-                },
-              ].map((key, i) => (
-                <button
-                  key={i}
-                  onClick={key.action}
-                  className={cn('h-12 text-sm font-semibold transition-opacity hover:opacity-80', key.wide && 'col-span-2')}
-                  style={{
-                    background: key.eq ? accentColor : key.op ? '#475569' : '#2d3f55',
-                    color: 'white',
-                  }}
-                >
-                  {key.label}
-                </button>
-              ))}
-            </div>
-          </div>
+        {showCalculator && currentSection?.hasCalculator && desmosApiKey && (
+          <DesmosCalculator apiKey={desmosApiKey} onClose={() => setShowCalculator(false)} />
         )}
       </div>
     </>
