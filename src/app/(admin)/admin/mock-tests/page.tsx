@@ -11,23 +11,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, GripVertical, Edit2, Search, ChevronDown, ChevronRight, X } from 'lucide-react';
-import RichEditor from '@/components/admin/RichEditor';
+import { Trash2, GripVertical, Edit2, ChevronDown, ChevronRight, X } from 'lucide-react';
+import RichEditor, { htmlToText } from '@/components/admin/RichEditor';
+import { QuestionBankPicker, diffColors, type BankQuestion } from '@/components/admin/QuestionBankPicker';
 
 interface Program { id: string; name: string; slug: string }
 interface Subject { id: string; name: string }
 
-interface BankQuestion {
-  id: string; statement: string; difficulty: string;
-  subject: { name: string }; topic: { name: string } | null;
-}
-
 interface SectionQuestion {
   id: string; questionId: string; sortOrder: number; points: number;
-  question: {
-    id: string; statement: string; difficulty: string;
-    subject: { name: string }; topic: { name: string } | null;
-  };
+  question: BankQuestion;
 }
 
 interface MockTestSection {
@@ -89,11 +82,6 @@ export default function AdminMockTestsPage() {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
   // Question picker
-  const [questionSearch, setQuestionSearch] = useState('');
-  const [bankSubject, setBankSubject] = useState('');
-  const [allQuestions, setAllQuestions] = useState<BankQuestion[]>([]);
-  const [questionsLoading, setQuestionsLoading] = useState(false);
-  const [addingId, setAddingId] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
 
   const fetchMockTests = useCallback(async (p = page, s = search) => {
@@ -109,11 +97,13 @@ export default function AdminMockTestsPage() {
     finally { setLoading(false); }
   }, [page, search]);
 
+  // Initial load only — page/search handlers call fetchMockTests with explicit args
   useEffect(() => {
     fetchMockTests();
     fetch('/api/admin/programs?limit=100').then(r => r.json()).then(d => setPrograms(d.programs ?? []));
     fetch('/api/admin/subjects?limit=100').then(r => r.json()).then(d => setSubjects(d.subjects ?? []));
-  }, [fetchMockTests]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const openAdd = () => { setEditMockTest(null); setForm(emptyForm); setFormError(''); setModalOpen(true); };
   const openEdit = (mt: MockTest) => {
@@ -174,14 +164,16 @@ export default function AdminMockTestsPage() {
     await loadSections(mt.id);
   };
 
-  const loadSections = async (mockTestId: string) => {
-    setSectionsLoading(true);
+  // `silent` refreshes in the background without swapping the list for a loader,
+  // so an expanded section (and its question picker) stays mounted.
+  const loadSections = async (mockTestId: string, silent = false) => {
+    if (!silent) setSectionsLoading(true);
     try {
       const res = await fetch(`/api/admin/mock-tests/${mockTestId}`);
       const data = await res.json();
       setSections(data.mockTest?.sections ?? []);
     } catch { toast('error', 'Failed to load sections'); }
-    finally { setSectionsLoading(false); }
+    finally { if (!silent) setSectionsLoading(false); }
   };
 
   const handleSaveSection = async () => {
@@ -222,54 +214,43 @@ export default function AdminMockTestsPage() {
   };
 
   // ── Question picker ──────────────────────────────────────────────
-  const loadQuestions = async (s = questionSearch, sub = bankSubject) => {
-    setQuestionsLoading(true);
-    try {
-      const params = new URLSearchParams({ limit: '30', page: '1' });
-      if (s) params.set('search', s);
-      if (sub) params.set('subjectId', sub);
-      const res = await fetch(`/api/admin/questions?${params}`);
-      const data = await res.json();
-      setAllQuestions(data.questions ?? []);
-    } catch { /* silent */ }
-    finally { setQuestionsLoading(false); }
+  const updateSectionQuestions = (sectionId: string, fn: (qs: SectionQuestion[]) => SectionQuestion[]) => {
+    setSections(list => list.map(s => {
+      if (s.id !== sectionId) return s;
+      const questions = fn(s.questions ?? []);
+      return { ...s, questions, _count: { ...s._count, questions: questions.length } };
+    }));
   };
 
-  useEffect(() => {
-    if (expandedSection) loadQuestions(questionSearch, bankSubject);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [expandedSection, questionSearch, bankSubject]);
-
-  const addQuestionToSection = async (sectionId: string, questionId: string) => {
+  const addQuestionToSection = async (sectionId: string, question: BankQuestion) => {
     if (!selectedMockTest) return;
-    setAddingId(questionId);
+    const mockTestId = selectedMockTest.id;
     try {
-      const res = await fetch(`/api/admin/mock-tests/${selectedMockTest.id}/sections/${sectionId}/questions`, {
+      const res = await fetch(`/api/admin/mock-tests/${mockTestId}/sections/${sectionId}/questions`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ questionId }),
+        body: JSON.stringify({ questionId: question.id }),
       });
       if (!res.ok) { const e = await res.json(); toast('error', e.error ?? 'Failed to add'); return; }
-      await loadSections(selectedMockTest.id);
-    } finally { setAddingId(null); }
+      // Show it immediately, then sync real ids/sort order in the background
+      updateSectionQuestions(sectionId, qs => [
+        ...qs,
+        { id: `pending-${question.id}`, questionId: question.id, sortOrder: qs.length, points: 1, question },
+      ]);
+      loadSections(mockTestId, true);
+    } catch { toast('error', 'Failed to add question'); }
   };
 
   const removeQuestionFromSection = async (sectionId: string, questionId: string) => {
     if (!selectedMockTest) return;
     setRemovingId(questionId);
     try {
-      await fetch(`/api/admin/mock-tests/${selectedMockTest.id}/sections/${sectionId}/questions/${questionId}`, {
+      const res = await fetch(`/api/admin/mock-tests/${selectedMockTest.id}/sections/${sectionId}/questions/${questionId}`, {
         method: 'DELETE',
       });
-      await loadSections(selectedMockTest.id);
+      if (!res.ok) throw new Error();
+      updateSectionQuestions(sectionId, qs => qs.filter(sq => sq.question.id !== questionId));
     } catch { toast('error', 'Failed to remove question'); }
     finally { setRemovingId(null); }
-  };
-
-  const diffColors: Record<string, { background: string; color: string }> = {
-    EASY:   { background: '#dcfce7', color: '#16a34a' },
-    MEDIUM: { background: '#fef3c7', color: '#d97706' },
-    HARD:   { background: '#fee2e2', color: '#dc2626' },
-    EXPERT: { background: '#ede9fe', color: '#7c3aed' },
   };
 
   const columns: Column<MockTest>[] = [
@@ -544,11 +525,7 @@ export default function AdminMockTestsPage() {
                         </button>
                         <button
                           className="p-1.5 rounded hover:bg-slate-100"
-                          onClick={() => {
-                            const next = expandedSection === section.id ? null : section.id;
-                            setExpandedSection(next);
-                            if (next) { setQuestionSearch(''); setBankSubject(''); }
-                          }}
+                          onClick={() => setExpandedSection(expandedSection === section.id ? null : section.id)}
                         >
                           {expandedSection === section.id
                             ? <ChevronDown className="h-3.5 w-3.5" />
@@ -584,13 +561,13 @@ export default function AdminMockTestsPage() {
                                       {i + 1}.
                                     </span>
                                     <div className="flex-1 min-w-0">
-                                      <p className="text-xs line-clamp-2">{sq.question.statement}</p>
+                                      <p className="text-xs line-clamp-2">{htmlToText(sq.question.statement, 200)}</p>
                                       <div className="flex gap-2 mt-1">
                                         <span className="text-xs px-1.5 py-0.5 rounded" style={diffColors[sq.question.difficulty] ?? {}}>
                                           {sq.question.difficulty}
                                         </span>
                                         <span className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>
-                                          {sq.question.subject.name}
+                                          {sq.question.subject?.name}
                                         </span>
                                       </div>
                                     </div>
@@ -613,75 +590,12 @@ export default function AdminMockTestsPage() {
                             <p className="text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: 'var(--color-muted-foreground)' }}>
                               Add from Question Bank
                             </p>
-                            <div className="flex gap-2 mb-3">
-                              <div className="relative flex-1">
-                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5" style={{ color: 'var(--color-muted-foreground)' }} />
-                                <Input
-                                  className="pl-8 h-8 text-sm"
-                                  placeholder="Search questions…"
-                                  value={questionSearch}
-                                  onChange={e => setQuestionSearch(e.target.value)}
-                                  onKeyDown={e => e.key === 'Enter' && loadQuestions(questionSearch, bankSubject)}
-                                />
-                              </div>
-                              <Select
-                                value={bankSubject || 'all'}
-                                onValueChange={v => { const val = v === 'all' ? '' : v; setBankSubject(val); loadQuestions(questionSearch, val); }}
-                              >
-                                <SelectTrigger className="w-36 h-8 shrink-0 text-xs"><SelectValue placeholder="Subject" /></SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="all">All subjects</SelectItem>
-                                  {subjects.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                                </SelectContent>
-                              </Select>
-                              <Button variant="outline" size="sm" className="h-8" onClick={() => loadQuestions(questionSearch, bankSubject)} disabled={questionsLoading}>
-                                {questionsLoading ? '…' : 'Search'}
-                              </Button>
-                            </div>
-                            <div className="max-h-52 overflow-y-auto space-y-1.5">
-                              {questionsLoading ? (
-                                <p className="text-xs py-2 text-center" style={{ color: 'var(--color-muted-foreground)' }}>Loading…</p>
-                              ) : allQuestions.length === 0 ? (
-                                <p className="text-xs py-2 text-center" style={{ color: 'var(--color-muted-foreground)' }}>No questions found.</p>
-                              ) : allQuestions.map(q => {
-                                const already = assignedIds.has(q.id);
-                                return (
-                                  <div
-                                    key={q.id}
-                                    className="flex items-start gap-2.5 p-2.5 rounded-lg border"
-                                    style={{
-                                      borderColor: 'var(--color-border)',
-                                      background: already ? 'color-mix(in srgb, var(--color-primary) 8%, var(--color-card))' : 'var(--color-card)',
-                                    }}
-                                  >
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-xs line-clamp-2">{q.statement}</p>
-                                      <div className="flex gap-2 mt-1">
-                                        <span className="text-xs px-1.5 py-0.5 rounded" style={diffColors[q.difficulty] ?? {}}>
-                                          {q.difficulty}
-                                        </span>
-                                        <span className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>
-                                          {q.subject.name}
-                                        </span>
-                                      </div>
-                                    </div>
-                                    {already ? (
-                                      <span className="text-xs shrink-0 mt-0.5" style={{ color: 'var(--color-primary)' }}>Added</span>
-                                    ) : (
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="shrink-0 h-7 text-xs"
-                                        onClick={() => addQuestionToSection(section.id, q.id)}
-                                        disabled={addingId === q.id}
-                                      >
-                                        {addingId === q.id ? '…' : <><Plus className="h-3 w-3 mr-1" />Add</>}
-                                      </Button>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
+                            <QuestionBankPicker
+                              subjects={subjects}
+                              assignedIds={assignedIds}
+                              onAdd={(q) => addQuestionToSection(section.id, q)}
+                              listClassName="max-h-72"
+                            />
                           </div>
                         </div>
                       );

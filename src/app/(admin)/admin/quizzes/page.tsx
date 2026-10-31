@@ -12,7 +12,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import RichEditor from '@/components/admin/RichEditor';
+import RichEditor, { htmlToText } from '@/components/admin/RichEditor';
+import { QuestionBankPicker, diffColors, type BankQuestion } from '@/components/admin/QuestionBankPicker';
 
 interface Quiz {
   id: string;
@@ -33,16 +34,6 @@ interface Quiz {
 interface Subject {
   id: string;
   name: string;
-}
-
-interface BankQuestion {
-  id: string;
-  statement: string;
-  difficulty: string;
-  questionType: string;
-  sourceType: string;
-  subject: { name: string } | null;
-  options: { id: string; content: string; isCorrect: boolean }[];
 }
 
 interface QuizQuestion {
@@ -89,11 +80,7 @@ export default function AdminQuizzesPage() {
   // Manage Questions panel
   const [manageQuiz, setManageQuiz] = useState<Quiz | null>(null);
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
-  const [bankSearch, setBankSearch] = useState('');
-  const [bankSubject, setBankSubject] = useState('');
-  const [bankResults, setBankResults] = useState<BankQuestion[]>([]);
-  const [bankLoading, setBankLoading] = useState(false);
-  const [addingId, setAddingId] = useState<string | null>(null);
+  const [quizQuestionsLoading, setQuizQuestionsLoading] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
 
   const fetchQuizzes = useCallback(async (p = page, s = search, type = typeFilter, pub = publishedFilter) => {
@@ -114,10 +101,12 @@ export default function AdminQuizzesPage() {
     }
   }, [page, search, typeFilter, publishedFilter]);
 
+  // Initial load only — page/search/filter handlers call fetchQuizzes with explicit args
   useEffect(() => {
     fetchQuizzes();
     fetch('/api/admin/subjects?limit=100').then(r => r.json()).then(d => setSubjects(d.subjects ?? []));
-  }, [fetchQuizzes]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const openAdd = () => {
     setEditQuiz(null);
@@ -210,63 +199,58 @@ export default function AdminQuizzesPage() {
 
   const openManage = async (q: Quiz) => {
     setManageQuiz(q);
-    setBankSearch('');
-    setBankSubject('');
-    setBankResults([]);
-    const res = await fetch(`/api/admin/quizzes/${q.id}/questions`);
-    const data = await res.json();
-    setQuizQuestions(data.questions ?? []);
+    setQuizQuestions([]);
+    setQuizQuestionsLoading(true);
+    try {
+      const res = await fetch(`/api/admin/quizzes/${q.id}/questions`);
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setQuizQuestions(data.questions ?? []);
+    } catch {
+      toast('error', 'Failed to load quiz questions');
+    } finally {
+      setQuizQuestionsLoading(false);
+    }
   };
 
-  const searchBank = useCallback(async (s = bankSearch, sub = bankSubject) => {
-    setBankLoading(true);
-    try {
-      const params = new URLSearchParams({ limit: '20', page: '1' });
-      if (s) params.set('search', s);
-      if (sub) params.set('subjectId', sub);
-      const res = await fetch(`/api/admin/questions?${params}`);
-      const data = await res.json();
-      setBankResults(data.questions ?? []);
-    } finally {
-      setBankLoading(false);
-    }
-  }, [bankSearch, bankSubject]);
+  // Keep the table's question count in sync without reloading the whole table
+  const bumpQuestionCount = (quizId: string, delta: number) => {
+    setQuizzes(list => list.map(q => q.id === quizId ? { ...q, _count: { ...q._count, questions: q._count.questions + delta } } : q));
+  };
 
-  useEffect(() => {
-    if (manageQuiz) searchBank();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [manageQuiz]);
-
-  const addQuestion = async (questionId: string) => {
+  const addQuestion = async (question: BankQuestion) => {
     if (!manageQuiz) return;
-    setAddingId(questionId);
+    const quizId = manageQuiz.id;
     try {
-      const res = await fetch(`/api/admin/quizzes/${manageQuiz.id}/questions`, {
+      const res = await fetch(`/api/admin/quizzes/${quizId}/questions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ questionId }),
+        body: JSON.stringify({ questionId: question.id }),
       });
+      const data = await res.json();
       if (!res.ok) {
-        const err = await res.json();
-        toast('error', err.error ?? 'Failed to add');
+        toast('error', data.error ?? 'Failed to add');
         return;
       }
-      const refreshed = await fetch(`/api/admin/quizzes/${manageQuiz.id}/questions`);
-      const data = await refreshed.json();
-      setQuizQuestions(data.questions ?? []);
-      fetchQuizzes();
-    } finally {
-      setAddingId(null);
+      const { id, sortOrder, points } = data.quizQuestion;
+      setQuizQuestions(list => [...list, { id, sortOrder, points, question }]);
+      bumpQuestionCount(quizId, 1);
+    } catch {
+      toast('error', 'Failed to add question');
     }
   };
 
   const removeQuestion = async (questionId: string) => {
     if (!manageQuiz) return;
+    const quizId = manageQuiz.id;
     setRemovingId(questionId);
     try {
-      await fetch(`/api/admin/quizzes/${manageQuiz.id}/questions/${questionId}`, { method: 'DELETE' });
+      const res = await fetch(`/api/admin/quizzes/${quizId}/questions/${questionId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error();
       setQuizQuestions(q => q.filter(qq => qq.question.id !== questionId));
-      fetchQuizzes();
+      bumpQuestionCount(quizId, -1);
+    } catch {
+      toast('error', 'Failed to remove question');
     } finally {
       setRemovingId(null);
     }
@@ -279,13 +263,6 @@ export default function AdminQuizzesPage() {
     PRACTICE: { background: '#dcfce7', color: '#16a34a' },
     DAILY_QUIZ: { background: '#fef3c7', color: '#d97706' },
     MOCK_TEST: { background: '#fee2e2', color: '#dc2626' },
-  };
-
-  const diffColors: Record<string, { background: string; color: string }> = {
-    EASY: { background: '#dcfce7', color: '#16a34a' },
-    MEDIUM: { background: '#fef3c7', color: '#d97706' },
-    HARD: { background: '#fee2e2', color: '#dc2626' },
-    EXPERT: { background: '#ede9fe', color: '#7c3aed' },
   };
 
   const columns: Column<Quiz>[] = [
@@ -465,7 +442,9 @@ export default function AdminQuizzesPage() {
               <p className="text-sm font-semibold mb-2" style={{ color: 'var(--color-foreground)' }}>
                 In this quiz ({quizQuestions.length})
               </p>
-              {quizQuestions.length === 0 ? (
+              {quizQuestionsLoading ? (
+                <p className="text-sm" style={{ color: 'var(--color-muted-foreground)' }}>Loading…</p>
+              ) : quizQuestions.length === 0 ? (
                 <p className="text-sm" style={{ color: 'var(--color-muted-foreground)' }}>No questions added yet.</p>
               ) : (
                 <div className="space-y-1.5">
@@ -473,7 +452,7 @@ export default function AdminQuizzesPage() {
                     <div key={qq.id} className="flex items-start gap-3 p-2.5 rounded-lg border" style={{ borderColor: 'var(--color-border)', background: 'var(--color-card)' }}>
                       <span className="text-xs font-mono mt-0.5 w-5 text-right shrink-0" style={{ color: 'var(--color-muted-foreground)' }}>{i + 1}.</span>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm line-clamp-2">{qq.question.statement}</p>
+                        <p className="text-sm line-clamp-2">{htmlToText(qq.question.statement, 200)}</p>
                         <div className="flex gap-2 mt-1">
                           <span className="text-xs px-1.5 py-0.5 rounded" style={diffColors[qq.question.difficulty] ?? {}}>{qq.question.difficulty}</span>
                           <span className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>{qq.question.subject?.name}</span>
@@ -496,58 +475,14 @@ export default function AdminQuizzesPage() {
             {/* Search question bank */}
             <div>
               <p className="text-sm font-semibold mb-2" style={{ color: 'var(--color-foreground)' }}>Add from Question Bank</p>
-              <div className="flex gap-2 mb-3">
-                <Input
-                  className="flex-1"
-                  placeholder="Search questions..."
-                  value={bankSearch}
-                  onChange={(e) => setBankSearch(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && searchBank(bankSearch, bankSubject)}
+              {manageQuiz && (
+                <QuestionBankPicker
+                  key={manageQuiz.id}
+                  subjects={subjects}
+                  assignedIds={assignedIds}
+                  onAdd={addQuestion}
                 />
-                <Select value={bankSubject || 'all'} onValueChange={(v) => { const val = v === 'all' ? '' : v; setBankSubject(val); searchBank(bankSearch, val); }}>
-                  <SelectTrigger className="w-36 shrink-0"><SelectValue placeholder="Subject" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All subjects</SelectItem>
-                    {subjects.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-                <Button variant="outline" size="sm" onClick={() => searchBank(bankSearch, bankSubject)} disabled={bankLoading}>
-                  {bankLoading ? '...' : 'Search'}
-                </Button>
-              </div>
-
-              {bankResults.length === 0 && !bankLoading && (
-                <p className="text-sm" style={{ color: 'var(--color-muted-foreground)' }}>No questions found.</p>
               )}
-              <div className="space-y-1.5">
-                {bankResults.map(q => {
-                  const already = assignedIds.has(q.id);
-                  return (
-                    <div key={q.id} className="flex items-start gap-3 p-2.5 rounded-lg border" style={{ borderColor: 'var(--color-border)', background: already ? 'var(--color-primary-light)' : 'var(--color-background)' }}>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm line-clamp-2">{q.statement}</p>
-                        <div className="flex gap-2 mt-1">
-                          <span className="text-xs px-1.5 py-0.5 rounded" style={diffColors[q.difficulty] ?? {}}>{q.difficulty}</span>
-                          <span className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>{q.subject?.name} · {q.sourceType}</span>
-                        </div>
-                      </div>
-                      {already ? (
-                        <span className="text-xs shrink-0 mt-1" style={{ color: 'var(--color-primary)' }}>Added</span>
-                      ) : (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="shrink-0"
-                          onClick={() => addQuestion(q.id)}
-                          disabled={addingId === q.id}
-                        >
-                          {addingId === q.id ? '...' : 'Add'}
-                        </Button>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
             </div>
           </div>
 
