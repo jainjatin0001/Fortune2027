@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, unauthorized, forbidden, badRequest } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { parseDifficulty, parseQuestionType, parseSourceType, validateAnswerInput } from '@/lib/question-input';
 
 async function withAdmin() {
   try {
@@ -61,25 +62,36 @@ export async function POST(req: NextRequest) {
   try {
     await withAdmin();
     const body = await req.json();
-    const { statement, explanation, difficulty, subjectId, topicId, tags, points, options } = body;
+    const { statement, explanation, subjectId, topicId, tags, points } = body;
 
     if (!statement) return badRequest('statement is required');
-    if (!options || options.length < 2) return badRequest('At least 2 options are required');
-    if (!options.some((o: { isCorrect: boolean }) => o.isCorrect)) {
-      return badRequest('At least one option must be marked as correct');
-    }
+    if (!subjectId) return badRequest('subjectId is required');
+
+    const questionType = body.questionType === undefined ? 'SINGLE_CORRECT' : parseQuestionType(body.questionType);
+    if (!questionType) return badRequest('Invalid questionType');
+    const sourceType = body.sourceType === undefined ? 'MCQ' : parseSourceType(body.sourceType);
+    if (!sourceType) return badRequest('Invalid sourceType');
+    const difficulty = body.difficulty === undefined ? 'MEDIUM' : parseDifficulty(body.difficulty);
+    if (!difficulty) return badRequest('Invalid difficulty');
+
+    const answer = validateAnswerInput(questionType, body.options, body.acceptedAnswers);
+    if ('error' in answer) return badRequest(answer.error);
+    const { options, acceptedAnswers } = answer.data;
 
     const question = await prisma.question.create({
       data: {
         statement,
         explanation: explanation ?? null,
-        difficulty: difficulty ?? 'MEDIUM',
-        subjectId: subjectId ?? null,
+        difficulty,
+        questionType,
+        sourceType,
+        acceptedAnswers,
+        subjectId,
         topicId: topicId ?? null,
         tags: tags ?? [],
         points: points ?? 1,
         options: {
-          create: options.map((o: { content: string; isCorrect: boolean }, idx: number) => ({
+          create: options.map((o, idx) => ({
             content: o.content,
             isCorrect: o.isCorrect,
             sortOrder: idx,

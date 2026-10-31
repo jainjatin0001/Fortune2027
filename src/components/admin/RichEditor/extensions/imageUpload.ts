@@ -22,11 +22,36 @@ async function uploadImageFile(file: File): Promise<string> {
 }
 
 /**
+ * Read an image's intrinsic size so it can be stored as width/height attributes.
+ * Readers' browsers use these to reserve space before the file loads (no layout jump).
+ */
+async function readImageSize(file: File): Promise<{ width: number; height: number } | null> {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const size = { width: bitmap.width, height: bitmap.height };
+    bitmap.close();
+    return size;
+  } catch {
+    return null; // e.g. SVG — fall back to no reserved size
+  }
+}
+
+async function uploadAndInsert(view: EditorView, file: File, alt: string) {
+  const [url, size] = await Promise.all([uploadImageFile(file), readImageSize(file)]);
+  insertImage(view, url, alt, size);
+}
+
+/**
  * Insert an uploaded image at the current cursor position.
  */
-function insertImage(view: EditorView, url: string, alt = '') {
+function insertImage(
+  view: EditorView,
+  url: string,
+  alt = '',
+  size: { width: number; height: number } | null = null,
+) {
   const { schema, tr } = view.state;
-  const node = schema.nodes.image?.create({ src: url, alt });
+  const node = schema.nodes.image?.create({ src: url, alt, ...size });
   if (!node) return;
   const transaction = tr.replaceSelectionWith(node);
   view.dispatch(transaction);
@@ -57,8 +82,7 @@ export const ImageUpload = Image.extend({
             event.preventDefault();
             images.forEach(async (file) => {
               try {
-                const url = await uploadImageFile(file);
-                insertImage(view, url, file.name);
+                await uploadAndInsert(view, file, file.name);
               } catch (e) {
                 console.error('[RichEditor] Image upload failed:', e);
               }
@@ -77,8 +101,7 @@ export const ImageUpload = Image.extend({
               const file = item.getAsFile();
               if (!file) return;
               try {
-                const url = await uploadImageFile(file);
-                insertImage(view, url, 'pasted-image');
+                await uploadAndInsert(view, file, 'pasted-image');
               } catch (e) {
                 console.error('[RichEditor] Image paste upload failed:', e);
               }

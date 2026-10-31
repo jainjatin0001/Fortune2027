@@ -20,17 +20,24 @@ export function ImageModal({ editor, open, onClose }: ImageModalProps) {
   const [alt, setAlt] = useState('');
   const [dragOver, setDragOver] = useState(false);
   const [preview, setPreview] = useState('');
+  // Intrinsic size from the preview, stored on the image so readers reserve space before it loads
+  const [size, setSize] = useState<{ width: number; height: number } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const { uploading, uploadFile } = useEditorUpload();
 
   const reset = () => {
-    setUrl(''); setAlt(''); setPreview(''); setTab('upload');
+    setUrl(''); setAlt(''); setPreview(''); setSize(null); setTab('upload');
+  };
+
+  const captureSize = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const { naturalWidth: width, naturalHeight: height } = e.currentTarget;
+    setSize(width && height ? { width, height } : null);
   };
 
   const handleInsert = () => {
     const src = url || preview;
     if (!src) return;
-    editor.chain().focus().setImage({ src, alt }).run();
+    editor.chain().focus().setImage({ src, alt, ...size }).run();
     reset();
     onClose();
   };
@@ -100,7 +107,7 @@ export function ImageModal({ editor, open, onClose }: ImageModalProps) {
             {uploading ? (
               <span className="text-sm" style={{ color: 'var(--color-muted-foreground)' }}>Uploading…</span>
             ) : preview ? (
-              <img src={preview} alt="Preview" className="max-h-40 rounded-lg object-contain" />
+              <img src={preview} alt="Preview" onLoad={captureSize} className="max-h-40 rounded-lg object-contain" />
             ) : (
               <>
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--color-muted-foreground)' }}>
@@ -120,7 +127,7 @@ export function ImageModal({ editor, open, onClose }: ImageModalProps) {
               <Input
                 autoFocus
                 value={url}
-                onChange={(e) => setUrl(e.target.value)}
+                onChange={(e) => { setUrl(e.target.value); setSize(null); }}
                 placeholder="https://example.com/image.png"
               />
             </div>
@@ -128,6 +135,7 @@ export function ImageModal({ editor, open, onClose }: ImageModalProps) {
               <img
                 src={url}
                 alt="Preview"
+                onLoad={captureSize}
                 className="max-h-32 rounded-lg object-contain mx-auto"
                 onError={(e) => (e.currentTarget.style.display = 'none')}
               />

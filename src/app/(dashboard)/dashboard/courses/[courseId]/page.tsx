@@ -145,6 +145,8 @@ export default async function CoursePlayerPage({
               id: qq.question.id,
               statement: qq.question.statement,
               difficulty: qq.question.difficulty,
+              questionType: qq.question.questionType,
+              acceptedAnswers: qq.question.acceptedAnswers,
               explanation: qq.question.explanation,
               options: qq.question.options.map(o => ({
                 id: o.id,
@@ -166,6 +168,8 @@ export default async function CoursePlayerPage({
               id: item.question.id,
               statement: item.question.statement,
               difficulty: item.question.difficulty,
+              questionType: item.question.questionType,
+              acceptedAnswers: item.question.acceptedAnswers,
               explanation: item.question.explanation,
               options: item.question.options.map(o => ({
                 id: o.id,

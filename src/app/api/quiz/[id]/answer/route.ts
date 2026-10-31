@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDbUser, unauthorized, badRequest } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { gradeAnswer, isAnswered, parseNumericAnswer, type StudentAnswer } from '@/lib/grading';
 
 export async function POST(
   req: NextRequest,
@@ -12,10 +13,16 @@ export async function POST(
 
     const { id: attemptId } = await params;
     const body = await req.json();
-    const { questionId, selectedOptionId, timeTaken } = body;
+    const { questionId, timeTaken } = body;
+    // selectedOptionId (single) is still accepted for older clients
+    const selectedOptionIds: string[] = Array.isArray(body.selectedOptionIds)
+      ? body.selectedOptionIds.map(String)
+      : body.selectedOptionId ? [String(body.selectedOptionId)] : [];
+    const textAnswer: string | undefined = typeof body.textAnswer === 'string' ? body.textAnswer.trim() : undefined;
+    const answer: StudentAnswer = { selectedOptionIds, textAnswer };
 
-    if (!questionId || !selectedOptionId) {
-      return badRequest('questionId and selectedOptionId are required');
+    if (!questionId || !isAnswered(answer)) {
+      return badRequest('questionId and an answer (selectedOptionIds or textAnswer) are required');
     }
 
     const attempt = await prisma.quizAttempt.findUnique({ where: { id: attemptId } });
@@ -28,42 +35,49 @@ export async function POST(
     });
     if (!quizQuestion) return badRequest('Question does not belong to this quiz');
 
-    const option = await prisma.questionOption.findFirst({
-      where: { id: selectedOptionId, questionId },
-      include: { question: { include: { options: { where: { isCorrect: true } } } } },
+    const question = await prisma.question.findUnique({
+      where: { id: questionId },
+      include: { options: { select: { id: true, isCorrect: true } } },
     });
+    if (!question) return NextResponse.json({ error: 'Question not found' }, { status: 404 });
 
-    if (!option) return NextResponse.json({ error: 'Option not found' }, { status: 404 });
+    const optionIds = new Set(question.options.map(o => o.id));
+    if (selectedOptionIds.some(id => !optionIds.has(id))) {
+      return NextResponse.json({ error: 'Option not found' }, { status: 404 });
+    }
 
-    const isCorrect = option.isCorrect;
-    const correctOption = option.question.options[0];
+    const correctOptionIds = question.options.filter(o => o.isCorrect).map(o => o.id);
+    const isCorrect = gradeAnswer(
+      { questionType: question.questionType, correctOptionIds, acceptedAnswers: question.acceptedAnswers },
+      answer,
+    ) ?? false;
+
+    const attemptData = {
+      selectedOptionIds,
+      textAnswer: textAnswer || null,
+      numericAnswer: question.questionType === 'NUMERIC' && textAnswer ? parseNumericAnswer(textAnswer) : null,
+      isCorrect,
+      timeTaken: timeTaken ?? null,
+    };
 
     const existing = await prisma.userQuestionAttempt.findFirst({
       where: { quizAttemptId: attemptId, questionId, userId: user.id },
     });
 
     if (existing) {
-      await prisma.userQuestionAttempt.update({
-        where: { id: existing.id },
-        data: { selectedOptionIds: [selectedOptionId], isCorrect, timeTaken: timeTaken ?? null },
-      });
+      await prisma.userQuestionAttempt.update({ where: { id: existing.id }, data: attemptData });
     } else {
       await prisma.userQuestionAttempt.create({
-        data: {
-          userId: user.id,
-          questionId,
-          quizAttemptId: attemptId,
-          selectedOptionIds: [selectedOptionId],
-          isCorrect,
-          timeTaken: timeTaken ?? null,
-        },
+        data: { userId: user.id, questionId, quizAttemptId: attemptId, ...attemptData },
       });
     }
 
     return NextResponse.json({
       isCorrect,
-      correctOptionId: correctOption?.id,
-      explanation: option.question.explanation,
+      correctOptionId: correctOptionIds[0],
+      correctOptionIds,
+      acceptedAnswers: question.acceptedAnswers,
+      explanation: question.explanation,
     });
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

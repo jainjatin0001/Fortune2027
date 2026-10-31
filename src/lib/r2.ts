@@ -31,6 +31,8 @@ export async function uploadToR2(file: Buffer, filename: string, contentType: st
       Key: filename,
       Body: file,
       ContentType: contentType,
+      // Keys are unique per upload and never overwritten, so browsers/CDN may cache forever
+      CacheControl: 'public, max-age=31536000, immutable',
     })
   );
 

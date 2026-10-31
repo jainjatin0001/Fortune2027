@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Loader2, AlertCircle, FileText, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ExamInterface, type ExamSection, type ExamAttemptResult } from './ExamInterface';
-import type { DemoQuestion } from '@/types';
+import type { DemoQuestion, QuestionType } from '@/types';
 
 interface MockTestPlayerProps {
   assetId: string;
@@ -31,7 +31,7 @@ interface SectionData {
     id: string;
     statement: string;
     difficulty: string;
-    questionType: string;
+    questionType: QuestionType;
     points: number;
     subject: string;
     topic: string | null;
@@ -60,6 +60,7 @@ function adaptSection(section: SectionData): ExamSection {
         category: 'SAT_PREP' as const,
         difficulty: q.difficulty as DemoQuestion['difficulty'],
         question: q.statement,
+        questionType: q.questionType,
         options: options.map(o => ({ id: o.id, content: o.content })),
         correctAnswerId: '',
         explanation: '',

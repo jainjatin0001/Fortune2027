@@ -5,15 +5,17 @@ import { CheckCircle, XCircle, Clock, ChevronRight, ChevronLeft, Trophy, RotateC
 import { cn, getDifficultyLabel, getDifficultyClass } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
 import type { DemoQuestion } from '@/types';
-import { sanitizeHtml } from '@/components/admin/RichEditor';
+import { RichContent, usePreloadImages } from './RichContent';
+import { demoAnswerKey, gradeAnswer, isTypedQuestion, type StudentAnswer } from '@/lib/grading';
 
 interface QuizInterfaceProps {
   questions: DemoQuestion[];
   title?: string;
   timeLimit?: number; // seconds; omit for an untimed quiz
   passingScore?: number; // percentage, default 70
-  onComplete?: (score: number, answers: Record<string, string>) => void;
+  onComplete?: (score: number, answers: Record<string, StudentAnswer>) => void;
   className?: string;
   /** Enables QuizAttempt persistence for quizzes loaded from the quiz library. */
   quizId?: string;
@@ -24,8 +26,10 @@ type QuizState = 'idle' | 'active' | 'review' | 'complete';
 export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, passingScore = 70, onComplete, className, quizId }: QuizInterfaceProps) {
   const [state, setState] = useState<QuizState>('idle');
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [answers, setAnswers] = useState<Record<string, StudentAnswer>>({});
+  // Unsubmitted input for the current question (multi-select picks, typed answer)
+  const [draftOptionIds, setDraftOptionIds] = useState<string[]>([]);
+  const [draftText, setDraftText] = useState('');
   const [showExplanation, setShowExplanation] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [totalTime] = useState(timeLimit);
@@ -36,11 +40,22 @@ export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, p
   const isStarting = useRef(false);
 
   const current = questions[currentIndex];
-  const isAnswered = selectedOption !== null;
-  const isCorrect = selectedOption === current?.correctAnswerId;
-  const score = Object.entries(answers).filter(
-    ([id, ans]) => questions.find((q) => q.id === id)?.correctAnswerId === ans
-  ).length;
+  const questionType = current?.questionType ?? 'SINGLE_CORRECT';
+  const isTyped = isTypedQuestion(questionType);
+  const isMulti = questionType === 'MULTIPLE_CORRECT';
+  const submitted = current ? answers[current.id] : undefined;
+  const isAnswered = !!submitted;
+  const correctOptionIds = current ? demoAnswerKey(current).correctOptionIds : [];
+  const isCorrectFor = (q: DemoQuestion) => gradeAnswer(demoAnswerKey(q), answers[q.id]) === true;
+  const isCorrect = current ? isCorrectFor(current) : false;
+  const score = questions.filter(isCorrectFor).length;
+
+  usePreloadImages(questions.flatMap((q) => [q.question, q.explanation, ...q.options.map((o) => o.content)]));
+
+  const resetDraft = () => {
+    setDraftOptionIds([]);
+    setDraftText('');
+  };
 
   const startQuiz = async () => {
     if (isStarting.current) return;
@@ -72,25 +87,47 @@ export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, p
     setTimeLeft(totalTime ?? null);
     setCurrentIndex(0);
     setAnswers({});
-    setSelectedOption(null);
+    resetDraft();
     setShowExplanation(false);
     isStarting.current = false;
   };
 
-  const selectOption = (optionId: string) => {
-    if (isAnswered) return;
-    setSelectedOption(optionId);
-    setAnswers((prev) => ({ ...prev, [current.id]: optionId }));
+  const submitAnswer = (answer: StudentAnswer) => {
+    if (!current || isAnswered) return;
+    if (answer.selectedOptionIds.length === 0 && !answer.textAnswer) return;
+    setAnswers((prev) => ({ ...prev, [current.id]: answer }));
 
-    const sourceOptionId = current.options.find((option) => option.id === optionId)?.sourceOptionId;
-    if (attemptId.current && sourceOptionId) {
+    // Display option IDs are letters; the API needs the database option IDs
+    const sourceOptionIds = answer.selectedOptionIds
+      .map((id) => current.options.find((option) => option.id === id)?.sourceOptionId)
+      .filter((id): id is string => !!id);
+    const canPersist = isTyped || sourceOptionIds.length === answer.selectedOptionIds.length;
+    if (attemptId.current && canPersist) {
       const request = fetch(`/api/quiz/${attemptId.current}/answer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ questionId: current.id, selectedOptionId: sourceOptionId }),
+        body: JSON.stringify({
+          questionId: current.id,
+          selectedOptionIds: sourceOptionIds,
+          textAnswer: answer.textAnswer,
+        }),
       }).then(() => undefined).catch(() => undefined);
       pendingAnswerRequests.current.push(request);
     }
+  };
+
+  const selectOption = (optionId: string) => {
+    if (isAnswered) return;
+    if (isMulti) {
+      setDraftOptionIds((ids) => ids.includes(optionId) ? ids.filter((id) => id !== optionId) : [...ids, optionId]);
+      return;
+    }
+    submitAnswer({ selectedOptionIds: [optionId] });
+  };
+
+  const checkDraft = () => {
+    if (isTyped) submitAnswer({ selectedOptionIds: [], textAnswer: draftText.trim() });
+    else submitAnswer({ selectedOptionIds: draftOptionIds });
   };
 
   const completeAttempt = useCallback(() => {
@@ -121,17 +158,17 @@ export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, p
   const nextQuestion = useCallback(() => {
     if (currentIndex + 1 < questions.length) {
       setCurrentIndex((i) => i + 1);
-      setSelectedOption(answers[questions[currentIndex + 1]?.id] ?? null);
+      resetDraft();
       setShowExplanation(false);
     } else {
       finishQuiz();
     }
-  }, [currentIndex, questions, answers, finishQuiz]);
+  }, [currentIndex, questions, finishQuiz]);
 
   const prevQuestion = () => {
     if (currentIndex > 0) {
       setCurrentIndex((i) => i - 1);
-      setSelectedOption(answers[questions[currentIndex - 1]?.id] ?? null);
+      resetDraft();
       setShowExplanation(false);
     }
   };
@@ -268,20 +305,66 @@ export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, p
             {current.subject} · {current.topic}
           </span>
         </div>
-        <div
+        <RichContent
+          html={current.question}
           className="text-base font-medium mb-6 leading-relaxed whitespace-pre-wrap"
           style={{ color: 'var(--color-foreground)' }}
-          dangerouslySetInnerHTML={{ __html: sanitizeHtml(current.question ?? '') }}
         />
 
+        {/* Typed answer (NUMERIC / TEXT) */}
+        {isTyped && (
+          <div className="space-y-3">
+            {isAnswered ? (
+              <div
+                className="flex items-center gap-2 p-3 rounded-xl border text-sm"
+                style={{
+                  borderColor: isCorrect ? 'var(--color-success)' : 'var(--color-danger)',
+                  background: isCorrect ? 'var(--color-success-light)' : 'var(--color-danger-light)',
+                  color: 'var(--color-foreground)',
+                }}
+              >
+                {isCorrect
+                  ? <CheckCircle className="h-4 w-4 shrink-0 text-[var(--color-success)]" />
+                  : <XCircle className="h-4 w-4 shrink-0 text-[var(--color-danger)]" />}
+                <span>
+                  Your answer: <strong>{submitted?.textAnswer}</strong>
+                  {!isCorrect && (current.acceptedAnswers?.length ?? 0) > 0 && (
+                    <> · Correct answer: <strong>{current.acceptedAnswers!.join(', ')}</strong></>
+                  )}
+                </span>
+              </div>
+            ) : (
+              <form
+                className="flex gap-2"
+                onSubmit={(e) => { e.preventDefault(); checkDraft(); }}
+              >
+                <Input
+                  value={draftText}
+                  onChange={(e) => setDraftText(e.target.value)}
+                  placeholder={questionType === 'NUMERIC' ? 'Enter a number or fraction, e.g. 3/17' : 'Type your answer'}
+                  inputMode={questionType === 'NUMERIC' ? 'decimal' : 'text'}
+                  autoComplete="off"
+                  aria-label="Your answer"
+                />
+                <Button type="submit" disabled={!draftText.trim()}>Check</Button>
+              </form>
+            )}
+          </div>
+        )}
+
         {/* Options */}
+        {!isTyped && (
         <div className="space-y-3">
+          {isMulti && !isAnswered && (
+            <p className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>Select all that apply.</p>
+          )}
           {current.options.map((option) => {
+            const selectedIds = submitted?.selectedOptionIds ?? draftOptionIds;
             let optionState: 'default' | 'selected' | 'correct' | 'incorrect' = 'default';
             if (isAnswered) {
-              if (option.id === current.correctAnswerId) optionState = 'correct';
-              else if (option.id === selectedOption && !isCorrect) optionState = 'incorrect';
-            } else if (option.id === selectedOption) {
+              if (correctOptionIds.includes(option.id)) optionState = 'correct';
+              else if (selectedIds.includes(option.id)) optionState = 'incorrect';
+            } else if (selectedIds.includes(option.id)) {
               optionState = 'selected';
             }
 
@@ -310,13 +393,19 @@ export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, p
                 >
                   {option.id.toUpperCase()}
                 </span>
-                <span className="text-sm" style={{ color: 'var(--color-foreground)' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(option.content ?? '') }} />
+                <RichContent as="span" html={option.content} className="text-sm" style={{ color: 'var(--color-foreground)' }} />
                 {optionState === 'correct' && <CheckCircle className="h-4 w-4 ml-auto shrink-0 text-[var(--color-success)]" />}
                 {optionState === 'incorrect' && <XCircle className="h-4 w-4 ml-auto shrink-0 text-[var(--color-danger)]" />}
               </button>
             );
           })}
+          {isMulti && !isAnswered && (
+            <Button size="sm" onClick={checkDraft} disabled={draftOptionIds.length === 0}>
+              Check answer
+            </Button>
+          )}
         </div>
+        )}
 
         {/* Explanation */}
         {isAnswered && (
@@ -328,14 +417,14 @@ export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, p
               {showExplanation ? 'Hide' : 'Show'} Explanation
             </button>
             {showExplanation && (
-                <div
+                <RichContent
+                  html={current.explanation}
                   className="mt-3 p-4 rounded-xl text-sm leading-relaxed"
                   style={{
                     background: 'var(--color-info-light)',
                     color: 'var(--color-foreground)',
                     borderLeft: '3px solid var(--color-info)',
                   }}
-                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(current.explanation ?? '') }}
                 />
             )}
           </div>
@@ -367,7 +456,7 @@ export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, p
                 background: i === currentIndex
                   ? 'var(--color-accent)'
                   : answers[questions[i].id]
-                  ? (answers[questions[i].id] === questions[i].correctAnswerId ? 'var(--color-success)' : 'var(--color-danger)')
+                  ? (isCorrectFor(questions[i]) ? 'var(--color-success)' : 'var(--color-danger)')
                   : 'var(--color-border)',
               }}
             />

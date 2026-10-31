@@ -36,6 +36,8 @@ export default async function QuizPage({ params }: { params: Promise<{ quizId: s
               statement: true,
               explanation: true,
               difficulty: true,
+              questionType: true,
+              acceptedAnswers: true,
               tags: true,
               subject: { select: { name: true } },
               topic: { select: { name: true } },
@@ -51,6 +53,9 @@ export default async function QuizPage({ params }: { params: Promise<{ quizId: s
   const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
   const questions: DemoQuestion[] = quiz.questions.map(({ points, question }) => {
     const correctIndex = question.options.findIndex((option) => option.isCorrect);
+    const correctAnswerIds = question.options
+      .map((option, index) => (option.isCorrect ? letters[index] ?? String(index) : null))
+      .filter((id): id is string => id !== null);
     return {
       id: question.id,
       subject: question.subject.name,
@@ -64,6 +69,9 @@ export default async function QuizPage({ params }: { params: Promise<{ quizId: s
         sourceOptionId: option.id,
       })),
       correctAnswerId: correctIndex >= 0 ? (letters[correctIndex] ?? String(correctIndex)) : '',
+      questionType: question.questionType,
+      correctAnswerIds,
+      acceptedAnswers: question.acceptedAnswers,
       explanation: question.explanation ?? '',
       points,
       tags: question.tags,

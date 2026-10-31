@@ -27,6 +27,9 @@ interface Question {
   difficulty: string;
   questionType: string;
   sourceType: string;
+  subjectId: string;
+  topicId: string | null;
+  acceptedAnswers: string[];
   points: number;
   isActive: boolean;
   tags: string[];
@@ -48,6 +51,8 @@ const SOURCE_TYPES = ['MCQ', 'PYQ', 'PRACTICE', 'MOCK_TEST'];
 let _optKeySeq = 0;
 const genKey = () => `ok-${++_optKeySeq}`;
 const emptyOption = (): QuestionOption => ({ content: '', isCorrect: false });
+const isTypedType = (t: string) => t === 'NUMERIC' || t === 'TEXT';
+const splitAnswers = (s: string) => s.split(',').map(a => a.trim()).filter(Boolean);
 const hasRichContent = (html: string) => {
   if (htmlToText(html).trim()) return true;
   return /<(img|table|iframe)\b|data-type="math-(inline|block)"/i.test(html);
@@ -77,6 +82,7 @@ export default function AdminQuestionsPage() {
     topicId: '',
     points: 1,
     tags: '',
+    acceptedAnswers: '',
     options: [emptyOption(), emptyOption(), emptyOption(), emptyOption()],
   });
   const [saving, setSaving] = useState(false);
@@ -121,6 +127,7 @@ export default function AdminQuestionsPage() {
       topicId: '',
       points: 1,
       tags: '',
+      acceptedAnswers: '',
       options: [emptyOption(), emptyOption(), emptyOption(), emptyOption()],
     });
   };
@@ -144,10 +151,11 @@ export default function AdminQuestionsPage() {
       difficulty: q.difficulty,
       questionType: q.questionType,
       sourceType: q.sourceType,
-      subjectId: '',
-      topicId: '',
+      subjectId: q.subjectId,
+      topicId: q.topicId ?? '',
       points: q.points,
       tags: q.tags.join(', '),
+      acceptedAnswers: q.acceptedAnswers.join(', '),
       options: opts,
     });
     setFormError('');
@@ -156,7 +164,10 @@ export default function AdminQuestionsPage() {
 
   const setOption = (i: number, field: keyof QuestionOption, value: string | boolean) => {
     setForm(f => {
-      const opts = [...f.options];
+      // Single-correct behaves like a radio group: checking one clears the rest
+      const opts = field === 'isCorrect' && value === true && f.questionType === 'SINGLE_CORRECT'
+        ? f.options.map(o => ({ ...o, isCorrect: false }))
+        : [...f.options];
       opts[i] = { ...opts[i], [field]: value };
       return { ...f, options: opts };
     });
@@ -165,9 +176,21 @@ export default function AdminQuestionsPage() {
   const handleSave = async () => {
     setFormError('');
     if (!hasRichContent(form.statement)) { setFormError('Question statement is required.'); return; }
+    if (!form.subjectId) { setFormError('Subject is required.'); return; }
+
+    const typed = isTypedType(form.questionType);
     const filledOptions = form.options.filter(o => hasRichContent(o.content));
-    if (filledOptions.length < 2) { setFormError('At least 2 options are required.'); return; }
-    if (!filledOptions.some(o => o.isCorrect)) { setFormError('At least one correct answer must be selected.'); return; }
+    const acceptedAnswers = splitAnswers(form.acceptedAnswers);
+    if (typed) {
+      if (acceptedAnswers.length === 0) { setFormError('At least one accepted answer is required.'); return; }
+    } else {
+      if (filledOptions.length < 2) { setFormError('At least 2 options are required.'); return; }
+      const correctCount = filledOptions.filter(o => o.isCorrect).length;
+      if (correctCount === 0) { setFormError('At least one correct answer must be selected.'); return; }
+      if (form.questionType === 'SINGLE_CORRECT' && correctCount > 1) {
+        setFormError('Single-correct questions must have exactly one correct option.'); return;
+      }
+    }
 
     setSaving(true);
     try {
@@ -177,10 +200,11 @@ export default function AdminQuestionsPage() {
         difficulty: form.difficulty,
         questionType: form.questionType,
         sourceType: form.sourceType,
-        subjectId: form.subjectId || undefined,
+        subjectId: form.subjectId,
         points: form.points,
         tags: form.tags ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
-        options: filledOptions,
+        options: typed ? [] : filledOptions,
+        acceptedAnswers: typed ? acceptedAnswers : [],
       };
 
       let res: Response;
@@ -268,8 +292,10 @@ export default function AdminQuestionsPage() {
     },
     {
       key: 'options',
-      label: 'Options',
-      render: (q) => <span className="text-sm">{q.options.length}</span>,
+      label: 'Answer',
+      render: (q) => isTypedType(q.questionType)
+        ? <span className="text-xs">{q.acceptedAnswers.join(', ')}</span>
+        : <span className="text-sm">{q.options.length} options</span>,
     },
   ];
 
@@ -348,7 +374,7 @@ export default function AdminQuestionsPage() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label>Subject</Label>
+                <Label>Subject *</Label>
                 <Select value={form.subjectId || 'none'} onValueChange={(v) => setForm(f => ({ ...f, subjectId: v === 'none' ? '' : v }))}>
                   <SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger>
                   <SelectContent>
@@ -370,7 +396,21 @@ export default function AdminQuestionsPage() {
               </div>
             </div>
 
-            {/* Options */}
+            {isTypedType(form.questionType) ? (
+              <div className="space-y-1.5">
+                <Label>Accepted Answers *</Label>
+                <Input
+                  value={form.acceptedAnswers}
+                  onChange={(e) => setForm(f => ({ ...f, acceptedAnswers: e.target.value }))}
+                  placeholder={form.questionType === 'NUMERIC' ? '3/17, .1764, .1765' : 'photosynthesis'}
+                />
+                <p className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>
+                  {form.questionType === 'NUMERIC'
+                    ? 'Comma separated. Numbers and fractions are compared by value (6/34 matches 3/17); decimals are not rounded, so list every acceptable decimal form.'
+                    : 'Comma separated. Matching ignores case and extra spaces.'}
+                </p>
+              </div>
+            ) : (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>Answer Options *</Label>
@@ -416,8 +456,13 @@ export default function AdminQuestionsPage() {
                   </div>
                 ))}
               </div>
-              <p className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>Check the box next to the correct answer(s).</p>
+              <p className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>
+                {form.questionType === 'SINGLE_CORRECT'
+                  ? 'Check the box next to the one correct answer.'
+                  : 'Check the box next to every correct answer.'}
+              </p>
             </div>
+            )}
 
             {formError && <p className="text-sm" style={{ color: 'var(--color-danger)' }}>{formError}</p>}
 

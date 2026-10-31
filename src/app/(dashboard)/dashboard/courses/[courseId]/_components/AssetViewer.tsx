@@ -7,7 +7,7 @@ import { QuizInterface } from '@/components/shared/QuizInterface';
 import { MockTestPlayer } from '@/components/shared/MockTestPlayer';
 import { markAssetComplete } from '../actions';
 import { sanitizeHtml } from '@/components/admin/RichEditor';
-import type { DemoQuestion } from '@/types';
+import type { DemoQuestion, QuestionType } from '@/types';
 
 type AssetType = 'VIDEO' | 'PDF' | 'ARTICLE' | 'QUIZ' | 'QUESTION_SET' | 'MOCK_TEST';
 
@@ -15,6 +15,8 @@ type QuestionData = {
   id: string;
   statement: string;
   difficulty: string;
+  questionType: QuestionType;
+  acceptedAnswers: string[];
   explanation: string | null;
   options: { id: string; content: string; isCorrect: boolean; sortOrder: number }[];
 };
@@ -76,6 +78,7 @@ function adaptQuestions(items: QuizItem[]): DemoQuestion[] {
       }));
       const correctIdx = sorted.findIndex(o => o.isCorrect);
       const correctAnswerId = correctIdx >= 0 ? (LETTERS[correctIdx] ?? String(correctIdx)) : '';
+      const correctAnswerIds = options.filter((_, i) => sorted[i].isCorrect).map(o => o.id);
       return {
         id: q.id,
         subject: 'Course Quiz',
@@ -85,6 +88,9 @@ function adaptQuestions(items: QuizItem[]): DemoQuestion[] {
         question: q.statement,
         options,
         correctAnswerId,
+        questionType: q.questionType,
+        correctAnswerIds,
+        acceptedAnswers: q.acceptedAnswers,
         explanation: q.explanation ?? '',
         points: 1,
         tags: [],

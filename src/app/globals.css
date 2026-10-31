@@ -445,6 +445,44 @@ body {
   overflow: auto;
 }
 
+/* Question/option/explanation HTML rendered by <RichContent>.
+   Images keep their aspect ratio from width/height attributes, so space is
+   reserved before the file arrives; they fade in once loaded. */
+.rich-html img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin-block: 0.5rem;
+  border-radius: 0.375rem;
+  transition: opacity 0.2s ease;
+}
+.rich-html img.rich-img-loading {
+  opacity: 0;
+  background: var(--color-muted);
+}
+.rich-html img[width].rich-img-loading {
+  opacity: 1;
+  animation: rich-img-pulse 1.2s ease-in-out infinite;
+}
+@keyframes rich-img-pulse {
+  50% { opacity: 0.55; }
+}
+.rich-html table {
+  border-collapse: collapse;
+  margin-block: 0.5rem;
+}
+.rich-html th,
+.rich-html td {
+  border: 1px solid var(--color-card-border);
+  padding: 0.25rem 0.75rem;
+  text-align: center;
+}
+.rich-html .katex-display {
+  margin-block: 0.5rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
 .container-narrow {
   width: 100%;
   max-width: 768px;

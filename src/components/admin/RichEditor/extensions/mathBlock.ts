@@ -67,8 +67,9 @@ export const MathBlock = Node.create({
     return [{ tag: 'div[data-type="math-block"]' }];
   },
 
+  // Atom node: no content hole — see mathInline.ts
   renderHTML({ HTMLAttributes }) {
-    return ['div', mergeAttributes(HTMLAttributes, { class: 'math-block-node' }), 0];
+    return ['div', mergeAttributes(HTMLAttributes, { class: 'math-block-node' })];
   },
 
   addNodeView() {

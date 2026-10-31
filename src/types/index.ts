@@ -214,6 +214,7 @@ export interface Question {
   imageUrl?: string;
   difficulty: DifficultyLevel;
   questionType: QuestionType;
+  acceptedAnswers: string[];
   tags: string[];
   points: number;
   options: QuestionOption[];
@@ -414,6 +415,9 @@ export interface MockTestReportQuestion {
   statement: string;
   correctOptionId: string;
   selectedOptionIds: string[];
+  questionType: QuestionType;
+  textAnswer?: string;
+  acceptedAnswers: string[];
   isCorrect: boolean;
   isSkipped: boolean;
   timeTaken: number;
@@ -445,6 +449,12 @@ export interface DemoQuestion {
   question: string;
   options: DemoOption[];
   correctAnswerId: string;
+  /** Defaults to SINGLE_CORRECT when omitted (static demo data). */
+  questionType?: QuestionType;
+  /** All correct option IDs — set for MULTIPLE_CORRECT questions. */
+  correctAnswerIds?: string[];
+  /** Answer key for NUMERIC / TEXT questions. */
+  acceptedAnswers?: string[];
   explanation: string;
   points: number;
   tags: string[];

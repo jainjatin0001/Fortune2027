@@ -69,8 +69,10 @@ export const MathInline = Node.create({
     return [{ tag: 'span[data-type="math-inline"]' }];
   },
 
+  // Atom node: no content hole — the LaTeX lives in data-math-src and is
+  // rendered by KaTeX (node view in the editor, RichContent for students)
   renderHTML({ HTMLAttributes }) {
-    return ['span', mergeAttributes(HTMLAttributes, { class: 'math-inline-node' }), 0];
+    return ['span', mergeAttributes(HTMLAttributes, { class: 'math-inline-node' })];
   },
 
   addNodeView() {

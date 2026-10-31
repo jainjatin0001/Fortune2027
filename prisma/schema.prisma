@@ -477,6 +477,9 @@ model Question {
   sourceType   QuestionSourceType @default(MCQ)
   points       Int                @default(1)
   tags         String[]
+  // Answer key for NUMERIC / TEXT questions (options are unused for these types)
+  // NUMERIC: every acceptable form, e.g. ["3/17", ".1764", ".1765"]
+  acceptedAnswers String[]        @default([])
   isActive     Boolean            @default(true)
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
@@ -775,6 +778,7 @@ model MockTestQuestionAttempt {
   sectionAttemptId  String
   questionId        String
   selectedOptionIds String[]
+  textAnswer        String?
   isCorrect         Boolean?
   isSkipped         Boolean  @default(false)
   timeTaken         Int?

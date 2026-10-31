@@ -7,7 +7,7 @@ import {
   ChevronDown, ChevronRight, Printer, ArrowLeft, Trophy, AlertTriangle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { sanitizeHtml } from '@/components/admin/RichEditor';
+import { RichContent } from '@/components/shared/RichContent';
 
 interface ReportQuestion {
   questionId: string;
@@ -17,6 +17,9 @@ interface ReportQuestion {
   topic: string | null;
   selectedOptionIds: string[];
   correctOptionIds: string[];
+  questionType: string;
+  textAnswer: string | null;
+  acceptedAnswers: string[];
   isCorrect: boolean | null;
   isSkipped: boolean;
   timeTaken: number | null;
@@ -228,7 +231,7 @@ export function ReportView({ report }: { report: MockTestReport }) {
                         >
                           <span className="text-xs font-bold w-6 shrink-0 pt-0.5" style={{ color: 'var(--color-muted-foreground)' }}>{qi + 1}</span>
                           {statusIcon}
-                          <span className="flex-1 text-sm line-clamp-2 text-left" style={{ color: 'var(--color-foreground)' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(q.statement) }} />
+                          <RichContent as="span" html={q.statement} className="flex-1 text-sm line-clamp-2 text-left" style={{ color: 'var(--color-foreground)' }} />
                           <div className="flex items-center gap-2 shrink-0">
                             <span className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>
                               {q.timeTaken ? fmtTime(q.timeTaken) : '—'}
@@ -243,7 +246,29 @@ export function ReportView({ report }: { report: MockTestReport }) {
                         {/* Question detail */}
                         {isQOpen && (
                           <div className="px-4 pb-4 space-y-3" style={{ background: 'var(--color-muted)' }}>
-                            <div className="text-sm font-medium pt-2" style={{ color: 'var(--color-foreground)' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(q.statement) }} />
+                            <RichContent html={q.statement} className="text-sm font-medium pt-2" style={{ color: 'var(--color-foreground)' }} />
+                            {(q.questionType === 'NUMERIC' || q.questionType === 'TEXT') && (
+                              <div className="space-y-1.5 text-sm">
+                                <div
+                                  className="flex items-start gap-2 p-2.5 rounded-lg border"
+                                  style={q.isSkipped
+                                    ? { borderColor: 'var(--color-border)' }
+                                    : q.isCorrect
+                                      ? { background: '#dcfce7', borderColor: '#16a34a' }
+                                      : { background: '#fee2e2', borderColor: '#dc2626' }}
+                                >
+                                  <span style={{ color: 'var(--color-foreground)' }}>
+                                    Your answer: <strong>{q.textAnswer ?? '—'}</strong>
+                                  </span>
+                                </div>
+                                <div className="flex items-start gap-2 p-2.5 rounded-lg border" style={{ background: '#dcfce7', borderColor: '#16a34a' }}>
+                                  <CheckCircle className="h-4 w-4 shrink-0 mt-0.5" style={{ color: '#16a34a' }} />
+                                  <span style={{ color: 'var(--color-foreground)' }}>
+                                    Accepted: <strong>{q.acceptedAnswers.join(', ')}</strong>
+                                  </span>
+                                </div>
+                              </div>
+                            )}
                             <div className="space-y-1.5">
                               {q.options.map((opt) => {
                                 const wasSelected = q.selectedOptionIds.includes(opt.id);
@@ -263,7 +288,7 @@ export function ReportView({ report }: { report: MockTestReport }) {
                                       : wasSelected
                                         ? <XCircle className="h-4 w-4 shrink-0 mt-0.5" style={{ color: '#dc2626' }} />
                                         : <span className="h-4 w-4 shrink-0" />}
-                                    <span style={{ color: 'var(--color-foreground)' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(opt.content) }} />
+                                    <RichContent as="span" html={opt.content} style={{ color: 'var(--color-foreground)' }} />
                                   </div>
                                 );
                               })}
@@ -271,7 +296,7 @@ export function ReportView({ report }: { report: MockTestReport }) {
                             {q.explanation && (
                               <div className="p-3 rounded-lg" style={{ background: '#eff6ff', borderLeft: '3px solid #3b82f6' }}>
                                 <p className="text-xs font-semibold mb-1" style={{ color: '#1d4ed8' }}>Explanation</p>
-                                <div className="text-sm" style={{ color: '#1e40af' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(q.explanation) }} />
+                                <RichContent html={q.explanation} className="text-sm" style={{ color: '#1e40af' }} />
                               </div>
                             )}
                           </div>

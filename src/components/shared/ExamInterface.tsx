@@ -16,8 +16,9 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { sanitizeHtml } from '@/components/admin/RichEditor';
 import type { DemoQuestion } from '@/types';
+import { RichContent, usePreloadImages } from './RichContent';
+import { demoAnswerKey, gradeAnswer, isAnswered, isTypedQuestion, type StudentAnswer } from '@/lib/grading';
 import { DesmosCalculator } from './DesmosCalculator';
 
 export interface ExamSection {
@@ -37,6 +38,7 @@ export interface ExamSectionResult {
   questions: {
     questionId: string;
     selectedOptionIds: string[];
+    textAnswer?: string;
     isSkipped: boolean;
     timeTaken: number;
   }[];
@@ -72,7 +74,7 @@ export function ExamInterface({
   const [state, setState] = useState<ExamState>('intro');
   const [sectionIdx, setSectionIdx] = useState(0);
   const [questionIdx, setQuestionIdx] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [answers, setAnswers] = useState<Record<string, StudentAnswer>>({});
   const [flagged, setFlagged] = useState<Set<string>>(new Set());
   const [timeLeft, setTimeLeft] = useState(0);
   const [isBrowserFullscreen, setIsBrowserFullscreen] = useState(false);
@@ -93,6 +95,8 @@ export function ExamInterface({
   const totalTime = sections.reduce((acc, s) => acc + s.timeLimit, 0);
   const globalQNum =
     sections.slice(0, sectionIdx).reduce((acc, s) => acc + s.questions.length, 0) + questionIdx + 1;
+
+  usePreloadImages(sections.flatMap((s) => s.questions.flatMap((q) => [q.question, ...q.options.map((o) => o.content)])));
 
   const formatTime = (secs: number) => {
     const h = Math.floor(secs / 3600);
@@ -133,8 +137,9 @@ export function ExamInterface({
             timeTaken: sectionTimesRef.current[si] ?? 0,
             questions: section.questions.map(q => ({
               questionId: q.id,
-              selectedOptionIds: answers[q.id] ? [answers[q.id]] : [],
-              isSkipped: !answers[q.id],
+              selectedOptionIds: answers[q.id]?.selectedOptionIds ?? [],
+              textAnswer: answers[q.id]?.textAnswer?.trim() || undefined,
+              isSkipped: !isAnswered(answers[q.id]),
               timeTaken: questionTimesRef.current[q.id] ?? 0,
             })),
           })),
@@ -206,7 +211,19 @@ export function ExamInterface({
 
   const selectAnswer = (optionId: string) => {
     if (!currentQuestion) return;
-    setAnswers((prev) => ({ ...prev, [currentQuestion.id]: optionId }));
+    const isMulti = currentQuestion.questionType === 'MULTIPLE_CORRECT';
+    setAnswers((prev) => {
+      const selected = prev[currentQuestion.id]?.selectedOptionIds ?? [];
+      const next = !isMulti
+        ? [optionId]
+        : selected.includes(optionId) ? selected.filter((id) => id !== optionId) : [...selected, optionId];
+      return { ...prev, [currentQuestion.id]: { selectedOptionIds: next } };
+    });
+  };
+
+  const setTextAnswer = (text: string) => {
+    if (!currentQuestion) return;
+    setAnswers((prev) => ({ ...prev, [currentQuestion.id]: { selectedOptionIds: [], textAnswer: text } }));
   };
 
   const toggleFlag = () => {
@@ -235,12 +252,12 @@ export function ExamInterface({
   const isLastQuestion = questionIdx === currentSection?.questions.length - 1;
   const isLastSection = sectionIdx === sections.length - 1;
   const isTimeCritical = timeLeft > 0 && timeLeft < 60;
-  const answeredInSection = currentSection?.questions.filter((q) => answers[q.id]).length ?? 0;
+  const answeredInSection = currentSection?.questions.filter((q) => isAnswered(answers[q.id])).length ?? 0;
   const unansweredInSection = (currentSection?.questions.length ?? 0) - answeredInSection;
 
   const sectionResults = sections.map((section) => ({
     name: section.name,
-    correct: section.questions.filter((q) => answers[q.id] === q.correctAnswerId).length,
+    correct: section.questions.filter((q) => gradeAnswer(demoAnswerKey(q), answers[q.id]) === true).length,
     total: section.questions.length,
   }));
   const totalCorrect = sectionResults.reduce((acc, r) => acc + r.correct, 0);
@@ -555,7 +572,7 @@ export function ExamInterface({
                 <div className="grid grid-cols-4 gap-1.5">
                   {section.questions.map((q, qi) => {
                     const isActive = si === sectionIdx && qi === questionIdx;
-                    const isAnsweredQ = !!answers[q.id];
+                    const isAnsweredQ = isAnswered(answers[q.id]);
                     const isFlaggedQ = flagged.has(q.id);
                     const isPastSection = si < sectionIdx;
                     const globalNum =
@@ -640,15 +657,40 @@ export function ExamInterface({
 
             {/* Scrollable question + options */}
             <div className="flex-1 overflow-y-auto px-8 py-6">
-              <div
+              <RichContent
+                html={currentQuestion?.question}
                 className="text-base leading-relaxed whitespace-pre-wrap mb-8"
                 style={{ color: '#0f172a' }}
-                dangerouslySetInnerHTML={{ __html: sanitizeHtml(currentQuestion?.question ?? '') }}
               />
 
+              {currentQuestion && isTypedQuestion(currentQuestion.questionType) ? (
+                <div className="max-w-sm pb-4 space-y-2">
+                  <label htmlFor="exam-typed-answer" className="text-sm font-semibold" style={{ color: '#0f172a' }}>
+                    Your answer
+                  </label>
+                  <input
+                    id="exam-typed-answer"
+                    key={currentQuestion.id}
+                    value={answers[currentQuestion.id]?.textAnswer ?? ''}
+                    onChange={(e) => setTextAnswer(e.target.value)}
+                    inputMode={currentQuestion.questionType === 'NUMERIC' ? 'decimal' : 'text'}
+                    autoComplete="off"
+                    className="w-full px-4 py-3 rounded-xl border text-base outline-none"
+                    style={{ borderColor: accentColor, color: '#0f172a', background: 'white' }}
+                  />
+                  {currentQuestion.questionType === 'NUMERIC' && (
+                    <p className="text-xs" style={{ color: '#94a3b8' }}>
+                      Enter a whole number, decimal, or fraction (e.g. 3/17). Negative answers start with a minus sign.
+                    </p>
+                  )}
+                </div>
+              ) : (
               <div className="space-y-3 max-w-2xl pb-4">
+                {currentQuestion?.questionType === 'MULTIPLE_CORRECT' && (
+                  <p className="text-xs" style={{ color: '#94a3b8' }}>Select all that apply.</p>
+                )}
                 {currentQuestion?.options.map((option) => {
-                  const selected = answers[currentQuestion.id] === option.id;
+                  const selected = answers[currentQuestion.id]?.selectedOptionIds.includes(option.id) ?? false;
                   return (
                     <button
                       key={option.id}
@@ -669,15 +711,17 @@ export function ExamInterface({
                       >
                         {option.id.toUpperCase()}
                       </span>
-                      <span
+                      <RichContent
+                        as="span"
+                        html={option.content}
                         className="text-sm leading-relaxed pt-1"
                         style={{ color: '#0f172a' }}
-                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(option.content ?? '') }}
                       />
                     </button>
                   );
                 })}
               </div>
+              )}
             </div>
 
             {/* Footer nav */}

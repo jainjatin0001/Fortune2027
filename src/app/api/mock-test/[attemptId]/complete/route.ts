@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireDbUser, unauthorized, badRequest, notFound } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { gradeAnswer } from '@/lib/grading';
 
 // Body shape: {
 //   totalTimeTaken: number,  // seconds
@@ -10,6 +11,7 @@ import { prisma } from '@/lib/prisma';
 //     questions: [{
 //       questionId: string,
 //       selectedOptionIds: string[],
+//       textAnswer?: string,     // NUMERIC / TEXT questions
 //       timeTaken: number,
 //       isSkipped: boolean
 //     }]
@@ -70,7 +72,7 @@ export async function POST(
     const sectionAttemptData = sections.map((submittedSection: {
       sectionId: string;
       timeTaken: number;
-      questions: { questionId: string; selectedOptionIds: string[]; timeTaken: number; isSkipped: boolean }[];
+      questions: { questionId: string; selectedOptionIds: string[]; textAnswer?: string; timeTaken: number; isSkipped: boolean }[];
     }) => {
       const dbSection = mockTestSections.find(s => s.id === submittedSection.sectionId);
       if (!dbSection) return null;
@@ -84,6 +86,7 @@ export async function POST(
       const questionAttempts = submittedSection.questions.map((qa: {
         questionId: string;
         selectedOptionIds: string[];
+        textAnswer?: string;
         timeTaken: number;
         isSkipped: boolean;
       }) => {
@@ -93,31 +96,31 @@ export async function POST(
         const points = sectionQ.points;
         sectionTotal += points;
 
-        let isCorrect: boolean | null = null;
-        if (qa.isSkipped) {
+        const answer = {
+          selectedOptionIds: Array.isArray(qa.selectedOptionIds) ? qa.selectedOptionIds : [],
+          textAnswer: typeof qa.textAnswer === 'string' ? qa.textAnswer.trim() : undefined,
+        };
+        const isCorrect = qa.isSkipped ? null : gradeAnswer({
+          questionType: sectionQ.question.questionType,
+          correctOptionIds: sectionQ.question.options.filter(o => o.isCorrect).map(o => o.id),
+          acceptedAnswers: sectionQ.question.acceptedAnswers,
+        }, answer);
+
+        if (isCorrect === null) {
           skippedCount++;
-        } else if (qa.selectedOptionIds.length > 0) {
-          const correctOptions = sectionQ.question.options
-            .filter(o => o.isCorrect)
-            .map(o => o.id)
-            .sort();
-          const selectedSorted = [...qa.selectedOptionIds].sort();
-          isCorrect = JSON.stringify(correctOptions) === JSON.stringify(selectedSorted);
-          if (isCorrect) {
-            sectionEarned += points;
-            correctCount++;
-          } else {
-            incorrectCount++;
-          }
+        } else if (isCorrect) {
+          sectionEarned += points;
+          correctCount++;
         } else {
-          skippedCount++;
+          incorrectCount++;
         }
 
         return {
           questionId: qa.questionId,
-          selectedOptionIds: qa.selectedOptionIds,
+          selectedOptionIds: answer.selectedOptionIds,
+          textAnswer: answer.textAnswer || null,
           isCorrect,
-          isSkipped: qa.isSkipped || qa.selectedOptionIds.length === 0,
+          isSkipped: isCorrect === null,
           timeTaken: qa.timeTaken ?? null,
           attemptedAt: now,
         };
@@ -166,6 +169,7 @@ export async function POST(
               sectionAttemptId: sectionAttempt.id,
               questionId: qa.questionId,
               selectedOptionIds: qa.selectedOptionIds,
+              textAnswer: qa.textAnswer,
               isCorrect: qa.isCorrect,
               isSkipped: qa.isSkipped,
               timeTaken: qa.timeTaken,

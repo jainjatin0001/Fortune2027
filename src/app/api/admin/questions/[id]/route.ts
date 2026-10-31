@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin, unauthorized, forbidden } from '@/lib/auth';
+import { requireAdmin, unauthorized, forbidden, badRequest } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import {
+  parseDifficulty,
+  parseQuestionType,
+  parseSourceType,
+  validateAnswerInput,
+  type QuestionAnswerInput,
+} from '@/lib/question-input';
 
 async function withAdmin() {
   try {
@@ -29,33 +36,66 @@ export async function PUT(
     await withAdmin();
     const { id } = await params;
     const body = await req.json();
-    const { statement, explanation, difficulty, subjectId, topicId, tags, points, isActive, options } = body;
+    const { statement, explanation, subjectId, topicId, tags, points, isActive } = body;
 
-    const question = await prisma.question.update({
+    const existing = await prisma.question.findUnique({
       where: { id },
-      data: {
-        ...(statement && { statement }),
-        ...(explanation !== undefined && { explanation }),
-        ...(difficulty && { difficulty }),
-        ...(subjectId !== undefined && { subjectId }),
-        ...(topicId !== undefined && { topicId }),
-        ...(tags && { tags }),
-        ...(points && { points }),
-        ...(typeof isActive === 'boolean' && { isActive }),
-      },
+      include: { options: { orderBy: { sortOrder: 'asc' } } },
     });
+    if (!existing) return NextResponse.json({ error: 'Question not found' }, { status: 404 });
 
-    if (options && Array.isArray(options)) {
-      await prisma.questionOption.deleteMany({ where: { questionId: id } });
-      await prisma.questionOption.createMany({
-        data: options.map((o: { content: string; isCorrect: boolean }, idx: number) => ({
-          questionId: id,
-          content: o.content,
-          isCorrect: o.isCorrect,
-          sortOrder: idx,
-        })),
-      });
+    if (subjectId === null || subjectId === '') return badRequest('subjectId is required');
+    const sourceType = body.sourceType === undefined ? undefined : parseSourceType(body.sourceType);
+    if (sourceType === null) return badRequest('Invalid sourceType');
+    const difficulty = body.difficulty === undefined ? undefined : parseDifficulty(body.difficulty);
+    if (difficulty === null) return badRequest('Invalid difficulty');
+
+    // Any change to type or answer data re-validates the full answer key against the
+    // effective type, falling back to stored values for whatever the caller omitted.
+    const touchesAnswer =
+      body.questionType !== undefined || body.options !== undefined || body.acceptedAnswers !== undefined;
+    let answer: QuestionAnswerInput | null = null;
+    if (touchesAnswer) {
+      const questionType = body.questionType === undefined ? existing.questionType : parseQuestionType(body.questionType);
+      if (!questionType) return badRequest('Invalid questionType');
+      const result = validateAnswerInput(
+        questionType,
+        body.options ?? existing.options,
+        body.acceptedAnswers ?? existing.acceptedAnswers,
+      );
+      if ('error' in result) return badRequest(result.error);
+      answer = result.data;
     }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.question.update({
+        where: { id },
+        data: {
+          ...(statement && { statement }),
+          ...(explanation !== undefined && { explanation }),
+          ...(difficulty && { difficulty }),
+          ...(sourceType && { sourceType }),
+          ...(subjectId !== undefined && { subjectId }),
+          ...(topicId !== undefined && { topicId }),
+          ...(tags && { tags }),
+          ...(points && { points }),
+          ...(typeof isActive === 'boolean' && { isActive }),
+          ...(answer && { questionType: answer.questionType, acceptedAnswers: answer.acceptedAnswers }),
+        },
+      });
+
+      if (answer) {
+        await tx.questionOption.deleteMany({ where: { questionId: id } });
+        await tx.questionOption.createMany({
+          data: answer.options.map((o, idx) => ({
+            questionId: id,
+            content: o.content,
+            isCorrect: o.isCorrect,
+            sortOrder: idx,
+          })),
+        });
+      }
+    });
 
     const updated = await prisma.question.findUnique({
       where: { id },
