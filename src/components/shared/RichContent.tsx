@@ -23,6 +23,9 @@ interface RichContentProps {
 export function RichContent({ html, as = 'div', className, style }: RichContentProps) {
   const ref = useRef<HTMLElement>(null);
   const clean = useMemo(() => sanitizeHtml(html ?? ''), [html]);
+  // Stable object: React 19 compares this prop by identity and resets innerHTML when it changes,
+  // which would wipe the KaTeX output on every parent re-render (e.g. selecting an option).
+  const inner = useMemo(() => ({ __html: clean }), [clean]);
 
   useEffect(() => {
     const root = ref.current;
@@ -56,7 +59,7 @@ export function RichContent({ html, as = 'div', className, style }: RichContentP
       ref={ref as never}
       className={cn('rich-html', className)}
       style={style}
-      dangerouslySetInnerHTML={{ __html: clean }}
+      dangerouslySetInnerHTML={inner}
     />
   );
 }

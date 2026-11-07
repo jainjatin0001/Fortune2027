@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Users, BookOpen, HelpCircle, BarChart2,
   FileText, Bell, Settings, Shield, Database, Layers,
   BookMarked, Tag, Megaphone, Mail, ArrowLeft, ChevronDown,
-  ListChecks, ClipboardList, GraduationCap, UserCheck, FolderOpen,
+  ListChecks, ClipboardList, GraduationCap, UserCheck, FolderOpen, FileUp,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { APP_NAME } from '@/constants';
@@ -29,6 +29,7 @@ const NAV_GROUPS = [
   ]},
   { group: 'ASSESSMENT', items: [
     { icon: HelpCircle, label: 'Questions', href: '/admin/questions' },
+    { icon: FileUp, label: 'Import Questions', href: '/admin/questions/import' },
     { icon: ListChecks, label: 'Question Sets', href: '/admin/question-sets' },
     { icon: ClipboardList, label: 'Quizzes', href: '/admin/quizzes' },
     { icon: GraduationCap, label: 'Exams', href: '/admin/exams' },
@@ -49,6 +50,16 @@ const NAV_GROUPS = [
 ];
 
 const STORAGE_KEY = 'admin-sidebar-collapsed';
+
+const matches = (pathname: string, href: string) =>
+  pathname === href || (href !== '/admin' && pathname.startsWith(`${href}/`));
+
+// Most specific nav item for the path, so /admin/questions/import doesn't also highlight Questions
+function activeHref(pathname: string) {
+  return NAV_GROUPS.flatMap(g => g.items.map(i => i.href))
+    .filter(href => matches(pathname, href))
+    .sort((a, b) => b.length - a.length)[0];
+}
 
 export function AdminSidebar() {
   const pathname = usePathname();
@@ -77,9 +88,8 @@ export function AdminSidebar() {
   // Auto-expand the group containing the active route
   useEffect(() => {
     if (!mounted) return;
-    const activeGroup = NAV_GROUPS.find((g) =>
-      g.items.some((item) => pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href)))
-    );
+    const current = activeHref(pathname);
+    const activeGroup = NAV_GROUPS.find((g) => g.items.some((item) => item.href === current));
     if (activeGroup && collapsed.has(activeGroup.group)) {
       setCollapsed((prev) => {
         const next = new Set(prev);
@@ -122,9 +132,8 @@ export function AdminSidebar() {
       <nav className="flex-1 p-3 overflow-y-auto" aria-label="Admin navigation">
         {NAV_GROUPS.map(({ group, items }) => {
           const isCollapsed = mounted && collapsed.has(group);
-          const hasActive = items.some(
-            (item) => pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href))
-          );
+          const current = activeHref(pathname);
+          const hasActive = items.some((item) => item.href === current);
 
           return (
             <div key={group} className="mb-1">
@@ -157,7 +166,7 @@ export function AdminSidebar() {
               >
                 <div className="space-y-0.5 pb-1">
                   {items.map(({ icon: Icon, label, href }) => {
-                    const active = pathname === href || (href !== '/admin' && pathname.startsWith(href));
+                    const active = href === current;
                     return (
                       <Link
                         key={href}

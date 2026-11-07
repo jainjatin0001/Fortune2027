@@ -467,6 +467,42 @@ body {
 @keyframes rich-img-pulse {
   50% { opacity: 0.55; }
 }
+/* Tailwind's preflight strips list bullets and paragraph margins; questions need both
+   (e.g. the bulleted notes in Reading & Writing questions). */
+.rich-html p + p,
+.rich-html p + ul,
+.rich-html p + ol,
+.rich-html ul + p,
+.rich-html ol + p {
+  margin-top: 0.5rem;
+}
+.rich-html ul,
+.rich-html ol {
+  padding-left: 1.5rem;
+  margin-block: 0.5rem;
+}
+.rich-html ul {
+  list-style: disc;
+}
+.rich-html ol {
+  list-style: decimal;
+}
+.rich-html li + li {
+  margin-top: 0.25rem;
+}
+/* Quoted passages (excerpts, poems) are set in from the margin, as in the source. */
+.rich-html blockquote {
+  margin-block: 0.5rem;
+  padding-left: 1.5rem;
+}
+.rich-html blockquote + p,
+.rich-html p + blockquote {
+  margin-top: 0.5rem;
+}
+/* Consecutive passage blocks = stanza or speaker breaks */
+.rich-html blockquote + blockquote {
+  margin-top: 1.25rem;
+}
 .rich-html table {
   border-collapse: collapse;
   margin-block: 0.5rem;

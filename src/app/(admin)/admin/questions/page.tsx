@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import Link from 'next/link';
+import { FileUp, Plus, Trash2 } from 'lucide-react';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { AdminTable, type Column } from '@/components/admin/AdminTable';
 import { ConfirmDeleteDialog } from '@/components/admin/ConfirmDeleteDialog';
@@ -302,7 +303,16 @@ export default function AdminQuestionsPage() {
   return (
     <div>
       <AdminToastContainer />
-      <AdminPageHeader title="Questions" description={`${total} questions in bank`} onAdd={openAdd} />
+      <AdminPageHeader
+        title="Questions"
+        description={`${total} questions in bank`}
+        onAdd={openAdd}
+        actions={
+          <Link href="/admin/questions/import" className="inline-flex items-center gap-2 px-4 h-9 rounded-lg text-sm font-semibold border" style={{ borderColor: 'var(--color-border)' }}>
+            <FileUp className="h-4 w-4" /> Import from PDF
+          </Link>
+        }
+      />
 
       <AdminTable
         columns={columns}
