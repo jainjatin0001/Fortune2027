@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { SignUpButton } from '@clerk/nextjs';
 import {
   LayoutDashboard, BookOpen, BarChart2, Bookmark, Trophy, Brain,
   Settings, User, Code2, FlaskConical, Play, GraduationCap, Shield,
@@ -16,7 +17,7 @@ const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard',  href: '/dashboard' },
   { icon: BookOpen,        label: 'My Courses', href: '/dashboard/courses' },
   // { icon: Brain,           label: 'Practice',   href: '/dashboard/practice' },
-  { icon: Trophy,          label: 'Quizzes',    href: '/dashboard/quizzes',  requiresPurchase: true },
+  { icon: Trophy,          label: 'Quizzes',    href: '/dashboard/quizzes' },
   { icon: Bookmark,        label: 'PYQs',       href: '/dashboard/pyqs',     requiresPurchase: true },
   { icon: BarChart2,       label: 'Progress',   href: '/dashboard/progress' },
   { icon: Play,            label: 'Demo',       href: '/dashboard/demo' },
@@ -42,14 +43,45 @@ const bottomItems = [
 interface DashboardSidebarProps {
   role?: string;
   isPurchased?: boolean;
+  /** Signed-out visitor on the dashboard preview: sections open the sign-up pop-up instead of navigating */
+  isGuest?: boolean;
 }
 
-export function DashboardSidebar({ role, isPurchased }: DashboardSidebarProps) {
+const itemBase = 'text-[var(--color-muted-foreground)] hover:bg-[var(--sidebar-item-hover)] hover:text-[var(--color-foreground)]';
+
+export function DashboardSidebar({ role, isPurchased, isGuest = false }: DashboardSidebarProps) {
   const pathname = usePathname();
   const { open } = useSidebar();
   const [showLockedModal, setShowLockedModal] = useState(false);
 
   const isUnlocked = role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'INSTRUCTOR' || !!isPurchased;
+
+  // Guests can see every section but need an account to open it (the preview page itself stays reachable)
+  const isGuestLocked = (href: string) => isGuest && href !== '/dashboard';
+  const guestItem = (href: string, label: string, icon: React.ReactNode, collapsed: boolean) => (
+    // After signing up — or switching to sign-in inside the pop-up — land on the section they clicked
+    <SignUpButton key={href} mode="modal" forceRedirectUrl={href} signInForceRedirectUrl={href}>
+      <button
+        type="button"
+        title={`Sign up free to open ${label}`}
+        className={cn(
+          'relative rounded-xl text-sm font-medium transition-colors',
+          collapsed ? 'w-10 h-10 flex items-center justify-center' : 'w-full flex items-center gap-3 px-3 py-2.5',
+          itemBase,
+        )}
+      >
+        {icon}
+        {collapsed ? (
+          <LockKeyhole className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5 opacity-60" />
+        ) : (
+          <>
+            {label}
+            <LockKeyhole className="h-3.5 w-3.5 ml-auto shrink-0 opacity-50" />
+          </>
+        )}
+      </button>
+    </SignUpButton>
+  );
 
   const lockedModal = showLockedModal ? (
     <div
@@ -136,6 +168,8 @@ export function DashboardSidebar({ role, isPurchased }: DashboardSidebarProps) {
               const active = pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
               const locked = requiresPurchase && !isUnlocked;
 
+              if (isGuestLocked(href)) return guestItem(href, label, <Icon className="h-4 w-4 shrink-0" />, true);
+
               if (locked) {
                 return (
                   <button
@@ -174,6 +208,7 @@ export function DashboardSidebar({ role, isPurchased }: DashboardSidebarProps) {
 
             {examItems.map(({ icon: Icon, label, href, color }) => {
               const active = pathname.startsWith(href);
+              if (isGuestLocked(href)) return guestItem(href, label, <Icon className="h-4 w-4 shrink-0" style={{ color }} />, true);
               return (
                 <Link
                   key={href}
@@ -210,7 +245,7 @@ export function DashboardSidebar({ role, isPurchased }: DashboardSidebarProps) {
             className="flex flex-col items-center py-3 gap-0.5 border-t"
             style={{ borderColor: 'var(--sidebar-border)' }}
           >
-            {bottomItems.map(({ icon: Icon, label, href }) => (
+            {bottomItems.map(({ icon: Icon, label, href }) => isGuestLocked(href) ? guestItem(href, label, <Icon className="h-4 w-4 shrink-0" />, true) : (
               <Link
                 key={href}
                 href={href}
@@ -286,6 +321,8 @@ export function DashboardSidebar({ role, isPurchased }: DashboardSidebarProps) {
             const active = pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
             const locked = requiresPurchase && !isUnlocked;
 
+            if (isGuestLocked(href)) return guestItem(href, label, <Icon className="h-4 w-4 shrink-0" />, false);
+
             if (locked) {
               return (
                 <button
@@ -329,6 +366,7 @@ export function DashboardSidebar({ role, isPurchased }: DashboardSidebarProps) {
 
           {examItems.map(({ icon: Icon, label, href, color }) => {
             const active = pathname.startsWith(href);
+            if (isGuestLocked(href)) return guestItem(href, label, <Icon className="h-4 w-4 shrink-0" style={{ color }} />, false);
             return (
               <Link
                 key={href}
@@ -367,7 +405,7 @@ export function DashboardSidebar({ role, isPurchased }: DashboardSidebarProps) {
 
         {/* Bottom items */}
         <div className="p-4 border-t space-y-1" style={{ borderColor: 'var(--sidebar-border)' }}>
-          {bottomItems.map(({ icon: Icon, label, href }) => (
+          {bottomItems.map(({ icon: Icon, label, href }) => isGuestLocked(href) ? guestItem(href, label, <Icon className="h-4 w-4 shrink-0" />, false) : (
             <Link
               key={href}
               href={href}

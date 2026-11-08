@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
 import {
   BookOpen, Clock, Trophy, TrendingUp, Flame, Target, ArrowRight,
   Lock, Play, FileText, BarChart2, Sparkles,
@@ -10,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { getDbUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { getDemoQuestions } from '@/../data/demo';
+import { DashboardGuest } from './_components/DashboardGuest';
 
 export const metadata: Metadata = { title: 'Dashboard' };
 
@@ -87,7 +87,14 @@ function LockedCard({ title, description, icon: Icon }: { title: string; descrip
 
 export default async function DashboardPage() {
   const user = await getDbUser();
-  if (!user) redirect('/sign-in');
+  if (!user) {
+    const [questionCount, quizCount, mockTestCount] = await Promise.all([
+      prisma.question.count({ where: { isActive: true } }),
+      prisma.quiz.count({ where: { isPublished: true } }),
+      prisma.mockTest.count({ where: { isPublished: true } }),
+    ]);
+    return <DashboardGuest questionCount={questionCount} quizCount={quizCount} mockTestCount={mockTestCount} />;
+  }
 
   const { enrollments, quizAttempts, bookmarkCount } = await getDashboardData(user.id);
   const isPremium = enrollments.length > 0;

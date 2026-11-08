@@ -12,12 +12,6 @@ export async function GET(req: NextRequest) {
     if (!user) return unauthorized();
 
     const canAccessAllQuizzes = ['ADMIN', 'SUPER_ADMIN', 'INSTRUCTOR'].includes(user.role);
-    if (!canAccessAllQuizzes) {
-      const hasEnrollment = await prisma.enrollment.count({
-        where: { userId: user.id, status: 'ACTIVE' },
-      });
-      if (!hasEnrollment) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
 
     const quizzes = await prisma.quiz.findMany({
       where: {
@@ -41,29 +35,15 @@ export async function POST(req: NextRequest) {
     const user = await getDbUser();
     if (!user) return unauthorized();
     const canAccessAllQuizzes = ['ADMIN', 'SUPER_ADMIN', 'INSTRUCTOR'].includes(user.role);
-    if (!canAccessAllQuizzes) {
-      const hasEnrollment = await prisma.enrollment.count({
-        where: { userId: user.id, status: 'ACTIVE' },
-      });
-      if (!hasEnrollment) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
 
     const body = await req.json();
     const { quizId } = body;
     if (!quizId) return badRequest('quizId is required');
 
+    // The quiz page already renders the questions; starting only needs to create the attempt.
     const quiz = await prisma.quiz.findUnique({
       where: { id: quizId },
-      include: {
-        questions: {
-          include: {
-            question: {
-              include: { options: { orderBy: { sortOrder: 'asc' } } },
-            },
-          },
-          orderBy: { sortOrder: 'asc' },
-        },
-      },
+      select: { id: true, title: true, timeLimit: true, isPublished: true },
     });
 
     if (!quiz || (!canAccessAllQuizzes && !quiz.isPublished)) {
@@ -76,26 +56,14 @@ export async function POST(req: NextRequest) {
         quizId,
         status: 'IN_PROGRESS',
       },
+      select: { id: true },
     });
-
-    const questions = quiz.questions.map((qq) => ({
-      id: qq.question.id,
-      statement: qq.question.statement,
-      difficulty: qq.question.difficulty,
-      points: qq.question.points,
-      options: qq.question.options.map((o) => ({
-        id: o.id,
-        content: o.content,
-        sortOrder: o.sortOrder,
-      })),
-    }));
 
     return NextResponse.json({
       attemptId: attempt.id,
       quizId: quiz.id,
       title: quiz.title,
       timeLimit: quiz.timeLimit,
-      questions,
     }, { status: 201 });
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

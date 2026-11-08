@@ -1,12 +1,13 @@
 'use client';
 
 import { Bell, Moon, Sun, Search, PanelLeft } from 'lucide-react';
-import { UserButton } from '@clerk/nextjs';
+import { SignUpButton, UserButton } from '@clerk/nextjs';
 import { useTheme } from 'next-themes';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useSidebar } from './DashboardSidebarProvider';
 
-export function DashboardHeader() {
+export function DashboardHeader({ isSignedIn = true }: { isSignedIn?: boolean }) {
   const { theme, setTheme } = useTheme();
   const { toggle } = useSidebar();
 
@@ -55,19 +56,29 @@ export function DashboardHeader() {
           <Moon className="h-4 w-4 hidden dark:block" />
         </button>
 
-        <button
-          className="relative p-2 rounded-lg transition-colors hover:bg-[var(--color-muted)]"
-          style={{ color: 'var(--color-muted-foreground)' }}
-          aria-label="Notifications"
-        >
-          <Bell className="h-4 w-4" />
-          <span
-            className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full"
-            style={{ background: 'var(--color-danger)' }}
-          />
-        </button>
+        {isSignedIn ? (
+          <>
+            <button
+              className="relative p-2 rounded-lg transition-colors hover:bg-[var(--color-muted)]"
+              style={{ color: 'var(--color-muted-foreground)' }}
+              aria-label="Notifications"
+            >
+              <Bell className="h-4 w-4" />
+              <span
+                className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full"
+                style={{ background: 'var(--color-danger)' }}
+              />
+            </button>
 
-        <UserButton appearance={{ elements: { avatarBox: 'w-8 h-8' } }} />
+            <UserButton appearance={{ elements: { avatarBox: 'w-8 h-8' } }} />
+          </>
+        ) : (
+          <SignUpButton mode="modal" forceRedirectUrl="/dashboard" signInForceRedirectUrl="/dashboard">
+            <Button size="sm" className="text-white font-semibold" style={{ background: 'var(--gradient-primary)' }}>
+              Get Started
+            </Button>
+          </SignUpButton>
+        )}
       </div>
     </header>
   );

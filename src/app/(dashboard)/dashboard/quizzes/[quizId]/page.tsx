@@ -12,13 +12,8 @@ export default async function QuizPage({ params }: { params: Promise<{ quizId: s
   if (!user) redirect('/sign-in');
 
   const { quizId } = await params;
+  // Every signed-in user can take published quizzes; staff can also open drafts
   const isStaff = ['ADMIN', 'SUPER_ADMIN', 'INSTRUCTOR'].includes(user.role);
-  if (!isStaff) {
-    const hasEnrollment = await prisma.enrollment.count({
-      where: { userId: user.id, status: 'ACTIVE' },
-    });
-    if (!hasEnrollment) redirect('/dashboard/courses');
-  }
 
   const quiz = await prisma.quiz.findFirst({
     where: { id: quizId, ...(isStaff ? {} : { isPublished: true }) },

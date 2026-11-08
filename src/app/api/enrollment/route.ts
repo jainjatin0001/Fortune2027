@@ -43,8 +43,15 @@ export async function POST(req: NextRequest) {
     const { courseId } = body;
     if (!courseId) return badRequest('courseId is required');
 
-    const course = await prisma.course.findUnique({ where: { id: courseId } });
-    if (!course) return NextResponse.json({ error: 'Course not found' }, { status: 404 });
+    const course = await prisma.course.findUnique({
+      where: { id: courseId },
+      select: { isFree: true, isPublished: true },
+    });
+    if (!course || !course.isPublished) return NextResponse.json({ error: 'Course not found' }, { status: 404 });
+    // Paid courses are enrolled by the Stripe webhook after checkout, or by an admin
+    if (!course.isFree) {
+      return NextResponse.json({ error: 'This course requires purchase' }, { status: 403 });
+    }
 
     const enrollment = await prisma.enrollment.upsert({
       where: { userId_courseId: { userId: user.id, courseId } },

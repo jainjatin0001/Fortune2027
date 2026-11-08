@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { SignInButton, SignUpButton, UserButton, useUser } from '@clerk/nextjs';
-import { Menu, X, ChevronDown, BookOpen, GraduationCap, Code2, FlaskConical, Moon, Sun } from 'lucide-react';
+import { SignUpButton, UserButton, useUser } from '@clerk/nextjs';
+import { Menu, X, ChevronDown, BookOpen, GraduationCap, Code2, FlaskConical, Moon, Sun, LayoutDashboard } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -124,11 +124,12 @@ export function Navbar() {
                 </div>
               ) : (
                 <div className="hidden sm:flex items-center gap-2">
-                  <SignInButton mode="modal">
-                    <Button variant="ghost" size="sm" className="text-[var(--nav-text)]">
-                      Sign In
+                  <Link href="/dashboard">
+                    <Button variant="ghost" size="sm" className="text-[var(--nav-text)] hover:text-[var(--nav-text-hover)]">
+                      Dashboard
                     </Button>
-                  </SignInButton>
+                  </Link>
+                  {/* Clerk's sign-up pop-up links to sign-in for returning users */}
                   <SignUpButton mode="modal">
                     <Button
                       size="sm"
@@ -180,13 +181,17 @@ export function Navbar() {
                 {item.label}
               </Link>
             ))}
+            {isLoaded && (
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors text-[var(--nav-text)] hover:bg-[var(--color-muted)]"
+              >
+                <LayoutDashboard className="h-4 w-4 shrink-0" />
+                Dashboard
+              </Link>
+            )}
             {isLoaded && !isSignedIn && (
               <div className="flex gap-2 mt-3 pt-3 border-t" style={{ borderColor: 'var(--color-border)' }}>
-                <SignInButton mode="modal">
-                  <Button variant="outline" size="sm" className="flex-1">
-                    Sign In
-                  </Button>
-                </SignInButton>
                 <SignUpButton mode="modal">
                   <Button
                     size="sm"

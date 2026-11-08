@@ -15,6 +15,8 @@ const isPublicRoute = createRouteMatcher([
   '/pricing',
   '/sign-in(.*)',
   '/sign-up(.*)',
+  // Signed-out visitors see a sign-up preview here; other dashboard pages still require sign-in
+  '/dashboard',
   '/api/webhook(.*)',
   '/api/contact',
   '/api/newsletter',
@@ -38,7 +40,7 @@ export default clerkMiddleware(async (auth, req) => {
     await auth.protect();
   }
 
-  if (isDashboardRoute(req) || isAdminRoute(req)) {
+  if ((isDashboardRoute(req) && !isPublicRoute(req)) || isAdminRoute(req)) {
     const { userId } = await auth();
     if (!userId) {
       return NextResponse.redirect(new URL('/sign-in', req.url));
