@@ -193,6 +193,8 @@ model User {
   leads             Lead[]
   parentRelations   ParentStudent[]       @relation("ParentRelation")
   studentRelations  ParentStudent[]       @relation("StudentRelation")
+  dailyActivity     UserDailyActivity[]
+  dailyQuestionAttempts DailyQuestionAttempt[]
 
   @@index([clerkId])
   @@index([email])
@@ -211,6 +213,8 @@ model Profile {
   targetScore Int?
   examDate    DateTime?
   phone       String?
+  // Questions per day the student aims to answer — drives the dashboard goal ring
+  dailyGoal   Int       @default(10)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -279,6 +283,7 @@ model Subject {
   questions    Question[]
   quizzes      Quiz[]
   questionSets QuestionSet[]
+  dailyQuestionTracks DailyQuestionTrackSubject[]
 
   @@unique([programId, name])
   @@index([programId])
@@ -495,6 +500,7 @@ model Question {
   mockTestAttempts      MockTestQuestionAttempt[]
   analytics             QuestionAnalytics?
   bookmarks             Bookmark[]
+  dailyQuestions        DailyQuestion[]
 
   @@index([subjectId])
   @@index([topicId])
@@ -922,10 +928,101 @@ model UserQuestionAttempt {
   question    Question     @relation(fields: [questionId],    references: [id], onDelete: Cascade)
   quizAttempt QuizAttempt? @relation(fields: [quizAttemptId], references: [id])
 
+  @@unique([quizAttemptId, questionId])
   @@index([userId])
   @@index([questionId])
-  @@index([quizAttemptId])
   @@map("user_question_attempts")
+}
+
+// ─────────────────────────────────────────────
+// ENGAGEMENT — DAILY QUESTION, STREAKS & GOALS
+// ─────────────────────────────────────────────
+
+// A themed daily question stream (e.g. "SAT Math") that draws from a pool of subjects.
+// Adding a stream for a new exam is an INSERT plus subject links — no code change.
+model DailyQuestionTrack {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  slug      String   @unique
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  subjects       DailyQuestionTrackSubject[]
+  dailyQuestions DailyQuestion[]
+
+  @@map("daily_question_tracks")
+}
+
+model DailyQuestionTrackSubject {
+  id        String @id @default(uuid())
+  trackId   String
+  subjectId String
+
+  track   DailyQuestionTrack @relation(fields: [trackId],   references: [id], onDelete: Cascade)
+  subject Subject            @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([trackId, subjectId])
+  @@map("daily_question_track_subjects")
+}
+
+// One question per track per calendar day — the same question for every student.
+// Auto-picked lazily on first view; isManual rows were scheduled by an admin.
+model DailyQuestion {
+  id         String   @id @default(uuid())
+  trackId    String
+  questionId String
+  date       DateTime @db.Date
+  isManual   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  track    DailyQuestionTrack     @relation(fields: [trackId],    references: [id], onDelete: Cascade)
+  question Question               @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  attempts DailyQuestionAttempt[]
+
+  @@unique([trackId, date])
+  @@index([questionId])
+  @@map("daily_questions")
+}
+
+// One-shot answer per student per daily question
+model DailyQuestionAttempt {
+  id                String   @id @default(uuid())
+  userId            String
+  dailyQuestionId   String
+  selectedOptionIds String[]
+  textAnswer        String?
+  isCorrect         Boolean
+  attemptedAt       DateTime @default(now())
+
+  user          User          @relation(fields: [userId],          references: [id], onDelete: Cascade)
+  dailyQuestion DailyQuestion @relation(fields: [dailyQuestionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dailyQuestionId])
+  @@index([dailyQuestionId])
+  @@map("daily_question_attempts")
+}
+
+// Per-student, per-local-day rollup of answered questions — written when a quiz,
+// mock test or daily question is completed. Streaks, daily goals and the activity
+// heatmap read only this table, so they stay O(days) instead of O(answers).
+model UserDailyActivity {
+  id                String   @id @default(uuid())
+  userId            String
+  // Calendar date in the student's time zone at the moment of activity
+  date              DateTime @db.Date
+  questionsAnswered Int      @default(0)
+  correctAnswers    Int      @default(0)
+  studySeconds      Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@map("user_daily_activity")
 }
 
 // ─────────────────────────────────────────────

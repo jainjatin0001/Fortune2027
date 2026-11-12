@@ -60,17 +60,12 @@ export async function POST(
       timeTaken: timeTaken ?? null,
     };
 
-    const existing = await prisma.userQuestionAttempt.findFirst({
-      where: { quizAttemptId: attemptId, questionId, userId: user.id },
+    // Students can change an answer; (quizAttemptId, questionId) is unique so this never duplicates
+    await prisma.userQuestionAttempt.upsert({
+      where: { quizAttemptId_questionId: { quizAttemptId: attemptId, questionId } },
+      create: { userId: user.id, questionId, quizAttemptId: attemptId, ...attemptData },
+      update: { ...attemptData, attemptedAt: new Date() },
     });
-
-    if (existing) {
-      await prisma.userQuestionAttempt.update({ where: { id: existing.id }, data: attemptData });
-    } else {
-      await prisma.userQuestionAttempt.create({
-        data: { userId: user.id, questionId, quizAttemptId: attemptId, ...attemptData },
-      });
-    }
 
     return NextResponse.json({
       isCorrect,

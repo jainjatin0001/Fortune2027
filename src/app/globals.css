@@ -93,6 +93,11 @@
   --color-info: #0284c7;
   --color-info-light: #e0f2fe;
 
+  /* Data viz — single-series charts (validated vs card surface) + heatmap ramp base */
+  --chart-series: #2563eb;
+  --chart-grid: #e2e8f0;
+  --chart-empty: #eef2f7;
+
   /* Subject Category Colors */
   --color-sat: #7c3aed;
   --color-sat-light: #ede9fe;
@@ -222,6 +227,10 @@
   --color-danger-light: #450a0a;
   --color-info: #38bdf8;
   --color-info-light: #0c4a6e;
+
+  --chart-series: #3b82f6;
+  --chart-grid: #334155;
+  --chart-empty: #273449;
 
   --color-sat: #a78bfa;
   --color-sat-light: #2e1065;

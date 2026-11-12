@@ -14,7 +14,7 @@ export async function GET() {
     const attempts = await prisma.mockTestAttempt.findMany({
       where: { userId: user.id, status: 'COMPLETED' },
       include: {
-        mockTest: { select: { id: true, title: true } },
+        mockTest: { select: { id: true, title: true, passingScore: true } },
       },
       orderBy: { completedAt: 'desc' },
       take: 20,

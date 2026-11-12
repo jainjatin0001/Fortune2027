@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { SignUpButton } from '@clerk/nextjs';
 import {
-  LayoutDashboard, BookOpen, BarChart2, Bookmark, Trophy, Brain,
+  LayoutDashboard, BookOpen, Bookmark, Trophy, Brain,
   Settings, User, Code2, FlaskConical, Play, GraduationCap, Shield,
   LockKeyhole, LockKeyholeOpen, X, ArrowRight,
 } from 'lucide-react';
@@ -19,7 +19,6 @@ const navItems = [
   // { icon: Brain,           label: 'Practice',   href: '/dashboard/practice' },
   { icon: Trophy,          label: 'Quizzes',    href: '/dashboard/quizzes' },
   { icon: Bookmark,        label: 'PYQs',       href: '/dashboard/pyqs',     requiresPurchase: true },
-  { icon: BarChart2,       label: 'Progress',   href: '/dashboard/progress' },
   { icon: Play,            label: 'Demo',       href: '/dashboard/demo' },
 ];
 

@@ -50,14 +50,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Quiz not found' }, { status: 404 });
     }
 
-    const attempt = await prisma.quizAttempt.create({
-      data: {
-        userId: user.id,
-        quizId,
-        status: 'IN_PROGRESS',
-      },
-      select: { id: true },
-    });
+    // The player always starts from a blank sheet, so an earlier unfinished
+    // attempt can never be resumed — close it instead of leaving it IN_PROGRESS forever.
+    const [, attempt] = await prisma.$transaction([
+      prisma.quizAttempt.updateMany({
+        where: { userId: user.id, quizId, status: 'IN_PROGRESS' },
+        data: { status: 'ABANDONED' },
+      }),
+      prisma.quizAttempt.create({
+        data: {
+          userId: user.id,
+          quizId,
+          status: 'IN_PROGRESS',
+        },
+        select: { id: true },
+      }),
+    ]);
 
     return NextResponse.json({
       attemptId: attempt.id,

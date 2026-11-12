@@ -68,16 +68,23 @@ export async function POST(req: NextRequest) {
       enrollmentId = enrollment.id;
     }
 
-    // Create the attempt
-    const attempt = await prisma.mockTestAttempt.create({
-      data: {
-        userId: user.id,
-        mockTestId: mockTest.id,
-        assetId,
-        enrollmentId,
-        status: 'IN_PROGRESS',
-      },
-    });
+    // Create the attempt. The player can't resume, so any earlier unfinished
+    // attempt at this test is closed rather than left IN_PROGRESS forever.
+    const [, attempt] = await prisma.$transaction([
+      prisma.mockTestAttempt.updateMany({
+        where: { userId: user.id, mockTestId: mockTest.id, status: 'IN_PROGRESS' },
+        data: { status: 'ABANDONED' },
+      }),
+      prisma.mockTestAttempt.create({
+        data: {
+          userId: user.id,
+          mockTestId: mockTest.id,
+          assetId,
+          enrollmentId,
+          status: 'IN_PROGRESS',
+        },
+      }),
+    ]);
 
     // Return attempt + structured sections (questions without correctAnswerId for security)
     const sections = mockTest.sections.map(section => ({

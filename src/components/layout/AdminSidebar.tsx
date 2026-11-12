@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Users, BookOpen, HelpCircle, BarChart2,
   FileText, Bell, Settings, Shield, Database, Layers,
   BookMarked, Tag, Megaphone, Mail, ArrowLeft, ChevronDown,
-  ListChecks, ClipboardList, GraduationCap, UserCheck, FolderOpen, FileUp,
+  ListChecks, ClipboardList, GraduationCap, UserCheck, FolderOpen, FileUp, Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { APP_NAME } from '@/constants';
@@ -34,6 +34,7 @@ const NAV_GROUPS = [
     { icon: ClipboardList, label: 'Quizzes', href: '/admin/quizzes' },
     { icon: GraduationCap, label: 'Exams', href: '/admin/exams' },
     { icon: ClipboardList, label: 'Mock Tests', href: '/admin/mock-tests' },
+    { icon: Sparkles, label: 'Question of the Day', href: '/admin/daily-questions' },
   ]},
   { group: 'CONTENT', items: [
     { icon: FileText, label: 'Blog Posts', href: '/admin/blog' },

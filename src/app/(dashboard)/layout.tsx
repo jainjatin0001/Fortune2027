@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { DashboardSidebarProvider } from '@/components/layout/DashboardSidebarProvider';
 import { DashboardSidebar } from '@/components/layout/DashboardSidebar';
 import { DashboardHeader } from '@/components/layout/DashboardHeader';
+import { TimeZoneSync } from '@/components/layout/TimeZoneSync';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await getDbUser();
@@ -15,6 +16,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <DashboardSidebarProvider>
+      {user && <TimeZoneSync />}
       <div className="min-h-screen flex" style={{ background: 'var(--color-background)' }}>
         <DashboardSidebar role={user?.role} isPurchased={isPurchased} isGuest={!user} />
         <div className="flex-1 flex flex-col min-w-0">

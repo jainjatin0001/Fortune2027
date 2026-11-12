@@ -86,6 +86,6 @@ export async function markAssetComplete(
 
   revalidatePath('/dashboard/courses');
   revalidatePath(`/dashboard/courses/${enrollment.courseId}`);
-  revalidatePath('/dashboard/progress');
+  revalidatePath('/dashboard');
   return { ok: true };
 }

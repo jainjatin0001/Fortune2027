@@ -30,6 +30,12 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react', 'framer-motion', '@radix-ui/react-icons'],
   },
+  async redirects() {
+    return [
+      // Progress metrics now live on the dashboard itself
+      { source: '/dashboard/progress', destination: '/dashboard', permanent: false },
+    ];
+  },
   async headers() {
     return [
       {
