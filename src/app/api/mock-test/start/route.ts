@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireDbUser, unauthorized, badRequest, notFound } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { examKindOf } from '@/lib/mock-test/exam-kind';
+import { splitPassage } from '@/lib/mock-test/passage';
 
 export async function POST(req: NextRequest) {
   let user;
@@ -109,23 +110,28 @@ export async function POST(req: NextRequest) {
       instructions: section.instructions,
       totalMarks: section.totalMarks,
       breakAfter: section.breakAfter,
-      questions: section.questions.map(sq => ({
-        id: sq.question.id,
-        sectionQuestionId: sq.id,
-        statement: sq.question.statement,
-        passage: sq.question.passage,
-        difficulty: sq.question.difficulty,
-        questionType: sq.question.questionType,
-        points: sq.points,
-        subject: sq.question.subject.name,
-        topic: sq.question.topic?.name ?? null,
-        tags: sq.question.tags,
-        options: sq.question.options.map(o => ({
-          id: o.id,
-          content: o.content,
-          // isCorrect intentionally omitted — sent only in report
-        })),
-      })),
+      questions: section.questions.map(sq => {
+        // Reading-style sections (no calculator) show the passage beside the question, like the
+        // real digital tests. An admin-entered passage wins; otherwise split the stored text.
+        const split = !sq.question.passage && !section.hasCalculator ? splitPassage(sq.question.statement) : null;
+        return {
+          id: sq.question.id,
+          sectionQuestionId: sq.id,
+          statement: split ? split.stem : sq.question.statement,
+          passage: split ? split.passage : sq.question.passage,
+          difficulty: sq.question.difficulty,
+          questionType: sq.question.questionType,
+          points: sq.points,
+          subject: sq.question.subject.name,
+          topic: sq.question.topic?.name ?? null,
+          tags: sq.question.tags,
+          options: sq.question.options.map(o => ({
+            id: o.id,
+            content: o.content,
+            // isCorrect intentionally omitted — sent only in report
+          })),
+        };
+      }),
     }));
 
     return NextResponse.json({
