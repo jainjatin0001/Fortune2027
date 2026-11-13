@@ -447,6 +447,8 @@ export interface DemoQuestion {
   category: CourseCategory;
   difficulty: DifficultyLevel;
   question: string;
+  /** Optional stimulus shown in a split pane beside the question (mock tests). */
+  passage?: string | null;
   options: DemoOption[];
   correctAnswerId: string;
   /** Defaults to SINGLE_CORRECT when omitted (static demo data). */

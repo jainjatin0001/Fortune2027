@@ -113,6 +113,8 @@ async function ResultsSection({ userId }: { userId: string }) {
             percentage: m.percentage,
             passed: m.passed,
             sections: m.sections,
+            program: m.program,
+            scaled: m.scaled,
           }))}
         />
       </div>

@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
   try {
     await withAdmin();
     const body = await req.json();
-    const { statement, explanation, subjectId, topicId, tags, points } = body;
+    const { statement, passage, explanation, subjectId, topicId, tags, points } = body;
 
     if (!statement) return badRequest('statement is required');
     if (!subjectId) return badRequest('subjectId is required');
@@ -81,6 +81,7 @@ export async function POST(req: NextRequest) {
     const question = await prisma.question.create({
       data: {
         statement,
+        passage: passage || null,
         explanation: explanation ?? null,
         difficulty,
         questionType,

@@ -164,7 +164,7 @@ export function HeroSection() {
                   <div className="grid grid-cols-4 gap-2 mb-3">
                     {[
                       { label: 'Course Enrolled', value: '12' },
-                      { label: 'Practice Questions', value: '1,428' },
+                      { label: 'Practice Questions', value: '4,000+' },
                       { label: 'Total Tests', value: '18' },
                       { label: 'Average Score', value: '78%' },
                     ].map(({ label, value }) => (

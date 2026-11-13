@@ -29,7 +29,7 @@ export async function PATCH(
     await withAdmin();
     const { sectionId } = await params;
     const body = await req.json();
-    const { name, shortName, timeLimit, hasCalculator, instructions, totalMarks, sortOrder } = body;
+    const { name, shortName, timeLimit, hasCalculator, instructions, totalMarks, sortOrder, breakAfter } = body;
 
     const existing = await prisma.mockTestSection.findUnique({ where: { id: sectionId } });
     if (!existing) return notFound('Section not found');
@@ -44,6 +44,7 @@ export async function PATCH(
         ...(instructions !== undefined && { instructions: instructions || null }),
         ...(totalMarks !== undefined && { totalMarks: parseInt(totalMarks) }),
         ...(sortOrder !== undefined && { sortOrder: parseInt(sortOrder) }),
+        ...(breakAfter !== undefined && { breakAfter: parseInt(breakAfter) || 0 }),
       },
       include: {
         _count: { select: { questions: true } },

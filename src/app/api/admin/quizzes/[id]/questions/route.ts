@@ -46,7 +46,29 @@ export async function POST(
   try {
     await withAdmin();
     const { id } = await params;
-    const { questionId, points, sortOrder } = await req.json();
+    const body = await req.json();
+
+    // Bulk: { questions: [{ questionId, points? }] } — questions already in the quiz are skipped
+    if (Array.isArray(body.questions)) {
+      const items: { questionId: string; points?: number }[] = body.questions;
+      if (!items.length || items.some(i => !i?.questionId)) {
+        return NextResponse.json({ error: 'questionId(s) required' }, { status: 400 });
+      }
+      const already = new Set((await prisma.quizQuestion.findMany({
+        where: { quizId: id, questionId: { in: items.map(i => i.questionId) } },
+        select: { questionId: true },
+      })).map(q => q.questionId));
+      const fresh = items.filter((i, idx) => !already.has(i.questionId) && items.findIndex(x => x.questionId === i.questionId) === idx);
+      const count = await prisma.quizQuestion.count({ where: { quizId: id } });
+      const quizQuestions = await prisma.$transaction(fresh.map((item, i) =>
+        prisma.quizQuestion.create({
+          data: { quizId: id, questionId: item.questionId, points: item.points ?? 1, sortOrder: count + i },
+        }),
+      ));
+      return NextResponse.json({ quizQuestions, skipped: items.length - fresh.length }, { status: 201 });
+    }
+
+    const { questionId, points, sortOrder } = body;
     if (!questionId) return NextResponse.json({ error: 'questionId is required' }, { status: 400 });
 
     const existing = await prisma.quizQuestion.findUnique({ where: { quizId_questionId: { quizId: id, questionId } } });

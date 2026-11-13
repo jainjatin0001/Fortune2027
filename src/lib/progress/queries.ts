@@ -6,6 +6,9 @@ import { prisma } from '@/lib/prisma';
 import { PACE_TARGET_SECONDS } from './constants';
 import { computeStreak, type StreakSummary } from './activity';
 import { addDays, dbToDateKey, toDateKey } from './time';
+import { getAllDemoMockTests } from '@/lib/mock-test/demo';
+import { examKindOf, type ExamKind } from '@/lib/mock-test/exam-kind';
+import { scaleScore } from '@/lib/mock-test/scoring';
 
 // A full year, GitHub-contribution style
 const HEATMAP_WEEKS = 53;
@@ -378,6 +381,18 @@ export interface MockTestResult {
   timeTaken: number | null;
   /** Score per section in test order — names are whatever the admin configured */
   sections: { name: string; percentage: number }[];
+  program: { id: string; name: string } | null;
+  /** Estimated score on the exam's scale (SAT / ACT programs only) */
+  scaled: { score: number; min: number; max: number; label: string; kind: ExamKind } | null;
+}
+
+function scaledFor(
+  program: { slug: string; name: string } | null,
+  sectionAttempts: { earnedScore: number; totalScore: number; section: { name: string; shortName: string } }[],
+): MockTestResult['scaled'] {
+  const kind = examKindOf(program);
+  const s = scaleScore(kind, sectionAttempts.map(sa => ({ ...sa.section, earned: sa.earnedScore, total: sa.totalScore })));
+  return kind && s ? { score: s.total.score, min: s.total.min, max: s.total.max, label: s.total.label, kind } : null;
 }
 
 export async function getMockTestResults(studentId: string): Promise<MockTestResult[]> {
@@ -390,10 +405,10 @@ export async function getMockTestResults(studentId: string): Promise<MockTestRes
       earnedScore: true,
       totalScore: true,
       timeTaken: true,
-      mockTest: { select: { title: true, passingScore: true } },
+      mockTest: { select: { title: true, passingScore: true, program: { select: { id: true, name: true, slug: true } } } },
       sectionAttempts: {
         orderBy: { section: { sortOrder: 'asc' } },
-        select: { earnedScore: true, totalScore: true, section: { select: { name: true } } },
+        select: { earnedScore: true, totalScore: true, section: { select: { name: true, shortName: true } } },
       },
     },
   });
@@ -411,6 +426,8 @@ export async function getMockTestResults(studentId: string): Promise<MockTestRes
         name: sa.section.name.trim(),
         percentage: pct(sa.earnedScore, sa.totalScore) ?? 0,
       })),
+      program: a.mockTest.program ? { id: a.mockTest.program.id, name: a.mockTest.program.name } : null,
+      scaled: scaledFor(a.mockTest.program, a.sectionAttempts),
     };
   });
 }
@@ -523,24 +540,43 @@ async function suggestLesson(studentId: string): Promise<UpNextItem> {
   return { kind: 'empty', feature: 'course' };
 }
 
-async function suggestMockTest(studentId: string, tz: string): Promise<UpNextItem> {
-  const [assets, attempts] = await Promise.all([
-    prisma.learningAsset.findMany({
-      where: {
-        assetType: 'MOCK_TEST',
-        isPublished: true,
-        mockTest: { isPublished: true },
-        module: { isPublished: true, course: { enrollments: { some: { userId: studentId, status: 'ACTIVE' } } } },
-      },
-      orderBy: [{ module: { sortOrder: 'asc' } }, { sortOrder: 'asc' }],
-      select: { id: true, mockTestId: true, mockTest: { select: { title: true } }, module: { select: { courseId: true } } },
-    }),
+async function suggestMockTest(studentId: string, tz: string, isEnrolled: boolean): Promise<UpNextItem> {
+  const [assets, demos, attempts] = await Promise.all([
+    isEnrolled
+      ? prisma.learningAsset.findMany({
+          where: {
+            assetType: 'MOCK_TEST',
+            isPublished: true,
+            mockTest: { isPublished: true },
+            module: { isPublished: true, course: { enrollments: { some: { userId: studentId, status: 'ACTIVE' } } } },
+          },
+          orderBy: [{ module: { sortOrder: 'asc' } }, { sortOrder: 'asc' }],
+          select: { id: true, mockTestId: true, mockTest: { select: { title: true } }, module: { select: { courseId: true } } },
+        })
+      : Promise.resolve([]),
+    // Free demo tests on the SAT/ACT practice pages are open to every student
+    getAllDemoMockTests(),
     prisma.mockTestAttempt.findMany({
       where: { userId: studentId, status: 'COMPLETED', completedAt: { not: null } },
       select: { mockTestId: true, completedAt: true },
     }),
   ]);
-  if (assets.length === 0) return { kind: 'empty', feature: 'mock' };
+
+  // Course tests first, then free tests not already reachable through a course
+  const courseTestIds = new Set(assets.map(a => a.mockTestId));
+  const candidates = [
+    ...assets.flatMap(a => a.mockTestId ? [{
+      mockTestId: a.mockTestId,
+      title: a.mockTest?.title ?? 'Mock test',
+      href: `/dashboard/courses/${a.module.courseId}?asset=${a.id}`,
+    }] : []),
+    ...demos.filter(d => !courseTestIds.has(d.id)).map(d => ({
+      mockTestId: d.id,
+      title: d.title,
+      href: d.href,
+    })),
+  ];
+  if (candidates.length === 0) return isEnrolled ? { kind: 'empty', feature: 'mock' } : { kind: 'locked', feature: 'mock' };
 
   const lastByTest = new Map<string, Date>();
   for (const a of attempts) {
@@ -550,28 +586,29 @@ async function suggestMockTest(studentId: string, tz: string): Promise<UpNextIte
   const lastAny = attempts.reduce<Date | null>((m, a) => (!m || a.completedAt! > m ? a.completedAt! : m), null);
 
   // A test not taken yet, else the one taken longest ago
-  const pick = assets.find(a => a.mockTestId && !lastByTest.has(a.mockTestId))
-    ?? [...assets].sort((a, b) => (lastByTest.get(a.mockTestId!)?.getTime() ?? 0) - (lastByTest.get(b.mockTestId!)?.getTime() ?? 0))[0];
+  const pick = candidates.find(c => !lastByTest.has(c.mockTestId))
+    ?? [...candidates].sort((a, b) => (lastByTest.get(a.mockTestId)?.getTime() ?? 0) - (lastByTest.get(b.mockTestId)?.getTime() ?? 0))[0];
 
   const today = toDateKey(new Date(), tz);
   return {
     kind: 'mock',
-    title: pick.mockTest?.title.trim() ?? 'Mock test',
+    title: pick.title.trim(),
     daysSinceLast: lastAny ? Math.max(0, Math.round((Date.parse(today) - Date.parse(toDateKey(lastAny, tz))) / 86_400_000)) : null,
-    attemptedBefore: !!pick.mockTestId && lastByTest.has(pick.mockTestId),
-    href: `/dashboard/courses/${pick.module.courseId}?asset=${pick.id}`,
+    attemptedBefore: lastByTest.has(pick.mockTestId),
+    href: pick.href,
   };
 }
 
 /**
  * Three next actions. Quizzes are open to every signed-in student; lessons and
- * mock tests live inside courses, so they show as locked without an active enrollment.
+ * course mock tests need an active enrollment, but free (demo) mock tests are open to all,
+ * so the mock slot only shows as locked when neither is available.
  */
 export async function getUpNext(studentId: string, tz: string, strengths: SubjectStrength[], isEnrolled: boolean) {
   const [practice, course, mock] = await Promise.all([
     suggestQuiz(studentId, strengths),
     isEnrolled ? suggestLesson(studentId) : Promise.resolve<UpNextItem>({ kind: 'locked', feature: 'course' }),
-    isEnrolled ? suggestMockTest(studentId, tz) : Promise.resolve<UpNextItem>({ kind: 'locked', feature: 'mock' }),
+    suggestMockTest(studentId, tz, isEnrolled),
   ]);
   return [practice, course, mock];
 }

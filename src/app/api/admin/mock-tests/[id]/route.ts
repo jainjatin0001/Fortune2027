@@ -74,7 +74,7 @@ export async function PATCH(
     await withAdmin();
     const { id } = await params;
     const body = await req.json();
-    const { title, description, instructions, programId, passingScore, isPublished } = body;
+    const { title, description, instructions, programId, passingScore, isPublished, isDemo } = body;
 
     const existing = await prisma.mockTest.findUnique({ where: { id } });
     if (!existing) return notFound('Mock test not found');
@@ -88,6 +88,7 @@ export async function PATCH(
         ...(programId !== undefined && { programId: programId || null }),
         ...(passingScore !== undefined && { passingScore: parseInt(passingScore) }),
         ...(isPublished !== undefined && { isPublished }),
+        ...(isDemo !== undefined && { isDemo }),
       },
       include: {
         program: { select: { name: true, slug: true } },

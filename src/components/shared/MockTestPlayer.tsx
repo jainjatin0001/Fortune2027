@@ -1,20 +1,23 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2, AlertCircle, FileText, Trophy } from 'lucide-react';
+import { Loader2, AlertCircle, FileText, Trophy, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ExamInterface, type ExamSection, type ExamAttemptResult } from './ExamInterface';
 import type { DemoQuestion, QuestionType } from '@/types';
 
 interface MockTestPlayerProps {
-  assetId: string;
-  enrollmentId: string | null;
+  /** Course flow — the learning asset that wraps the test (enrollment is checked) */
+  assetId?: string;
+  /** Free practice flow — a published demo test, no enrollment needed */
+  mockTestId?: string;
+  enrollmentId?: string | null;
   color?: string;
   onComplete?: () => void;
 }
 
-type PlayerState = 'loading' | 'error' | 'ready' | 'submitting' | 'done';
+type PlayerState = 'loading' | 'error' | 'ready' | 'submitting' | 'saveFailed' | 'done';
 
 const LETTERS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 
@@ -27,9 +30,11 @@ interface SectionData {
   hasCalculator: boolean;
   instructions: string | null;
   totalMarks: number;
+  breakAfter: number;
   questions: {
     id: string;
     statement: string;
+    passage: string | null;
     difficulty: string;
     questionType: QuestionType;
     points: number;
@@ -47,6 +52,8 @@ function adaptSection(section: SectionData): ExamSection {
     shortName: section.shortName,
     timeLimit: section.timeLimit,
     hasCalculator: section.hasCalculator,
+    instructions: section.instructions,
+    breakAfter: section.breakAfter,
     questions: section.questions.map(q => {
       const options = q.options.map((o, i) => ({
         id: LETTERS[i] ?? String(i),
@@ -60,6 +67,7 @@ function adaptSection(section: SectionData): ExamSection {
         category: 'SAT_PREP' as const,
         difficulty: q.difficulty as DemoQuestion['difficulty'],
         question: q.statement,
+        passage: q.passage,
         questionType: q.questionType,
         options: options.map(o => ({ id: o.id, content: o.content })),
         correctAnswerId: '',
@@ -73,6 +81,7 @@ function adaptSection(section: SectionData): ExamSection {
 
 export function MockTestPlayer({
   assetId,
+  mockTestId,
   enrollmentId: _enrollmentId,
   color = '#7c3aed',
   onComplete,
@@ -84,29 +93,47 @@ export function MockTestPlayer({
   const [attemptId, setAttemptId] = useState('');
   const [examTitle, setExamTitle] = useState('');
   const [examCode, setExamCode] = useState('');
+  const [testInstructions, setTestInstructions] = useState<string | null>(null);
   const [sections, setSections] = useState<ExamSection[]>([]);
   const [rawSections, setRawSections] = useState<SectionData[]>([]);
+
+  const [pendingResult, setPendingResult] = useState<ExamAttemptResult | null>(null);
+  // One start request per test. Effects can run twice for the same mount (React dev
+  // mode, fast remounts); a second request would supersede the first attempt on the
+  // server and the student's answers would be saved against an abandoned attempt.
+  const startRef = useRef<{ key: string; promise: Promise<Response> } | null>(null);
 
   // Start the attempt on mount
   useEffect(() => {
     let cancelled = false;
-    async function start() {
-      try {
-        const res = await fetch('/api/mock-test/start', {
+    const key = assetId ? `asset:${assetId}` : `test:${mockTestId}`;
+    if (startRef.current?.key !== key) {
+      startRef.current = {
+        key,
+        promise: fetch('/api/mock-test/start', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ assetId }),
-        });
+          body: JSON.stringify(assetId ? { assetId } : { mockTestId }),
+        }),
+      };
+    }
+    const request = startRef.current.promise;
+    async function start() {
+      try {
+        // clone(): every effect run reads the shared response independently
+        const res = (await request).clone();
         if (cancelled) return;
         if (!res.ok) {
           const err = await res.json();
           throw new Error(err.error ?? 'Failed to start exam');
         }
         const data = await res.json();
+        if (cancelled) return;
         setAttemptId(data.attemptId);
         setExamTitle(data.title);
-        // Derive a short code from the title (first word, max 4 chars)
-        setExamCode(data.title.split(' ')[0]?.slice(0, 4).toUpperCase() ?? 'EXAM');
+        // Exam kind from the program when known, else a short code from the title (first word, max 4 chars)
+        setExamCode(data.examKind ?? data.title.split(' ')[0]?.slice(0, 4).toUpperCase() ?? 'EXAM');
+        setTestInstructions(data.instructions ?? null);
         setRawSections(data.sections);
         setSections(data.sections.map(adaptSection));
         setPlayerState('ready');
@@ -119,9 +146,10 @@ export function MockTestPlayer({
     }
     start();
     return () => { cancelled = true; };
-  }, [assetId]);
+  }, [assetId, mockTestId]);
 
   const handleAttemptComplete = async (result: ExamAttemptResult) => {
+    setPendingResult(result);
     setPlayerState('submitting');
     try {
       // Re-map letter option IDs back to real UUIDs for server storage
@@ -151,14 +179,36 @@ export function MockTestPlayer({
           sections: mappedSections,
         }),
       });
-      if (!res.ok) throw new Error('Failed to save results');
+      // 409 = already saved (e.g. a retried request that had succeeded) — the report exists
+      if (!res.ok && res.status !== 409) throw new Error('Failed to save results');
       setPlayerState('done');
       onComplete?.();
     } catch {
-      // Even on save failure, show the done screen — report can be retried
-      setPlayerState('done');
+      // Keep the answers in memory so the student can retry instead of losing the test
+      setPlayerState('saveFailed');
     }
   };
+
+  if (playerState === 'saveFailed') {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 gap-4 text-center px-4">
+        <AlertCircle className="h-10 w-10" style={{ color: '#dc2626' }} />
+        <div>
+          <p className="text-base font-bold" style={{ color: 'var(--color-foreground)' }}>We couldn&apos;t save your answers</p>
+          <p className="text-sm mt-1" style={{ color: 'var(--color-muted-foreground)' }}>
+            Check your connection and try again — your answers are still here.
+          </p>
+        </div>
+        <Button
+          className="font-bold text-white gap-2"
+          style={{ background: color, border: 'none' }}
+          onClick={() => pendingResult && handleAttemptComplete(pendingResult)}
+        >
+          <RotateCcw className="h-4 w-4" /> Retry saving
+        </Button>
+      </div>
+    );
+  }
 
   if (playerState === 'loading') {
     return (
@@ -210,7 +260,12 @@ export function MockTestPlayer({
             size="lg"
             className="font-bold text-white gap-2"
             style={{ background: color, border: 'none' }}
-            onClick={() => router.push(`/dashboard/mock-test/${attemptId}/report`)}
+            // Free tests replace the exam page so "Back" from the report returns to the test list
+            // instead of re-opening (and re-starting) the exam
+            onClick={() => {
+              const href = `/dashboard/mock-test/${attemptId}/report`;
+              if (mockTestId) router.replace(href); else router.push(href);
+            }}
           >
             <FileText className="h-4 w-4" />
             View Full Report
@@ -226,6 +281,7 @@ export function MockTestPlayer({
       examName={examTitle}
       examCode={examCode}
       accentColor={color}
+      instructions={testInstructions}
       sections={sections}
       onAttemptComplete={handleAttemptComplete}
     />

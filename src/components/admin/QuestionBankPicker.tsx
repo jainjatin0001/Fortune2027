@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -20,6 +21,8 @@ interface QuestionBankPickerProps {
   subjects: { id: string; name: string }[];
   assignedIds: Set<string>;
   onAdd: (question: BankQuestion) => Promise<void>;
+  /** Enables checkboxes + "Add selected" for adding many questions in one request */
+  onAddMany?: (questions: BankQuestion[]) => Promise<void>;
   pageSize?: number;
   /** Max height of the scrollable results list, e.g. 'max-h-72'. */
   listClassName?: string;
@@ -38,6 +41,7 @@ export function QuestionBankPicker({
   subjects,
   assignedIds,
   onAdd,
+  onAddMany,
   pageSize = 20,
   listClassName = 'max-h-80',
 }: QuestionBankPickerProps) {
@@ -53,6 +57,9 @@ export function QuestionBankPicker({
   const [loadedQuery, setLoadedQuery] = useState<string | null>(null);
   const [errorQuery, setErrorQuery] = useState<string | null>(null);
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
+  // Kept across pages and filters so a selection can be built up before adding
+  const [selected, setSelected] = useState<Map<string, BankQuestion>>(new Map());
+  const [addingMany, setAddingMany] = useState(false);
 
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -99,6 +106,39 @@ export function QuestionBankPicker({
     }
   };
 
+  const toggleSelected = (q: BankQuestion) => {
+    setSelected(prev => {
+      const next = new Map(prev);
+      if (next.has(q.id)) next.delete(q.id);
+      else next.set(q.id, q);
+      return next;
+    });
+  };
+
+  const selectable = results.filter(q => !assignedIds.has(q.id));
+  const allPageSelected = selectable.length > 0 && selectable.every(q => selected.has(q.id));
+  const togglePage = () => {
+    setSelected(prev => {
+      const next = new Map(prev);
+      if (allPageSelected) selectable.forEach(q => next.delete(q.id));
+      else selectable.forEach(q => next.set(q.id, q));
+      return next;
+    });
+  };
+
+  const handleAddMany = async () => {
+    if (!onAddMany) return;
+    const qs = [...selected.values()].filter(q => !assignedIds.has(q.id));
+    if (!qs.length) { setSelected(new Map()); return; }
+    setAddingMany(true);
+    try {
+      await onAddMany(qs);
+      setSelected(new Map());
+    } finally {
+      setAddingMany(false);
+    }
+  };
+
   return (
     <div>
       <div className="flex gap-2 mb-3">
@@ -128,6 +168,24 @@ export function QuestionBankPicker({
         </Select>
       </div>
 
+      {onAddMany && (
+        <div className="flex items-center gap-3 mb-2 text-xs">
+          <label className="flex items-center gap-2 cursor-pointer" style={{ color: 'var(--color-muted-foreground)' }}>
+            <Checkbox checked={allPageSelected} onCheckedChange={togglePage} disabled={selectable.length === 0} />
+            Select page
+          </label>
+          {selected.size > 0 && (
+            <button className="underline" style={{ color: 'var(--color-muted-foreground)' }} onClick={() => setSelected(new Map())}>
+              Clear
+            </button>
+          )}
+          <Button size="sm" className="ml-auto h-7 text-xs" onClick={handleAddMany} disabled={selected.size === 0 || addingMany}>
+            <Plus className="h-3 w-3 mr-1" />
+            {addingMany ? 'Adding…' : `Add selected (${selected.size})`}
+          </Button>
+        </div>
+      )}
+
       <div
         ref={listRef}
         className={`${listClassName} overflow-y-auto space-y-1.5 transition-opacity`}
@@ -151,6 +209,15 @@ export function QuestionBankPicker({
                 background: already ? 'color-mix(in srgb, var(--color-primary) 8%, var(--color-card))' : 'var(--color-card)',
               }}
             >
+              {onAddMany && (
+                <Checkbox
+                  className="mt-1 shrink-0"
+                  checked={already || selected.has(q.id)}
+                  disabled={already}
+                  onCheckedChange={() => toggleSelected(q)}
+                  aria-label="Select question"
+                />
+              )}
               <div className="flex-1 min-w-0">
                 <p className="text-sm line-clamp-2">{htmlToText(q.statement, 200)}</p>
                 <div className="flex gap-2 mt-1">

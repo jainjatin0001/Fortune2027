@@ -2,7 +2,11 @@ import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { getDbUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { ReportView } from './_components/ReportView';
+import { canViewDetailedReport } from '@/lib/mock-test/access';
+import { EXAM_KIND_META, examKindOf } from '@/lib/mock-test/exam-kind';
+import { scaleScore } from '@/lib/mock-test/scoring';
+import { MOCK_TESTS_PATH } from '@/lib/mock-test/paths';
+import { ReportView, type ReportData, type ReportQuestion } from './_components/ReportView';
 
 export const metadata: Metadata = { title: 'Mock Test Report' };
 
@@ -19,12 +23,21 @@ export default async function MockTestReportPage({
   const attempt = await prisma.mockTestAttempt.findUnique({
     where: { id: attemptId },
     include: {
+      user: { select: { firstName: true, lastName: true } },
       mockTest: {
-        select: { id: true, title: true, passingScore: true },
+        select: {
+          id: true, title: true, passingScore: true, isDemo: true,
+          program: { select: { slug: true, name: true } },
+        },
       },
       sectionAttempts: {
         include: {
-          section: { select: { name: true, shortName: true, sortOrder: true, timeLimit: true } },
+          section: {
+            select: {
+              name: true, shortName: true, sortOrder: true, timeLimit: true,
+              questions: { select: { questionId: true, sortOrder: true } },
+            },
+          },
           questionAttempts: {
             include: {
               question: {
@@ -43,149 +56,130 @@ export default async function MockTestReportPage({
   });
 
   if (!attempt) notFound();
-  if (attempt.userId !== user.id && user.role !== 'SUPER_ADMIN' && user.role !== 'ADMIN') {
+  const isStaff = user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' || user.role === 'INSTRUCTOR';
+  if (attempt.userId !== user.id && !isStaff) {
     redirect('/dashboard');
   }
   if (attempt.status !== 'COMPLETED') redirect('/dashboard');
 
-  // ── Compute report ────────────────────────────────────────────
-  let totalCorrect = 0, totalIncorrect = 0, totalSkipped = 0;
+  const detailed = await canViewDetailedReport(user);
+  const examKind = examKindOf(attempt.mockTest.program);
+
+  // ── Sections ────────────────────────────────────────────────
+  const questions: ReportQuestion[] = [];
 
   const sections = attempt.sectionAttempts.map((sa) => {
-    const questions = sa.questionAttempts.map((qa) => {
-      const correctOptionIds = qa.question.options
-        .filter((o) => o.isCorrect)
-        .map((o) => o.id);
+    if (detailed) {
+      // Questions in the order the student saw them
+      const order = new Map(sa.section.questions.map(q => [q.questionId, q.sortOrder]));
+      const ordered = [...sa.questionAttempts].sort(
+        (a, b) => (order.get(a.questionId) ?? 0) - (order.get(b.questionId) ?? 0),
+      );
+      ordered.forEach((qa, i) => {
+        questions.push({
+          key: `${sa.sectionId}-${qa.questionId}`,
+          sectionId: sa.sectionId,
+          sectionShort: sa.section.shortName,
+          number: i + 1,
+          statement: qa.question.statement,
+          passage: qa.question.passage,
+          difficulty: qa.question.difficulty,
+          subject: qa.question.subject.name,
+          topic: qa.question.topic?.name ?? null,
+          questionType: qa.question.questionType,
+          options: qa.question.options.map(o => ({ id: o.id, content: o.content, isCorrect: o.isCorrect })),
+          selectedOptionIds: qa.selectedOptionIds,
+          textAnswer: qa.textAnswer,
+          acceptedAnswers: qa.question.acceptedAnswers,
+          isCorrect: qa.isCorrect,
+          isSkipped: qa.isSkipped,
+          timeTaken: qa.timeTaken ?? 0,
+          explanation: qa.question.explanation,
+        });
+      });
+    }
 
-      return {
-        questionId: qa.questionId,
-        statement: qa.question.statement,
-        difficulty: qa.question.difficulty,
-        subject: qa.question.subject.name,
-        topic: qa.question.topic?.name ?? null,
-        selectedOptionIds: qa.selectedOptionIds,
-        correctOptionIds,
-        questionType: qa.question.questionType,
-        textAnswer: qa.textAnswer,
-        acceptedAnswers: qa.question.acceptedAnswers,
-        isCorrect: qa.isCorrect,
-        isSkipped: qa.isSkipped,
-        timeTaken: qa.timeTaken,
-        explanation: qa.question.explanation,
-        options: qa.question.options.map((o) => ({
-          id: o.id,
-          content: o.content,
-          isCorrect: o.isCorrect,
-        })),
-      };
-    });
-
-    totalCorrect += sa.correctCount;
-    totalIncorrect += sa.incorrectCount;
-    totalSkipped += sa.skippedCount;
-
+    const answered = sa.correctCount + sa.incorrectCount;
     return {
-      sectionId: sa.sectionId,
+      id: sa.sectionId,
       name: sa.section.name,
       shortName: sa.section.shortName,
-      sortOrder: sa.section.sortOrder,
       timeLimit: sa.section.timeLimit,
       timeTaken: sa.timeTaken,
-      earnedScore: sa.earnedScore,
-      totalScore: sa.totalScore,
-      correctCount: sa.correctCount,
-      incorrectCount: sa.incorrectCount,
-      skippedCount: sa.skippedCount,
-      accuracy: sa.totalScore > 0
-        ? Math.round((sa.earnedScore / sa.totalScore) * 100)
-        : sa.correctCount + sa.incorrectCount > 0
-          ? Math.round((sa.correctCount / (sa.correctCount + sa.incorrectCount)) * 100)
-          : 0,
-      questions,
+      earned: sa.earnedScore,
+      total: sa.totalScore,
+      correct: sa.correctCount,
+      incorrect: sa.incorrectCount,
+      skipped: sa.skippedCount,
+      questionCount: answered + sa.skippedCount,
+      accuracy: answered > 0 ? Math.round((sa.correctCount / answered) * 100) : 0,
+      scorePct: sa.totalScore > 0 ? Math.round((sa.earnedScore / sa.totalScore) * 100) : 0,
     };
   });
 
-  // Topic analysis
-  const topicMap = new Map<string, { subject: string; topic: string | null; total: number; correct: number }>();
-  for (const sec of sections) {
-    for (const q of sec.questions) {
-      if (q.isSkipped) continue;
-      const key = `${q.subject}||${q.topic ?? ''}`;
-      const entry = topicMap.get(key) ?? { subject: q.subject, topic: q.topic, total: 0, correct: 0 };
-      entry.total++;
-      if (q.isCorrect) entry.correct++;
-      topicMap.set(key, entry);
-    }
-  }
-  const topicAnalysis = [...topicMap.values()]
-    .map((t) => ({ ...t, accuracy: t.total > 0 ? Math.round((t.correct / t.total) * 100) : 0 }))
-    .sort((a, b) => a.accuracy - b.accuracy);
-
+  const totalCorrect = sections.reduce((n, s) => n + s.correct, 0);
+  const totalIncorrect = sections.reduce((n, s) => n + s.incorrect, 0);
+  const totalSkipped = sections.reduce((n, s) => n + s.skipped, 0);
   const totalScore = attempt.totalScore ?? 0;
   const earnedScore = attempt.earnedScore ?? 0;
-  const accuracy = totalCorrect + totalIncorrect > 0
-    ? Math.round((totalCorrect / (totalCorrect + totalIncorrect)) * 100)
-    : 0;
-  const passed = attempt.mockTest
-    ? accuracy >= attempt.mockTest.passingScore
-    : false;
+  const percentage = totalScore > 0 ? Math.round((earnedScore / totalScore) * 100) : 0;
+  const answered = totalCorrect + totalIncorrect;
+  const accuracy = answered > 0 ? Math.round((totalCorrect / answered) * 100) : 0;
 
-  // Auto-generated insights
+  const scaled = scaleScore(examKind, attempt.sectionAttempts.map(sa => ({
+    name: sa.section.name,
+    shortName: sa.section.shortName,
+    earned: sa.earnedScore,
+    total: sa.totalScore,
+  })));
+
+  // ── Insights (section-level ones are free; question-level ones need the detailed report) ──
   const insights: string[] = [];
-  if (accuracy >= 80) insights.push('Excellent overall accuracy — you have a strong command of the material.');
-  else if (accuracy >= 60) insights.push('Good accuracy overall. Focus on the weaker topics to push your score higher.');
-  else insights.push('Your accuracy needs improvement. Review the explanations for each incorrect answer carefully.');
-
+  if (accuracy >= 80) insights.push('Excellent accuracy on the questions you answered — you have a strong command of the material.');
+  else if (accuracy >= 60) insights.push('Solid accuracy overall. Focus on your weaker sections to push your score higher.');
+  else insights.push('Accuracy is the main lever right now. Review every incorrect answer and its explanation before your next test.');
   if (totalSkipped > 0) {
-    insights.push(`You skipped ${totalSkipped} question${totalSkipped > 1 ? 's' : ''}. On most exams, an educated guess is better than leaving blank.`);
+    insights.push(`You left ${totalSkipped} question${totalSkipped > 1 ? 's' : ''} blank. There's no penalty for guessing — always answer every question.`);
+  }
+  const weakSection = sections.slice().sort((a, b) => a.scorePct - b.scorePct)[0];
+  if (sections.length > 1 && weakSection && weakSection.scorePct < 70) {
+    insights.push(`Your lowest section was ${weakSection.name} (${weakSection.scorePct}%). Extra practice here will move your score the most.`);
+  }
+  const rushed = sections.find(s => s.timeLimit > 0 && s.timeTaken / s.timeLimit >= 0.95 && s.skipped > 0);
+  if (rushed) {
+    insights.push(`You ran out of time in ${rushed.name} with questions left blank — work on pacing so you reach every question.`);
   }
 
-  const weakTopics = topicAnalysis.filter((t) => t.accuracy < 50 && t.total >= 2);
-  if (weakTopics.length > 0) {
-    insights.push(`Weakest areas: ${weakTopics.slice(0, 3).map((t) => t.topic ?? t.subject).join(', ')}. Prioritise these in your revision.`);
-  }
-
-  const strongTopics = topicAnalysis.filter((t) => t.accuracy >= 80 && t.total >= 2);
-  if (strongTopics.length > 0) {
-    insights.push(`Strong areas: ${strongTopics.slice(0, 3).map((t) => t.topic ?? t.subject).join(', ')}. Keep these sharp.`);
-  }
-
-  const weakSection = sections.slice().sort((a, b) => a.accuracy - b.accuracy)[0];
-  if (weakSection && weakSection.accuracy < 70) {
-    insights.push(`Your lowest section was ${weakSection.name} (${weakSection.accuracy}% accuracy). Extra practice here will have the biggest impact.`);
-  }
-
-  const slowSection = sections
-    .filter((s) => s.timeTaken / s.timeLimit > 0.92)
-    .sort((a, b) => b.timeTaken / b.timeLimit - a.timeTaken / a.timeLimit)[0];
-  if (slowSection) {
-    insights.push(`You used almost all available time in ${slowSection.shortName}. Work on pacing to leave time for review.`);
-  }
-
-  const report = {
+  const report: ReportData = {
     attemptId: attempt.id,
-    mockTestId: attempt.mockTestId,
-    title: attempt.mockTest?.title ?? 'Mock Test',
-    passingScore: attempt.mockTest?.passingScore ?? 70,
-    status: attempt.status,
-    startedAt: attempt.startedAt.toISOString(),
-    completedAt: attempt.completedAt?.toISOString() ?? null,
-    totalTimeTaken: attempt.timeTaken,
-    totalScore,
+    title: attempt.mockTest.title.trim(),
+    programName: attempt.mockTest.program?.name ?? null,
+    examKind,
+    color: examKind ? EXAM_KIND_META[examKind].color : '#4f46e5',
+    studentName: `${attempt.user.firstName} ${attempt.user.lastName}`.trim(),
+    isOwnReport: attempt.userId === user.id,
+    completedAt: attempt.completedAt?.toISOString() ?? attempt.startedAt.toISOString(),
+    totalTimeTaken: attempt.timeTaken ?? sections.reduce((n, s) => n + s.timeTaken, 0),
+    totalTimeLimit: sections.reduce((n, s) => n + s.timeLimit, 0),
     earnedScore,
-    scaledScore: attempt.scaledScore,
+    totalScore,
+    percentage,
     accuracy,
-    correctCount: totalCorrect,
-    incorrectCount: totalIncorrect,
-    skippedCount: totalSkipped,
-    passed,
+    passingScore: attempt.mockTest.passingScore,
+    passed: percentage >= attempt.mockTest.passingScore,
+    correct: totalCorrect,
+    incorrect: totalIncorrect,
+    skipped: totalSkipped,
+    scaled,
     sections,
-    topicAnalysis,
     insights,
+    detailed,
+    questions: detailed ? questions : [],
+    backHref: attempt.mockTest.isDemo ? MOCK_TESTS_PATH : null,
   };
 
   return (
-    <div className="px-4 py-6 md:px-6 lg:px-8">
+    <div className="px-1 py-2 md:px-2 print:p-0">
       <ReportView report={report} />
     </div>
   );

@@ -2,7 +2,7 @@ const exams = ['SAT®', 'ACT®', 'AP®', 'IB', 'PSAT', 'CLEP'];
 
 const stats = [
   { value: '98%', label: 'Score Improvement' },
-  { value: '1,400+', label: 'Practice Questions' },
+  { value: '4,000+', label: 'Practice Questions' },
   { value: '20+', label: 'Students with 5 AP Scores' },
   { value: '500+', label: 'Practice Tests' },
   { value: '4.9/5', label: 'Average Rating' },

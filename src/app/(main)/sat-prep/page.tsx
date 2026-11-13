@@ -16,7 +16,7 @@ const SAT_COLOR = '#7c3aed';
 export const metadata: Metadata = {
   title: 'SAT Preparation — Delta Tutors',
   description:
-    'Comprehensive SAT preparation with 1,400+ practice questions, 10 full-length mock tests, and a personalized study plan that helps you score higher.',
+    'Comprehensive SAT preparation with 4,000+ practice questions, 10 full-length mock tests, and a personalized study plan that helps you score higher.',
 };
 
 const benefits = [
@@ -161,7 +161,7 @@ export default async function SATPage() {
                 <span style={{ color: '#a78bfa' }}>Expert Prep</span>
               </h1>
               <p className="text-sm mb-6 leading-relaxed" style={{ color: 'rgba(203,213,225,0.85)' }}>
-                Comprehensive SAT preparation with 1,400+ practice questions,
+                Comprehensive SAT preparation with 4,000+ practice questions,
                 10 full-length mock tests, and a personalized study plan
                 that helps you score higher.
               </p>
@@ -191,7 +191,7 @@ export default async function SATPage() {
               <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4 gap-x-6 gap-y-4">
                 {[
                   { value: '+220', label: 'Avg Score Increase' },
-                  { value: '1,400+', label: 'Practice Questions' },
+                  { value: '4,000+', label: 'Practice Questions' },
                   { value: '50+', label: 'Full-Length Tests' },
                   // { value: '50,000+', label: 'Students Trusted' },
                 ].map((stat) => (

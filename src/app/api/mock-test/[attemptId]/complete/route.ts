@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma';
 import { gradeAnswer } from '@/lib/grading';
 import { recordDailyActivity } from '@/lib/progress/activity';
 import { getUserTimeZone } from '@/lib/progress/time';
+import { examKindOf } from '@/lib/mock-test/exam-kind';
+import { scaleScore } from '@/lib/mock-test/scoring';
 
 // Body shape: {
 //   totalTimeTaken: number,  // seconds
@@ -43,6 +45,7 @@ export async function POST(
       include: {
         mockTest: {
           include: {
+            program: { select: { slug: true, name: true } },
             sections: {
               include: {
                 questions: {
@@ -60,7 +63,9 @@ export async function POST(
     });
 
     if (!attempt) return notFound('Attempt not found');
-    if (attempt.status !== 'IN_PROGRESS') {
+    // ABANDONED only means a newer start superseded this attempt (another tab, a double
+    // start); the answers submitted here are still the student's real work, so keep them.
+    if (attempt.status === 'COMPLETED') {
       return NextResponse.json({ error: 'Attempt already completed' }, { status: 409 });
     }
 
@@ -149,17 +154,29 @@ export async function POST(
 
     const percentage = totalPossibleScore > 0 ? (totalEarnedScore / totalPossibleScore) * 100 : 0;
 
+    // Estimated score on the exam's own scale (SAT 400–1600, ACT 1–36); unanswered sections count as zero
+    const scaled = scaleScore(examKindOf(attempt.mockTest.program), mockTestSections.map(s => {
+      const sa = sectionAttemptData.find(x => x?.sectionId === s.id);
+      return {
+        name: s.name,
+        shortName: s.shortName,
+        earned: sa?.earnedScore ?? 0,
+        total: s.questions.reduce((n, q) => n + q.points, 0),
+      };
+    }));
+
     // Persist everything in a transaction. Claiming the attempt first (conditional
     // update) makes a double submit fail cleanly instead of writing sections twice.
     const claimed = await prisma.$transaction(async (tx) => {
       const { count } = await tx.mockTestAttempt.updateMany({
-        where: { id: attemptId, userId: user.id, status: 'IN_PROGRESS' },
+        where: { id: attemptId, userId: user.id, status: { in: ['IN_PROGRESS', 'ABANDONED'] } },
         data: {
           status: 'COMPLETED',
           completedAt: now,
           timeTaken: totalTimeTaken ?? null,
           totalScore: totalPossibleScore,
           earnedScore: totalEarnedScore,
+          scaledScore: scaled?.total.score ?? null,
         },
       });
       if (count === 0) return false;

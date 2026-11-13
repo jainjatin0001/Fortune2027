@@ -24,6 +24,7 @@ interface QuestionOption {
 interface Question {
   id: string;
   statement: string;
+  passage?: string | null;
   explanation?: string | null;
   difficulty: string;
   questionType: string;
@@ -75,6 +76,7 @@ export default function AdminQuestionsPage() {
   const [optionKeys, setOptionKeys] = useState<string[]>(() => [genKey(), genKey(), genKey(), genKey()]);
   const [form, setForm] = useState({
     statement: '',
+    passage: '',
     explanation: '',
     difficulty: 'MEDIUM',
     questionType: 'SINGLE_CORRECT',
@@ -120,6 +122,7 @@ export default function AdminQuestionsPage() {
     setOptionKeys(keys);
     setForm({
       statement: '',
+      passage: '',
       explanation: '',
       difficulty: 'MEDIUM',
       questionType: 'SINGLE_CORRECT',
@@ -148,6 +151,7 @@ export default function AdminQuestionsPage() {
     setOptionKeys(opts.map((_, i) => q.options[i]?.id ?? genKey()));
     setForm({
       statement: q.statement,
+      passage: q.passage ?? '',
       explanation: q.explanation ?? '',
       difficulty: q.difficulty,
       questionType: q.questionType,
@@ -197,6 +201,7 @@ export default function AdminQuestionsPage() {
     try {
       const payload = {
         statement: form.statement,
+        passage: hasRichContent(form.passage) ? form.passage : null,
         explanation: form.explanation || undefined,
         difficulty: form.difficulty,
         questionType: form.questionType,
@@ -351,6 +356,11 @@ export default function AdminQuestionsPage() {
             <DialogTitle>{editQuestion ? 'Edit Question' : 'Add New Question'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Passage / Stimulus (optional)</Label>
+              <RichEditor value={form.passage} onChange={(html) => setForm(f => ({ ...f, passage: html }))} placeholder="Reading passage, table or graph. When filled, mock tests show it in a left pane beside the question." mode="full" minHeight={110} />
+            </div>
+
             <div className="space-y-1.5">
               <Label>Question Statement *</Label>
               <RichEditor value={form.statement} onChange={(html) => setForm(f => ({ ...f, statement: html }))} placeholder="Enter the question text..." mode="full" minHeight={140} />

@@ -13,7 +13,7 @@ export function DashboardHeader({ isSignedIn = true }: { isSignedIn?: boolean })
 
   return (
     <header
-      className="sticky top-0 z-10 h-16 flex items-center justify-between px-6 border-b"
+      className="sticky top-0 z-10 h-16 flex items-center justify-between px-6 border-b print:hidden"
       style={{
         background: 'var(--color-background)',
         borderColor: 'var(--color-border)',

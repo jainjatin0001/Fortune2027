@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireDbUser, unauthorized, notFound } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { canViewDetailedReport } from '@/lib/mock-test/access';
 import type { MockTestReport, MockTestReportSection, MockTestReportQuestion, MockTestTopicAnalysis } from '@/types';
 
 export async function GET(
@@ -255,6 +256,11 @@ export async function GET(
       },
       insights,
     };
+
+    // Question-level detail is for enrolled students and staff; scores stay visible to all
+    if (!(await canViewDetailedReport(user))) {
+      return NextResponse.json({ report: { ...report, questionDetails: [], topicAnalysis: [], detailedLocked: true } });
+    }
 
     return NextResponse.json({ report });
   } catch {

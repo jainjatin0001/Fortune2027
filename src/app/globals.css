@@ -942,3 +942,10 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+/* Printed / PDF reports: plain white pages, no shadows, cards kept whole where possible */
+@media print {
+  @page { margin: 12mm; }
+  html, body { background: #fff !important; }
+  .card-base { box-shadow: none !important; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}

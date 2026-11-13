@@ -475,6 +475,8 @@ model Question {
   subjectId    String
   topicId      String?
   statement    String
+  // Optional stimulus (reading passage, table…) shown in a split pane beside the statement
+  passage      String?
   explanation  String?
   imageUrl     String?
   difficulty   DifficultyLevel    @default(MEDIUM)
@@ -677,6 +679,8 @@ model MockTest {
   instructions String?
   passingScore Int      @default(70)
   isPublished  Boolean  @default(false)
+  // Free test listed on the dashboard's SAT/ACT practice page (picked by program); no enrollment needed
+  isDemo       Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -701,6 +705,7 @@ model MockTestSection {
   hasCalculator Boolean  @default(false)
   instructions  String?
   totalMarks    Int      @default(0)
+  breakAfter    Int      @default(0) // seconds of optional break before the next section; 0 = none
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

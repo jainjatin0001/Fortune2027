@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { SignUpButton } from '@clerk/nextjs';
 import {
   LayoutDashboard, BookOpen, Bookmark, Trophy, Brain,
-  Settings, User, Code2, FlaskConical, Play, GraduationCap, Shield,
+  Settings, User, Code2, FlaskConical, ClipboardList, Shield,
   LockKeyhole, LockKeyholeOpen, X, ArrowRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -19,14 +19,17 @@ const navItems = [
   // { icon: Brain,           label: 'Practice',   href: '/dashboard/practice' },
   { icon: Trophy,          label: 'Quizzes',    href: '/dashboard/quizzes' },
   { icon: Bookmark,        label: 'PYQs',       href: '/dashboard/pyqs',     requiresPurchase: true },
-  { icon: Play,            label: 'Demo',       href: '/dashboard/demo' },
+  { icon: ClipboardList,   label: 'Mock Test',  href: '/dashboard/mock-tests' },
+  // Demo section retired — free practice now lives in the SAT/ACT practice exams (admin "demo" mock tests)
+  // { icon: Play,            label: 'Demo',       href: '/dashboard/demo' },
 ];
 
-const examItems = [
-  { icon: GraduationCap, label: 'SAT Practice Exam', href: '/dashboard/sat-exam', color: '#7c3aed' },
-  { icon: GraduationCap, label: 'ACT Practice Exam', href: '/dashboard/act-exam', color: '#0891b2' },
-  { icon: FlaskConical,  label: 'AP Exams',          href: '/dashboard/ap-exam',  color: '#b45309' },
-];
+// Practice Exams group retired — free SAT/ACT tests now live on the Mock Test page
+// const examItems = [
+//   { icon: GraduationCap, label: 'SAT Practice Exam', href: '/dashboard/sat-exam', color: '#7c3aed' },
+//   { icon: GraduationCap, label: 'ACT Practice Exam', href: '/dashboard/act-exam', color: '#0891b2' },
+//   { icon: FlaskConical,  label: 'AP Exams',          href: '/dashboard/ap-exam',  color: '#b45309' },
+// ];
 
 const quickItems = [
   { icon: BookOpen,     label: 'SAT Prep', href: '/sat-prep' },
@@ -143,7 +146,7 @@ export function DashboardSidebar({ role, isPurchased, isGuest = false }: Dashboa
       <>
         {lockedModal}
         <aside
-          className="hidden lg:flex flex-col h-screen sticky top-0 overflow-hidden shrink-0"
+          className="hidden lg:flex flex-col h-screen sticky top-0 overflow-hidden shrink-0 print:hidden!"
           style={{
             width: 'var(--sidebar-collapsed)',
             background: 'var(--sidebar-bg)',
@@ -203,27 +206,7 @@ export function DashboardSidebar({ role, isPurchased, isGuest = false }: Dashboa
               );
             })}
 
-            <div className="w-8 border-t my-2" style={{ borderColor: 'var(--sidebar-border)' }} />
-
-            {examItems.map(({ icon: Icon, label, href, color }) => {
-              const active = pathname.startsWith(href);
-              if (isGuestLocked(href)) return guestItem(href, label, <Icon className="h-4 w-4 shrink-0" style={{ color }} />, true);
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  title={label}
-                  className={cn(
-                    'w-10 h-10 flex items-center justify-center rounded-xl transition-colors',
-                    active
-                      ? 'bg-[var(--sidebar-item-active)] text-[var(--sidebar-item-active-text)]'
-                      : 'text-[var(--color-muted-foreground)] hover:bg-[var(--sidebar-item-hover)] hover:text-[var(--color-foreground)]',
-                  )}
-                >
-                  <Icon className="h-4 w-4 shrink-0" style={{ color: active ? undefined : color }} />
-                </Link>
-              );
-            })}
+            {/* Practice Exams group retired — see the Mock Test nav item */}
 
             <div className="w-8 border-t my-2" style={{ borderColor: 'var(--sidebar-border)' }} />
 
@@ -278,7 +261,7 @@ export function DashboardSidebar({ role, isPurchased, isGuest = false }: Dashboa
     <>
       {lockedModal}
       <aside
-        className="hidden lg:flex flex-col h-screen sticky top-0 overflow-y-auto"
+        className="hidden lg:flex flex-col h-screen sticky top-0 overflow-y-auto print:hidden!"
         style={{
           width: 'var(--sidebar-width)',
           minWidth: 'var(--sidebar-width)',
@@ -356,32 +339,7 @@ export function DashboardSidebar({ role, isPurchased, isGuest = false }: Dashboa
             );
           })}
 
-          <div
-            className="text-xs font-semibold mt-6 mb-3 px-3 pt-2 border-t"
-            style={{ color: 'var(--color-muted-foreground)', borderColor: 'var(--sidebar-border)' }}
-          >
-            PRACTICE EXAMS
-          </div>
-
-          {examItems.map(({ icon: Icon, label, href, color }) => {
-            const active = pathname.startsWith(href);
-            if (isGuestLocked(href)) return guestItem(href, label, <Icon className="h-4 w-4 shrink-0" style={{ color }} />, false);
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors',
-                  active
-                    ? 'bg-[var(--sidebar-item-active)] text-[var(--sidebar-item-active-text)]'
-                    : 'text-[var(--color-muted-foreground)] hover:bg-[var(--sidebar-item-hover)] hover:text-[var(--color-foreground)]',
-                )}
-              >
-                <Icon className="h-4 w-4 shrink-0" style={{ color: active ? undefined : color }} />
-                {label}
-              </Link>
-            );
-          })}
+          {/* Practice Exams group retired — see the Mock Test nav item */}
 
           <div
             className="text-xs font-semibold mt-6 mb-3 px-3 pt-2 border-t"

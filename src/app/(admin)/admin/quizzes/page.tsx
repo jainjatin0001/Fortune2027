@@ -240,6 +240,33 @@ export default function AdminQuizzesPage() {
     }
   };
 
+  const addQuestions = async (questions: BankQuestion[]) => {
+    if (!manageQuiz) return;
+    const quizId = manageQuiz.id;
+    try {
+      const res = await fetch(`/api/admin/quizzes/${quizId}/questions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ questions: questions.map(q => ({ questionId: q.id })) }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast('error', data.error ?? 'Failed to add');
+        return;
+      }
+      const byId = new Map(questions.map(q => [q.id, q]));
+      const added: { id: string; questionId: string; sortOrder: number; points: number }[] = data.quizQuestions;
+      setQuizQuestions(list => [
+        ...list,
+        ...added.map(({ id, questionId, sortOrder, points }) => ({ id, sortOrder, points, question: byId.get(questionId)! })),
+      ]);
+      bumpQuestionCount(quizId, added.length);
+      toast('success', `Added ${added.length} question${added.length === 1 ? '' : 's'}`);
+    } catch {
+      toast('error', 'Failed to add questions');
+    }
+  };
+
   const removeQuestion = async (questionId: string) => {
     if (!manageQuiz) return;
     const quizId = manageQuiz.id;
@@ -481,6 +508,7 @@ export default function AdminQuizzesPage() {
                   subjects={subjects}
                   assignedIds={assignedIds}
                   onAdd={addQuestion}
+                  onAddMany={addQuestions}
                 />
               )}
             </div>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireDbUser, unauthorized, badRequest, notFound } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { examKindOf } from '@/lib/mock-test/exam-kind';
 
 export async function POST(req: NextRequest) {
   let user;
@@ -12,60 +13,71 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { assetId } = body;
-    if (!assetId) return badRequest('assetId is required');
+    const { assetId, mockTestId } = body;
+    if (!assetId && !mockTestId) return badRequest('assetId or mockTestId is required');
 
-    // Resolve the asset and its mock test
-    const asset = await prisma.learningAsset.findUnique({
-      where: { id: assetId, assetType: 'MOCK_TEST', isPublished: true },
-      include: {
-        mockTest: {
-          include: {
-            sections: {
-              orderBy: { sortOrder: 'asc' },
-              include: {
-                questions: {
-                  orderBy: { sortOrder: 'asc' },
-                  include: {
-                    question: {
-                      include: {
-                        subject: { select: { name: true } },
-                        topic: { select: { name: true } },
-                        options: { orderBy: { sortOrder: 'asc' } },
-                      },
-                    },
-                  },
+    const mockTestInclude = {
+      program: { select: { slug: true, name: true } },
+      sections: {
+        orderBy: { sortOrder: 'asc' as const },
+        include: {
+          questions: {
+            orderBy: { sortOrder: 'asc' as const },
+            include: {
+              question: {
+                include: {
+                  subject: { select: { name: true } },
+                  topic: { select: { name: true } },
+                  options: { orderBy: { sortOrder: 'asc' as const } },
                 },
               },
             },
           },
         },
-        module: { select: { courseId: true } },
       },
-    });
+    };
 
-    if (!asset || !asset.mockTest) return notFound('Mock test not found');
-
-    const mockTest = asset.mockTest;
-
-    // Verify the student is enrolled in the course (skip for admin)
-    const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+    let mockTest;
     let enrollmentId: string | null = null;
 
-    if (!isAdmin) {
-      const enrollment = await prisma.enrollment.findUnique({
-        where: {
-          userId_courseId: {
-            userId: user.id,
-            courseId: asset.module.courseId,
-          },
+    if (assetId) {
+      // Course flow: resolve the asset and its mock test
+      const asset = await prisma.learningAsset.findUnique({
+        where: { id: assetId, assetType: 'MOCK_TEST', isPublished: true },
+        include: {
+          mockTest: { include: mockTestInclude },
+          module: { select: { courseId: true } },
         },
       });
 
-      if (!enrollment || enrollment.status !== 'ACTIVE') {
-        return NextResponse.json({ error: 'Not enrolled in this course' }, { status: 403 });
+      if (!asset || !asset.mockTest) return notFound('Mock test not found');
+      mockTest = asset.mockTest;
+
+      // Verify the student is enrolled in the course (skip for admin)
+      const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+
+      if (!isAdmin) {
+        const enrollment = await prisma.enrollment.findUnique({
+          where: {
+            userId_courseId: {
+              userId: user.id,
+              courseId: asset.module.courseId,
+            },
+          },
+        });
+
+        if (!enrollment || enrollment.status !== 'ACTIVE') {
+          return NextResponse.json({ error: 'Not enrolled in this course' }, { status: 403 });
+        }
+        enrollmentId = enrollment.id;
       }
-      enrollmentId = enrollment.id;
+    } else {
+      // Free practice flow: published demo tests are open to every signed-in student
+      mockTest = await prisma.mockTest.findUnique({
+        where: { id: mockTestId, isPublished: true, isDemo: true },
+        include: mockTestInclude,
+      });
+      if (!mockTest) return notFound('Mock test not found');
     }
 
     // Create the attempt. The player can't resume, so any earlier unfinished
@@ -79,7 +91,7 @@ export async function POST(req: NextRequest) {
         data: {
           userId: user.id,
           mockTestId: mockTest.id,
-          assetId,
+          assetId: assetId ?? null,
           enrollmentId,
           status: 'IN_PROGRESS',
         },
@@ -96,10 +108,12 @@ export async function POST(req: NextRequest) {
       hasCalculator: section.hasCalculator,
       instructions: section.instructions,
       totalMarks: section.totalMarks,
+      breakAfter: section.breakAfter,
       questions: section.questions.map(sq => ({
         id: sq.question.id,
         sectionQuestionId: sq.id,
         statement: sq.question.statement,
+        passage: sq.question.passage,
         difficulty: sq.question.difficulty,
         questionType: sq.question.questionType,
         points: sq.points,
@@ -118,6 +132,7 @@ export async function POST(req: NextRequest) {
       attemptId: attempt.id,
       mockTestId: mockTest.id,
       title: mockTest.title,
+      examKind: examKindOf(mockTest.program),
       instructions: mockTest.instructions,
       passingScore: mockTest.passingScore,
       sections,

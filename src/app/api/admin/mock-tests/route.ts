@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, unauthorized, forbidden, badRequest } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { getExamPreset, presetToSectionRows } from '@/lib/mock-test/presets';
 
 async function withAdmin() {
   try {
@@ -61,9 +62,12 @@ export async function POST(req: NextRequest) {
   try {
     await withAdmin();
     const body = await req.json();
-    const { title, description, instructions, programId, passingScore, isPublished } = body;
+    const { title, description, instructions, programId, passingScore, isPublished, isDemo, preset } = body;
 
     if (!title) return badRequest('title is required');
+    // Optional: stamp a known exam structure (e.g. Digital SAT) as the initial sections
+    const examPreset = preset ? getExamPreset(preset) : undefined;
+    if (preset && !examPreset) return badRequest('Unknown preset');
 
     const mockTest = await prisma.mockTest.create({
       data: {
@@ -73,6 +77,8 @@ export async function POST(req: NextRequest) {
         programId: programId || null,
         passingScore: passingScore ? parseInt(passingScore) : 70,
         isPublished: isPublished ?? false,
+        isDemo: isDemo ?? false,
+        ...(examPreset && { sections: { create: presetToSectionRows(examPreset) } }),
       },
       include: {
         program: { select: { name: true, slug: true } },

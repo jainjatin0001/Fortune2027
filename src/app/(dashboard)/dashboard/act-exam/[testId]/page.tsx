@@ -1,19 +1,12 @@
-import { notFound, redirect } from 'next/navigation';
-import { getDbUser } from '@/lib/auth';
-import { getACTMockTest } from '@/../data/act';
-import ACTExamClient from './ACTExamClient';
+import { redirect } from 'next/navigation';
+import { mockTestPlayHref } from '@/lib/mock-test/paths';
 
+// Free tests now play from /dashboard/mock-tests/[testId]
 export default async function ACTTestPage({
   params,
 }: {
   params: Promise<{ testId: string }>;
 }) {
-  const user = await getDbUser();
-  if (!user) redirect('/sign-in');
-
   const { testId } = await params;
-  const test = getACTMockTest(testId);
-  if (!test) notFound();
-
-  return <ACTExamClient test={test} />;
+  redirect(mockTestPlayHref(testId));
 }

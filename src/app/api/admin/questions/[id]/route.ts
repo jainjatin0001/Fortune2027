@@ -36,7 +36,7 @@ export async function PUT(
     await withAdmin();
     const { id } = await params;
     const body = await req.json();
-    const { statement, explanation, subjectId, topicId, tags, points, isActive } = body;
+    const { statement, passage, explanation, subjectId, topicId, tags, points, isActive } = body;
 
     const existing = await prisma.question.findUnique({
       where: { id },
@@ -72,6 +72,7 @@ export async function PUT(
         where: { id },
         data: {
           ...(statement && { statement }),
+          ...(passage !== undefined && { passage: passage || null }),
           ...(explanation !== undefined && { explanation }),
           ...(difficulty && { difficulty }),
           ...(sourceType && { sourceType }),

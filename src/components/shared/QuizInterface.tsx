@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef, type CSSProperties } from 'react';
-import { Check, X, Clock, ChevronRight, ChevronLeft, Trophy, RotateCcw, ListChecks, Target, Sparkles, ArrowRight, Loader2, AlertCircle, Flag, Mail, MessageSquareText } from 'lucide-react';
+import { Check, X, Clock, ChevronRight, ChevronLeft, Trophy, RotateCcw, ListChecks, Target, Sparkles, ArrowRight, Loader2, AlertCircle, Flag } from 'lucide-react';
 import { cn, getDifficultyLabel, getDifficultyClass } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { DemoQuestion, QuestionType } from '@/types';
 import { RichContent, usePreloadImages } from './RichContent';
+import { FeedbackCard } from './FeedbackCard';
 import { demoAnswerKey, gradeAnswer, isAnswered as hasAnswer, isTypedQuestion, type StudentAnswer } from '@/lib/grading';
 
 interface QuizInterfaceProps {
@@ -38,7 +39,6 @@ const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
 };
 
 const LOW_TIME_SECONDS = 5 * 60;
-const FEEDBACK_EMAIL = 'info.deltatutors@gmail.com';
 
 const formatTime = (secs: number) => {
   const m = Math.floor(secs / 60).toString().padStart(2, '0');
@@ -389,29 +389,7 @@ export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, p
           </div>
         </div>
 
-        <div className="card-base p-5 flex flex-wrap sm:flex-nowrap items-center gap-4">
-          <span
-            className="w-11 h-11 rounded-xl shrink-0 flex items-center justify-center"
-            style={{ background: 'var(--color-primary-light)', color: 'var(--color-accent)' }}
-          >
-            <MessageSquareText className="h-5 w-5" />
-          </span>
-          <div className="flex-1 min-w-0 basis-56">
-            <p className="font-semibold" style={{ color: 'var(--color-foreground)' }}>Have a doubt or feedback?</p>
-            <p className="text-sm" style={{ color: 'var(--color-muted-foreground)' }}>
-              If you have any doubt or objection about a question or its explanation, or any feedback or suggestion, do write to us at{' '}
-              <a href={`mailto:${FEEDBACK_EMAIL}`} className="font-medium hover:underline break-all" style={{ color: 'var(--color-accent)' }}>
-                {FEEDBACK_EMAIL}
-              </a>
-            </p>
-          </div>
-          <Button asChild variant="outline" className="shrink-0">
-            <a href={`mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(`Quiz feedback: ${title}`)}`}>
-              <Mail className="h-4 w-4 mr-2" />
-              Write to us
-            </a>
-          </Button>
-        </div>
+        <FeedbackCard subject={`Quiz feedback: ${title}`} />
 
         <h3 className="text-lg font-semibold pt-2" style={{ color: 'var(--color-foreground)' }}>Answer review</h3>
         <ol className="space-y-3">
