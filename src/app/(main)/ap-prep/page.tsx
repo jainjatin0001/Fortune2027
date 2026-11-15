@@ -396,8 +396,8 @@ export default async function APPage() {
                         <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />New
                       </span>
                     </div>
-                    <div className="flex items-center justify-between pt-4 border-t" style={{ borderColor: 'var(--color-border)' }}>
-                      <span className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>{course._count.enrollments.toLocaleString()} enrolled</span>
+                    <div className="flex items-center justify-end pt-4 border-t" style={{ borderColor: 'var(--color-border)' }}>
+                      {/* Enrolled count hidden on public course cards: <span className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>{course._count.enrollments.toLocaleString()} enrolled</span> */}
                       <span className="text-base font-bold" style={{ color: 'var(--color-primary)' }}>{formatPrice(course.price)}</span>
                     </div>
                   </div>

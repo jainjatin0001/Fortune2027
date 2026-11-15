@@ -394,13 +394,15 @@ export default async function CoursesPage({
                         <div style={{
                           display: 'flex',
                           alignItems: 'center',
-                          justifyContent: 'space-between',
+                          justifyContent: 'flex-end',
                           paddingTop: '0.75rem',
                           borderTop: '1px solid var(--color-border)',
                         }}>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--color-muted-foreground)' }}>
-                            {course._count.enrollments.toLocaleString()} enrolled
-                          </span>
+                          {/* Enrolled count hidden on public course cards
+                              <span style={{ fontSize: '0.75rem', color: 'var(--color-muted-foreground)' }}>
+                              {course._count.enrollments.toLocaleString()} enrolled
+                              </span>
+                          */}
                           <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--color-primary)' }}>
                             {formatPrice(course.price)}
                           </span>

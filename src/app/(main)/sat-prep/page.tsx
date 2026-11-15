@@ -693,12 +693,14 @@ export default async function SATPage() {
                       </span>
                     </div>
                     <div
-                      className="flex items-center justify-between pt-4 border-t"
+                      className="flex items-center justify-end pt-4 border-t"
                       style={{ borderColor: 'var(--color-border)' }}
                     >
-                      <span className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>
-                        {course._count.enrollments.toLocaleString()} enrolled
-                      </span>
+                      {/* Enrolled count hidden on public course cards
+                          <span className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>
+                          {course._count.enrollments.toLocaleString()} enrolled
+                          </span>
+                      */}
                       <span className="text-base font-bold" style={{ color: 'var(--color-primary)' }}>
                         {formatPrice(course.price)}
                       </span>
