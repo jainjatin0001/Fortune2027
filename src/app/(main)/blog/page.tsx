@@ -1,12 +1,10 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import { Clock, ArrowRight, BookOpen, ChevronRight } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 
-export const metadata: Metadata = {
-  title: 'Blog',
-  description: 'SAT strategies, ACT tips, AP study guides, coding tutorials, and college admissions advice from the Delta Tutors team.',
-};
+export const metadata: Metadata = pageMetadata({ title: 'Blog: SAT, ACT, AP & College Admissions Guides', path: '/blog', description: 'Digital SAT strategies, ACT tips, AP study guides, coding tutorials and US college admissions advice for students and parents from the Delta Tutors team.' });
 
 function readTimeMin(content: string) {
   return Math.max(1, Math.round(content.split(/\s+/).length / 200));

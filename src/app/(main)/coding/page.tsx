@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import {
   ArrowRight, CheckCircle, BookOpen, Star,
@@ -13,10 +14,7 @@ import { formatPrice, getCategoryBadgeClass, getCategoryLabel } from '@/lib/util
 
 const codingGradient = 'linear-gradient(135deg, #059669 0%, #047857 100%)';
 
-export const metadata: Metadata = {
-  title: 'Coding Courses',
-  description: 'Learn Python, Machine Learning, Data Science, and Web Development. Project-based courses for high school students.',
-};
+export const metadata: Metadata = pageMetadata({ title: 'Coding Classes for Teens: Python, AI & Web Development', path: '/coding', description: 'Online coding classes for high school students: Python, machine learning, data science and web development with live 1:1 mentors. For teens in the US and Canada.' });
 
 const stats = [
   { icon: Users,    value: '1:1 Live',    label: 'Coding & Project Support' },

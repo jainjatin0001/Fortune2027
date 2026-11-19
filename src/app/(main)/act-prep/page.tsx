@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import {
   ArrowRight, CheckCircle, Clock, Trophy, BookOpen, Star,
@@ -13,11 +14,7 @@ import { formatPrice, getCategoryBadgeClass, getCategoryLabel } from '@/lib/util
 
 const actGradient = 'linear-gradient(135deg, #0891b2 0%, #0284c7 100%)';
 
-export const metadata: Metadata = {
-  title: 'ACT Preparation — Delta Tutors',
-  description:
-    'Comprehensive ACT prep for all four sections — English, Math, Reading, and Science. Improve your score and open doors to top universities.',
-};
+export const metadata: Metadata = pageMetadata({ title: 'ACT Prep & Online ACT Tutoring', path: '/act-prep', description: 'Online ACT prep for English, Math, Reading and Science: live 1:1 tutoring, full-length practice tests and score reports for US and Canadian students.' });
 
 const actSections = [
   {

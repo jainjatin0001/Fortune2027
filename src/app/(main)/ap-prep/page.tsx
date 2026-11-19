@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import {
   ArrowRight, CheckCircle, BookOpen, Star, Trophy,
@@ -16,10 +17,7 @@ const AP_AMBER = '#d97706';
 const AP_AMBER_DARK = '#b45309';
 const AP_AMBER_LIGHT = '#fef3c7';
 
-export const metadata: Metadata = {
-  title: 'AP Exam Preparation | Delta Tutors',
-  description: 'Comprehensive AP preparation for 20+ subjects. 98% pass rate among Delta Tutors students.',
-};
+export const metadata: Metadata = pageMetadata({ title: 'AP Exam Prep & Online AP Tutoring', path: '/ap-prep', description: 'Online AP exam preparation with live 1:1 tutors for AP Calculus, Physics, Chemistry, Computer Science and more. Built for students in the US and Canada.' });
 
 const whyReasons = [
   { icon: Award,        title: 'Earn College Credit',     desc: 'Get credit for college courses and save thousands in tuition.' },

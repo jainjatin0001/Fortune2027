@@ -23,6 +23,11 @@ const isPublicRoute = createRouteMatcher([
   '/api/questions',
   '/sitemap.xml',
   '/robots.txt',
+  // Generated social-preview images and icons must be fetchable by crawlers
+  '/opengraph-image(.*)',
+  '/twitter-image(.*)',
+  '/icon(.*)',
+  '/apple-icon(.*)',
 ]);
 
 const isDashboardRoute = createRouteMatcher([

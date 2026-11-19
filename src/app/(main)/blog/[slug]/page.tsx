@@ -1,7 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { cache } from 'react';
 import { Clock, ArrowLeft, BookOpen, Tag, ChevronRight } from 'lucide-react';
+import { pageMetadata, toPlainText, articleJsonLd, breadcrumbJsonLd } from '@/lib/seo';
+import { JsonLd } from '@/components/seo/JsonLd';
 import { prisma } from '@/lib/prisma';
 import { htmlToText } from '@/components/admin/RichEditor/utils/htmlToText';
 
@@ -67,34 +70,43 @@ function renderContent(content: string) {
   });
 }
 
+// cache(): generateMetadata and the page share one DB round-trip per request.
+const getPost = cache((slug: string) =>
+  prisma.blogPost.findUnique({
+    where: { slug, isPublished: true },
+    select: {
+      id: true, slug: true, title: true, excerpt: true, content: true,
+      coverImage: true, isFeatured: true, publishedAt: true, createdAt: true, updatedAt: true,
+      tags: true,
+      author: { select: { firstName: true, lastName: true, avatarUrl: true } },
+      category: { select: { name: true } },
+    },
+  }),
+);
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const post = await prisma.blogPost.findUnique({
-    where: { slug, isPublished: true },
-    select: { title: true, excerpt: true, coverImage: true },
-  });
-  if (!post) return { title: 'Post Not Found' };
-  return {
+  const post = await getPost(slug);
+  if (!post) return { title: 'Post Not Found', robots: { index: false } };
+  return pageMetadata({
     title: post.title,
-    description: post.excerpt ?? undefined,
-    openGraph: post.coverImage ? { images: [post.coverImage] } : undefined,
-  };
+    // Excerpts are stored as editor HTML ("<p><strong>…"), so strip tags.
+    description: toPlainText(post.excerpt) || toPlainText(post.content),
+    hasRouteOgImage: true,
+    path: `/blog/${slug}`,
+    type: 'article',
+    publishedTime: (post.publishedAt ?? post.createdAt).toISOString(),
+    modifiedTime: post.updatedAt.toISOString(),
+    authors: [`${post.author.firstName} ${post.author.lastName}`.trim()],
+    tags: post.tags,
+  });
 }
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
 
   const [post, featuredPosts] = await Promise.all([
-    prisma.blogPost.findUnique({
-      where: { slug, isPublished: true },
-      select: {
-        id: true, slug: true, title: true, excerpt: true, content: true,
-        coverImage: true, isFeatured: true, publishedAt: true, createdAt: true,
-        tags: true,
-        author: { select: { firstName: true, lastName: true, avatarUrl: true } },
-        category: { select: { name: true } },
-      },
-    }),
+    getPost(slug),
     prisma.blogPost.findMany({
       where: { isPublished: true },
       select: {
@@ -116,8 +128,27 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
   const sidebarPosts = featuredPosts.filter((p) => p.slug !== slug).slice(0, 5);
 
+  const structuredData = [
+    articleJsonLd({
+      title: post.title,
+      slug: post.slug,
+      description: toPlainText(post.excerpt) || toPlainText(post.content),
+      image: post.coverImage,
+      authorName,
+      datePublished: postDate,
+      dateModified: post.updatedAt,
+      tags: post.tags,
+    }),
+    breadcrumbJsonLd([
+      { name: 'Home', path: '/' },
+      { name: 'Blog', path: '/blog' },
+      { name: post.title, path: `/blog/${post.slug}` },
+    ]),
+  ];
+
   return (
     <div style={{ background: 'var(--color-background)' }}>
+      <JsonLd data={structuredData} />
 
       {/* Breadcrumb bar */}
       <div style={{ background: 'var(--color-background-alt)', borderBottom: '1px solid var(--color-card-border)' }}>

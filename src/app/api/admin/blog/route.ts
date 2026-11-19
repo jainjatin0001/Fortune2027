@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, unauthorized, forbidden, badRequest } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { slugify } from '@/lib/utils';
 
 async function withAdmin() {
   try {
@@ -59,7 +60,9 @@ export async function POST(req: NextRequest) {
   try {
     const admin = await withAdmin();
     const body = await req.json();
-    const { title, slug, content, excerpt, categoryId, coverImage, tags, isPublished, isFeatured } = body;
+    const { title, content, excerpt, categoryId, coverImage, tags, isPublished, isFeatured } = body;
+    // Slugs become public URLs (/blog/<slug>): force lowercase-hyphen form.
+    const slug = typeof body.slug === 'string' ? slugify(body.slug) : '';
 
     if (!title || !slug || !content) return badRequest('title, slug, and content are required');
 

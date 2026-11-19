@@ -1,7 +1,12 @@
+import type { Metadata } from 'next';
+import { NO_INDEX_METADATA } from '@/lib/seo';
 import { redirect } from 'next/navigation';
 import { getDbUser } from '@/lib/auth';
 import { AdminSidebar } from '@/components/layout/AdminSidebar';
 import { DashboardHeader } from '@/components/layout/DashboardHeader';
+
+// Private app area: keep it out of search results.
+export const metadata: Metadata = NO_INDEX_METADATA;
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await getDbUser();

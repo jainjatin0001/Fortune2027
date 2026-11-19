@@ -1,9 +1,14 @@
+import type { Metadata } from 'next';
+import { NO_INDEX_METADATA } from '@/lib/seo';
 import { getDbUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { DashboardSidebarProvider } from '@/components/layout/DashboardSidebarProvider';
 import { DashboardSidebar } from '@/components/layout/DashboardSidebar';
 import { DashboardHeader } from '@/components/layout/DashboardHeader';
 import { TimeZoneSync } from '@/components/layout/TimeZoneSync';
+
+// Private app area: keep it out of search results.
+export const metadata: Metadata = NO_INDEX_METADATA;
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await getDbUser();

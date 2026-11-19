@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import type { ElementType } from 'react';
 import Link from 'next/link';
 import {
@@ -11,10 +12,7 @@ import { prisma } from '@/lib/prisma';
 import type { CourseCategory } from '@/types';
 import { CoursesFilter } from './CoursesFilter';
 
-export const metadata: Metadata = {
-  title: 'All Courses — Delta Tutors',
-  description: 'Browse all SAT, ACT, AP, High School, and Coding courses on Delta Tutors.',
-};
+export const metadata: Metadata = pageMetadata({ title: 'Online Courses: SAT, ACT, AP & Coding', path: '/courses', description: 'Browse online SAT, ACT, AP and coding courses from Delta Tutors, with live tutoring and practice tests for high school students in the US and Canada.' });
 
 const gradients: Record<string, string> = {
   SAT_PREP:   'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)',

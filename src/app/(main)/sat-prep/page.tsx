@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import {
   ArrowRight, CheckCircle, Star, TrendingUp, Trophy,
@@ -13,11 +14,7 @@ import { formatPrice, getCategoryBadgeClass, getCategoryLabel } from '@/lib/util
 const satGradient = 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)';
 const SAT_COLOR = '#7c3aed';
 
-export const metadata: Metadata = {
-  title: 'SAT Preparation — Delta Tutors',
-  description:
-    'Comprehensive SAT preparation with 4,000+ practice questions, 10 full-length mock tests, and a personalized study plan that helps you score higher.',
-};
+export const metadata: Metadata = pageMetadata({ title: 'Digital SAT Prep & Online SAT Tutoring', path: '/sat-prep', description: 'Prepare for the digital SAT with live 1:1 online tutors, full-length timed practice tests and detailed score reports. For students in the US, Canada and abroad applying to US colleges.' });
 
 const benefits = [
   {

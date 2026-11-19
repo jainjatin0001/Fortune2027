@@ -4,7 +4,8 @@ import { XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export const metadata: Metadata = {
-  title: 'Payment Cancelled — Delta Tutors',
+  title: 'Payment Cancelled',
+  robots: { index: false, follow: false },
 };
 
 export default function PaymentCancelPage() {

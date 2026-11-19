@@ -1,11 +1,9 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import { Mail, Phone, MessageSquare, Clock } from 'lucide-react';
 import { ContactForm } from './ContactForm';
 
-export const metadata: Metadata = {
-  title: 'Contact Us',
-  description: "Get in touch with the Delta Tutors team. We're here to help students, parents, and educators.",
-};
+export const metadata: Metadata = pageMetadata({ title: 'Contact Us', path: '/contact', description: 'Contact Delta Tutors about online SAT, ACT, AP or coding tutoring. We help students and parents across the US and Canada choose the right plan.' });
 
 const contactInfo = [
   {

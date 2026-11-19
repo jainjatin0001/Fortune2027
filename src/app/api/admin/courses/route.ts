@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, unauthorized, forbidden, badRequest } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { slugify } from '@/lib/utils';
 
 async function withAdmin() {
   try {
@@ -62,7 +63,9 @@ export async function POST(req: NextRequest) {
   try {
     await withAdmin();
     const body = await req.json();
-    const { programId, title, slug, description, shortDesc, difficulty, price, isFree } = body;
+    const { programId, title, description, shortDesc, difficulty, price, isFree } = body;
+    // Slugs become public URLs (/courses/<slug>): force lowercase-hyphen form.
+    const slug = typeof body.slug === 'string' ? slugify(body.slug) : '';
 
     if (!programId || !title || !slug || !description) {
       return badRequest('programId, title, slug, and description are required');

@@ -28,7 +28,6 @@ export const NAV_LINKS = [
       { label: 'SAT Preparation', href: '/sat-prep' },
       { label: 'ACT Preparation', href: '/act-prep' },
       { label: 'AP Exams', href: '/ap-prep' },
-      { label: 'High School', href: '/subjects' },
       { label: 'Coding', href: '/coding' },
     ],
   },
@@ -51,7 +50,7 @@ export const FOOTER_LINKS = {
     { label: 'SAT Preparation', href: '/sat-prep' },
     { label: 'ACT Preparation', href: '/act-prep' },
     { label: 'AP Exams', href: '/ap-prep' },
-    { label: 'Practice Tests', href: '/practice' },
+    { label: 'Practice Tests', href: '/dashboard' },
   ],
   coding: [
     { label: 'Python', href: '/coding' },

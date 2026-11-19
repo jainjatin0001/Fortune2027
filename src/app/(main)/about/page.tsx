@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -8,10 +9,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export const metadata: Metadata = {
-  title: 'About Us',
-  description: "Learn about Delta Tutors's mission to make premium test prep and coding education accessible to all US and Canadian students.",
-};
+export const metadata: Metadata = pageMetadata({ title: 'About Us', path: '/about', description: 'Meet the team behind Delta Tutors and learn how we help high school students in the US and Canada prepare for the SAT, ACT, AP exams and coding.' });
 
 const heroFeatures = [
   { icon: GraduationCap, label: 'Expert-Led',     desc: 'IITians & Subject Matter Experts',   pos: 'top-left' },

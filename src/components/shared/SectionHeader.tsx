@@ -7,6 +7,8 @@ interface SectionHeaderProps {
   align?: 'left' | 'center';
   className?: string;
   titleClassName?: string;
+  /** Heading level for the title. Use 'h1' when this is the page's main heading. */
+  as?: 'h1' | 'h2';
 }
 
 export function SectionHeader({
@@ -16,6 +18,7 @@ export function SectionHeader({
   align = 'center',
   className,
   titleClassName,
+  as: Heading = 'h2',
 }: SectionHeaderProps) {
   return (
     <div className={cn('mb-12', align === 'center' && 'text-center', className)}>
@@ -27,12 +30,12 @@ export function SectionHeader({
           {eyebrow}
         </span>
       )}
-      <h2
+      <Heading
         className={cn('text-heading-2 mb-4', titleClassName)}
         style={{ color: 'var(--color-foreground)' }}
       >
         {title}
-      </h2>
+      </Heading>
       {subtitle && (
         <p
           className={cn(

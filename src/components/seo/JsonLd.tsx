@@ -1,0 +1,12 @@
+/**
+ * Renders schema.org structured data. `<` is escaped so values coming from the
+ * DB (course/blog titles) can't break out of the script tag.
+ */
+export function JsonLd({ data }: { data: Record<string, unknown> | Record<string, unknown>[] }) {
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(data).replace(/</g, '\\u003c') }}
+    />
+  );
+}

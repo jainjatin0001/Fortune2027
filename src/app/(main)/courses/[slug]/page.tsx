@@ -17,7 +17,10 @@ import {
   ShieldCheck,
   ListChecks,
 } from 'lucide-react';
+import { cache } from 'react';
 import { prisma } from '@/lib/prisma';
+import { pageMetadata, toPlainText, courseJsonLd, breadcrumbJsonLd } from '@/lib/seo';
+import { JsonLd } from '@/components/seo/JsonLd';
 import {
   formatPrice,
   getDifficultyLabel,
@@ -143,7 +146,8 @@ function programSlugToCategory(slug: string): CourseCategory {
 }
 
 // ─── DB fetch ────────────────────────────────────────────────────────────────
-async function getCourse(slug: string) {
+// cache(): generateMetadata and the page share one DB round-trip per request.
+const getCourse = cache(async (slug: string) => {
   try {
     return await prisma.course.findUnique({
       where: { slug, isPublished: true },
@@ -201,7 +205,7 @@ async function getCourse(slug: string) {
   } catch {
     return null;
   }
-}
+});
 
 // ─── Metadata ────────────────────────────────────────────────────────────────
 export async function generateMetadata({
@@ -211,11 +215,21 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const course = await getCourse(slug);
-  if (!course) return { title: 'Course Not Found' };
-  return {
-    title: `${course.title} | Delta Tutors`,
-    description: course.shortDesc ?? course.description?.slice(0, 160),
-  };
+  if (!course) return { title: 'Course Not Found', robots: { index: false } };
+  return pageMetadata({
+    title: course.title,
+    description: courseDescription(course),
+    hasRouteOgImage: true,
+    path: `/courses/${course.slug}`,
+  });
+}
+
+function courseDescription(course: { shortDesc: string | null; description: string; title: string }) {
+  return (
+    toPlainText(course.shortDesc) ||
+    toPlainText(course.description) ||
+    `${course.title}: online course with live tutoring from Delta Tutors for US & Canadian students.`
+  );
 }
 
 // ─── Static fallbacks ────────────────────────────────────────────────────────
@@ -340,6 +354,22 @@ export default async function CourseDetailPage({
 
   const metaEntries = Object.entries(meta);
 
+  const structuredData = [
+    courseJsonLd({
+      title: course.title,
+      slug: course.slug,
+      description: courseDescription(course),
+      price,
+      isFree: course.isFree,
+      instructorName: instructor?.name,
+    }),
+    breadcrumbJsonLd([
+      { name: 'Home', path: '/' },
+      { name: 'Courses', path: '/courses' },
+      { name: course.title, path: `/courses/${course.slug}` },
+    ]),
+  ];
+
   const statItems = metaEntries.slice(0, 5).map(([key, val]) => {
     const cfg = META_CONFIG[key];
     return {
@@ -358,6 +388,7 @@ export default async function CourseDetailPage({
 
   return (
     <div style={{ background: 'var(--color-background)' }}>
+      <JsonLd data={structuredData} />
 
       {/* ── HERO ──────────────────────────────────────────────────────────── */}
       <section style={{ background: heroGradient }} className="relative overflow-hidden">

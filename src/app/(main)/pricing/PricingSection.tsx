@@ -73,9 +73,9 @@ function ContactModal({ onClose }: { onClose: () => void }) {
             >
               ✓
             </div>
-            <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--color-foreground)' }}>
+            <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--color-foreground)' }}>
               We&apos;ll be in touch!
-            </h3>
+            </h2>
             <p className="text-sm" style={{ color: 'var(--color-muted-foreground)' }}>
               Thanks for reaching out. Our team will contact you within 24 hours.
             </p>
@@ -86,9 +86,9 @@ function ContactModal({ onClose }: { onClose: () => void }) {
           </div>
         ) : (
           <>
-            <h3 className="text-xl font-bold mb-1" style={{ color: 'var(--color-foreground)' }}>
+            <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--color-foreground)' }}>
               Get Started
-            </h3>
+            </h2>
             <p className="text-sm mb-6" style={{ color: 'var(--color-muted-foreground)' }}>
               Tell us about your needs and we&apos;ll get back to you with accurate pricing.
             </p>
@@ -366,9 +366,9 @@ export default function PricingSection() {
             )}
 
             <div className="mb-6">
-              <h3 className="text-xl font-bold mb-1" style={{ color: 'var(--color-foreground)' }}>
+              <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--color-foreground)' }}>
                 {plan.name}
-              </h3>
+              </h2>
               <p className="text-sm mb-3" style={{ color: 'var(--color-muted-foreground)' }}>
                 {plan.description}
               </p>
