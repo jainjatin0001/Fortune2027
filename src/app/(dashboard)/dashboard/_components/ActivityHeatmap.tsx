@@ -58,7 +58,7 @@ export function ActivityHeatmap({ cells, dailyGoal, todayKey, longestStreak }: {
             {totalAnswered.toLocaleString()} questions answered in the last year
           </p>
         </div>
-        <div className="flex gap-6">
+        <div className="flex gap-4 sm:gap-6">
           <Stat value={activeDays} label="active days" />
           <Stat value={goalDays} label="goal days" />
           <Stat value={longestStreak} label="longest streak" />

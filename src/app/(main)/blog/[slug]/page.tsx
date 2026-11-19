@@ -141,10 +141,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
       {/* Main layout */}
       <div className="container-app py-10">
-        <div className="grid lg:grid-cols-[minmax(0,1fr)_300px] xl:grid-cols-[minmax(0,1fr)_320px] gap-10 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] xl:grid-cols-[minmax(0,1fr)_320px] gap-10 items-start">
 
           {/* ── LEFT: Article ── */}
-          <article>
+          <article className="min-w-0">
 
             {/* Cover image */}
             <div className="w-full rounded-2xl overflow-hidden mb-8" style={{ aspectRatio: '16/9', background: catMeta.gradient }}>

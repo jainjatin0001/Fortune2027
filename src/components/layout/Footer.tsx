@@ -41,10 +41,10 @@ export function Footer() {
         borderColor: 'var(--color-border)',
       }}
     >
-      <div className="container-app py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-10">
+      <div className="container-app py-12 sm:py-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-8 lg:gap-10">
           {/* Brand */}
-          <div className="lg:col-span-2">
+          <div className="sm:col-span-2 lg:col-span-2">
             <Link href="/" className="flex items-center gap-3 mb-4">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/images/logos/logo_5.png" alt="Delta Tutors" className="h-12 w-auto object-contain" />
@@ -118,7 +118,7 @@ export function Footer() {
           ))}
 
           {/* Contact Us */}
-          <div>
+          <div className="sm:col-span-2 lg:col-span-2 min-w-0">
             <h3 className="text-sm font-semibold mb-4" style={{ color: 'var(--color-foreground)' }}>
               Contact Us
             </h3>
@@ -133,7 +133,7 @@ export function Footer() {
                   style={{ color: 'var(--color-foreground)' }}
                 >
                   <Mail className="h-3.5 w-3.5 shrink-0" />
-                  info.deltatutors@gmail.com
+                  <span className="min-w-0 break-all">info.deltatutors@gmail.com</span>
                 </a>
               </li>
               <li>

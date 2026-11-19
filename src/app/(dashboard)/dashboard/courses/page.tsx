@@ -296,7 +296,7 @@ export default async function MyCoursesPage() {
 
         {courses.length === 0 ? (
           <div
-            className="card-base p-12 text-center"
+            className="card-base p-6 sm:p-12 text-center"
           >
             <BookOpen
               className="h-10 w-10 mx-auto mb-3"
@@ -370,7 +370,7 @@ export default async function MyCoursesPage() {
       </div>
 
       {enrollments.length === 0 ? (
-        <div className="card-base p-12 text-center">
+        <div className="card-base p-6 sm:p-12 text-center">
           <div
             className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5"
             style={{ background: 'var(--color-muted)' }}

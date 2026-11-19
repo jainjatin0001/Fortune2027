@@ -536,10 +536,10 @@ export default async function SATPage() {
         style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 55%, #4f46e5 120%)' }}
       >
         <div className="container-app">
-          <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
+          <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
 
             {/* Laptop mockup */}
-            <div className="hidden md:block flex-shrink-0">
+            <div className="hidden lg:block flex-shrink-0">
               <div className="relative w-52">
                 <div
                   className="w-52 h-32 rounded-t-xl border-2 flex flex-col overflow-hidden"
@@ -581,7 +581,7 @@ export default async function SATPage() {
             </div>
 
             {/* Content */}
-            <div className="flex-1 text-center md:text-left">
+            <div className="flex-1 text-center lg:text-left">
               <span
                 className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold mb-3"
                 style={{ background: SAT_COLOR, color: 'white' }}
@@ -594,7 +594,7 @@ export default async function SATPage() {
               <p className="text-base mb-5" style={{ color: 'rgba(203,213,225,0.85)' }}>
                 Practice like the real exam with our official-style SAT test environment.
               </p>
-              <div className="flex flex-wrap gap-x-5 gap-y-2 justify-center md:justify-start">
+              <div className="flex flex-wrap gap-x-5 gap-y-2 justify-center lg:justify-start">
                 {[
                   'Real Exam Interface',
                   'Timed Section Tests',

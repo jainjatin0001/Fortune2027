@@ -176,7 +176,7 @@ export default async function CoursesPage({
           </nav>
 
           {/* Heading */}
-          <h1 style={{ color: '#fff', fontWeight: 800, fontSize: '2.75rem', lineHeight: 1.15, marginBottom: '0.75rem' }}>
+          <h1 className="text-3xl sm:text-4xl lg:text-[2.75rem]" style={{ color: '#fff', fontWeight: 800, lineHeight: 1.15, marginBottom: '0.75rem' }}>
             All Courses
           </h1>
           <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '1rem', maxWidth: '38rem', marginBottom: '2rem', lineHeight: 1.6 }}>
@@ -185,7 +185,7 @@ export default async function CoursesPage({
 
           {/* Stats + Search row */}
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '1.5rem' }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '1.75rem', flex: 1, minWidth: 0 }}>
+            <div className="grid grid-cols-2 gap-4 sm:flex sm:flex-wrap sm:items-center sm:gap-7" style={{ flex: 1, minWidth: 0 }}>
               {[
                 { icon: BookOpen,    value: String(totalCourses || '9'), label: 'Courses' },
                 { icon: Users,       value: enrollDisplay,                label: 'Students Enrolled' },
@@ -205,7 +205,7 @@ export default async function CoursesPage({
             </div>
 
             {/* Search bar */}
-            <form method="GET" action="/courses" style={{ flexShrink: 0, width: '17rem' }}>
+            <form method="GET" action="/courses" className="w-full sm:w-68" style={{ flexShrink: 0 }}>
               {category && <input type="hidden" name="category" value={category} />}
               <div style={{ position: 'relative' }}>
                 <Search style={{ position: 'absolute', left: '0.875rem', top: '50%', transform: 'translateY(-50%)', width: 15, height: 15, color: 'rgba(255,255,255,0.5)', pointerEvents: 'none' }} />
@@ -225,20 +225,17 @@ export default async function CoursesPage({
       </section>
 
       {/* ── MAIN CONTENT ────────────────────────────── */}
-      <div className="container-app" style={{ paddingBlock: '2.5rem' }}>
-        <div style={{ display: 'flex', gap: '1.75rem', alignItems: 'flex-start' }}>
+      <div className="container-app py-6 sm:py-10">
+        <div className="flex flex-col lg:flex-row lg:items-start gap-5 lg:gap-7">
 
           {/* Sidebar */}
-          <aside style={{
-            width: 220,
+          <aside className="w-full lg:w-[220px] lg:sticky lg:top-6" style={{
             flexShrink: 0,
             background: 'var(--color-card)',
             border: '1px solid var(--color-border)',
             borderRadius: '0.75rem',
             padding: '1.25rem',
             boxShadow: 'var(--shadow-card)',
-            position: 'sticky',
-            top: '1.5rem',
           }}>
             <CoursesFilter activeCategory={category} q={q} />
           </aside>
@@ -247,7 +244,7 @@ export default async function CoursesPage({
           <div style={{ flex: 1, minWidth: 0 }}>
 
             {/* Count + sort header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
               <p style={{ fontWeight: 600, fontSize: '1rem', color: 'var(--color-foreground)' }}>
                 {courses.length} Course{courses.length !== 1 ? 's' : ''}
               </p>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { SignUpButton } from '@clerk/nextjs';
@@ -53,7 +53,20 @@ const itemBase = 'text-[var(--color-muted-foreground)] hover:bg-[var(--sidebar-i
 
 export function DashboardSidebar({ role, isPurchased, isGuest = false }: DashboardSidebarProps) {
   const pathname = usePathname();
-  const { open } = useSidebar();
+  const { open, mobileOpen, setMobileOpen } = useSidebar();
+
+  // Close the phone/tablet drawer whenever the route changes
+  useEffect(() => { setMobileOpen(false); }, [pathname, setMobileOpen]);
+
+  // While the drawer is open: lock page scroll and close on Escape
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMobileOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => { document.body.style.overflow = prev; window.removeEventListener('keydown', onKey); };
+  }, [mobileOpen, setMobileOpen]);
   const [showLockedModal, setShowLockedModal] = useState(false);
 
   const isUnlocked = role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'INSTRUCTOR' || !!isPurchased;
@@ -140,135 +153,9 @@ export function DashboardSidebar({ role, isPurchased, isGuest = false }: Dashboa
     </div>
   ) : null;
 
-  // ── Collapsed: icon-only rail ─────────────────────────────────
-  if (!open) {
-    return (
-      <>
-        {lockedModal}
-        <aside
-          className="hidden lg:flex flex-col h-screen sticky top-0 overflow-hidden shrink-0 print:hidden!"
-          style={{
-            width: 'var(--sidebar-collapsed)',
-            background: 'var(--sidebar-bg)',
-            borderRight: '1px solid var(--sidebar-border)',
-          }}
-        >
-          {/* Logo mark */}
-          <div
-            className="flex items-center justify-center h-16 border-b shrink-0"
-            style={{ borderColor: 'var(--sidebar-border)' }}
-          >
-            <Link href="/">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/images/logos/logo_5.png" alt="Delta Tutors" className="w-8 h-8 object-contain" />
-            </Link>
-          </div>
-
-          {/* Nav icons */}
-          <nav className="flex-1 flex flex-col items-center py-3 gap-0.5 overflow-y-auto" aria-label="Dashboard navigation">
-            {navItems.map(({ icon: Icon, label, href, requiresPurchase }) => {
-              const active = pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
-              const locked = requiresPurchase && !isUnlocked;
-
-              if (isGuestLocked(href)) return guestItem(href, label, <Icon className="h-4 w-4 shrink-0" />, true);
-
-              if (locked) {
-                return (
-                  <button
-                    key={href}
-                    title={label}
-                    onClick={() => setShowLockedModal(true)}
-                    className="relative w-10 h-10 flex items-center justify-center rounded-xl transition-colors text-[var(--color-muted-foreground)] hover:bg-[var(--sidebar-item-hover)] hover:text-[var(--color-foreground)]"
-                  >
-                    <Icon className="h-4 w-4 shrink-0" />
-                    <LockKeyhole
-                      className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5"
-                      style={{ color: '#d97706' }}
-                    />
-                  </button>
-                );
-              }
-
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  title={label}
-                  className={cn(
-                    'w-10 h-10 flex items-center justify-center rounded-xl transition-colors',
-                    active
-                      ? 'bg-[var(--sidebar-item-active)] text-[var(--sidebar-item-active-text)]'
-                      : 'text-[var(--color-muted-foreground)] hover:bg-[var(--sidebar-item-hover)] hover:text-[var(--color-foreground)]',
-                  )}
-                >
-                  <Icon className="h-4 w-4 shrink-0" />
-                </Link>
-              );
-            })}
-
-            {/* Practice Exams group retired — see the Mock Test nav item */}
-
-            <div className="w-8 border-t my-2" style={{ borderColor: 'var(--sidebar-border)' }} />
-
-            {quickItems.map(({ icon: Icon, label, href }) => (
-              <Link
-                key={href}
-                href={href}
-                title={label}
-                className="w-10 h-10 flex items-center justify-center rounded-xl text-[var(--color-muted-foreground)] hover:bg-[var(--sidebar-item-hover)] hover:text-[var(--color-foreground)] transition-colors"
-              >
-                <Icon className="h-4 w-4 shrink-0" />
-              </Link>
-            ))}
-          </nav>
-
-          {/* Bottom icons */}
-          <div
-            className="flex flex-col items-center py-3 gap-0.5 border-t"
-            style={{ borderColor: 'var(--sidebar-border)' }}
-          >
-            {bottomItems.map(({ icon: Icon, label, href }) => isGuestLocked(href) ? guestItem(href, label, <Icon className="h-4 w-4 shrink-0" />, true) : (
-              <Link
-                key={href}
-                href={href}
-                title={label}
-                className="w-10 h-10 flex items-center justify-center rounded-xl text-[var(--color-muted-foreground)] hover:bg-[var(--sidebar-item-hover)] hover:text-[var(--color-foreground)] transition-colors"
-              >
-                <Icon className="h-4 w-4 shrink-0" />
-              </Link>
-            ))}
-            {role === 'SUPER_ADMIN' && (
-              <Link
-                href="/admin"
-                title="Admin Panel"
-                className="w-10 h-10 flex items-center justify-center rounded-xl transition-colors"
-                style={{
-                  color: 'var(--color-danger)',
-                  background: 'color-mix(in srgb, var(--color-danger) 10%, transparent)',
-                }}
-              >
-                <Shield className="h-4 w-4 shrink-0" />
-              </Link>
-            )}
-          </div>
-        </aside>
-      </>
-    );
-  }
-
-  // ── Expanded: full sidebar ────────────────────────────────────
-  return (
+  // Full navigation (logo, menu, bottom links) — shared by the desktop sidebar and the phone/tablet drawer
+  const fullNav = (
     <>
-      {lockedModal}
-      <aside
-        className="hidden lg:flex flex-col h-screen sticky top-0 overflow-y-auto print:hidden!"
-        style={{
-          width: 'var(--sidebar-width)',
-          minWidth: 'var(--sidebar-width)',
-          background: 'var(--sidebar-bg)',
-          borderRight: '1px solid var(--sidebar-border)',
-        }}
-      >
         {/* Logo */}
         <div className="p-5 border-b" style={{ borderColor: 'var(--sidebar-border)' }}>
           <Link href="/" className="flex items-center gap-2.5">
@@ -387,6 +274,179 @@ export function DashboardSidebar({ role, isPurchased, isGuest = false }: Dashboa
             </Link>
           )}
         </div>
+    </>
+  );
+
+  // ── Phone/tablet: slide-in drawer (the desktop sidebar is hidden below lg) ──
+  const mobileDrawer = (
+    <div
+      className={cn('lg:hidden fixed inset-0 z-40 print:hidden!', mobileOpen ? 'pointer-events-auto' : 'pointer-events-none')}
+      aria-hidden={!mobileOpen}
+    >
+      <div
+        className={cn('absolute inset-0 bg-black/50 transition-opacity duration-200', mobileOpen ? 'opacity-100' : 'opacity-0')}
+        onClick={() => setMobileOpen(false)}
+      />
+      <aside
+        role="dialog"
+        aria-modal="true"
+        aria-label="Dashboard menu"
+        inert={!mobileOpen}
+        className={cn(
+          'absolute inset-y-0 left-0 flex flex-col overflow-y-auto transition-transform duration-200',
+          mobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full',
+        )}
+        style={{
+          width: 'min(var(--sidebar-width), 85vw)',
+          background: 'var(--sidebar-bg)',
+          borderRight: '1px solid var(--sidebar-border)',
+        }}
+      >
+        <button
+          onClick={() => setMobileOpen(false)}
+          className="absolute top-4 right-3 w-9 h-9 flex items-center justify-center rounded-lg hover:bg-[var(--sidebar-item-hover)]"
+          style={{ color: 'var(--color-muted-foreground)' }}
+          aria-label="Close menu"
+        >
+          <X className="h-5 w-5" />
+        </button>
+        {fullNav}
+      </aside>
+    </div>
+  );
+
+  // ── Collapsed: icon-only rail ─────────────────────────────────
+  if (!open) {
+    return (
+      <>
+        {lockedModal}
+        {mobileDrawer}
+        <aside
+          className="hidden lg:flex flex-col h-screen sticky top-0 overflow-hidden shrink-0 print:hidden!"
+          style={{
+            width: 'var(--sidebar-collapsed)',
+            background: 'var(--sidebar-bg)',
+            borderRight: '1px solid var(--sidebar-border)',
+          }}
+        >
+          {/* Logo mark */}
+          <div
+            className="flex items-center justify-center h-16 border-b shrink-0"
+            style={{ borderColor: 'var(--sidebar-border)' }}
+          >
+            <Link href="/">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/images/logos/logo_5.png" alt="Delta Tutors" className="w-8 h-8 object-contain" />
+            </Link>
+          </div>
+
+          {/* Nav icons */}
+          <nav className="flex-1 flex flex-col items-center py-3 gap-0.5 overflow-y-auto" aria-label="Dashboard navigation">
+            {navItems.map(({ icon: Icon, label, href, requiresPurchase }) => {
+              const active = pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
+              const locked = requiresPurchase && !isUnlocked;
+
+              if (isGuestLocked(href)) return guestItem(href, label, <Icon className="h-4 w-4 shrink-0" />, true);
+
+              if (locked) {
+                return (
+                  <button
+                    key={href}
+                    title={label}
+                    onClick={() => setShowLockedModal(true)}
+                    className="relative w-10 h-10 flex items-center justify-center rounded-xl transition-colors text-[var(--color-muted-foreground)] hover:bg-[var(--sidebar-item-hover)] hover:text-[var(--color-foreground)]"
+                  >
+                    <Icon className="h-4 w-4 shrink-0" />
+                    <LockKeyhole
+                      className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5"
+                      style={{ color: '#d97706' }}
+                    />
+                  </button>
+                );
+              }
+
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  title={label}
+                  className={cn(
+                    'w-10 h-10 flex items-center justify-center rounded-xl transition-colors',
+                    active
+                      ? 'bg-[var(--sidebar-item-active)] text-[var(--sidebar-item-active-text)]'
+                      : 'text-[var(--color-muted-foreground)] hover:bg-[var(--sidebar-item-hover)] hover:text-[var(--color-foreground)]',
+                  )}
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                </Link>
+              );
+            })}
+
+            {/* Practice Exams group retired — see the Mock Test nav item */}
+
+            <div className="w-8 border-t my-2" style={{ borderColor: 'var(--sidebar-border)' }} />
+
+            {quickItems.map(({ icon: Icon, label, href }) => (
+              <Link
+                key={href}
+                href={href}
+                title={label}
+                className="w-10 h-10 flex items-center justify-center rounded-xl text-[var(--color-muted-foreground)] hover:bg-[var(--sidebar-item-hover)] hover:text-[var(--color-foreground)] transition-colors"
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+              </Link>
+            ))}
+          </nav>
+
+          {/* Bottom icons */}
+          <div
+            className="flex flex-col items-center py-3 gap-0.5 border-t"
+            style={{ borderColor: 'var(--sidebar-border)' }}
+          >
+            {bottomItems.map(({ icon: Icon, label, href }) => isGuestLocked(href) ? guestItem(href, label, <Icon className="h-4 w-4 shrink-0" />, true) : (
+              <Link
+                key={href}
+                href={href}
+                title={label}
+                className="w-10 h-10 flex items-center justify-center rounded-xl text-[var(--color-muted-foreground)] hover:bg-[var(--sidebar-item-hover)] hover:text-[var(--color-foreground)] transition-colors"
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+              </Link>
+            ))}
+            {role === 'SUPER_ADMIN' && (
+              <Link
+                href="/admin"
+                title="Admin Panel"
+                className="w-10 h-10 flex items-center justify-center rounded-xl transition-colors"
+                style={{
+                  color: 'var(--color-danger)',
+                  background: 'color-mix(in srgb, var(--color-danger) 10%, transparent)',
+                }}
+              >
+                <Shield className="h-4 w-4 shrink-0" />
+              </Link>
+            )}
+          </div>
+        </aside>
+      </>
+    );
+  }
+
+  // ── Expanded: full sidebar ────────────────────────────────────
+  return (
+    <>
+      {lockedModal}
+      {mobileDrawer}
+      <aside
+        className="hidden lg:flex flex-col h-screen sticky top-0 overflow-y-auto print:hidden!"
+        style={{
+          width: 'var(--sidebar-width)',
+          minWidth: 'var(--sidebar-width)',
+          background: 'var(--sidebar-bg)',
+          borderRight: '1px solid var(--sidebar-border)',
+        }}
+      >
+        {fullNav}
       </aside>
     </>
   );

@@ -264,7 +264,7 @@ export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, p
           </div>
         </div>
 
-        <div className="px-6 py-7 sm:px-10 space-y-6">
+        <div className="px-4 py-6 sm:px-10 sm:py-7 space-y-6">
           {/* Stats */}
           <div className="grid grid-cols-3 gap-3">
             {stats.map(({ icon: Icon, label, value }, i) => (
@@ -346,7 +346,7 @@ export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, p
 
     return (
       <div className={cn('max-w-3xl mx-auto space-y-5 animate-fade-in', className)}>
-        <div className="card-base p-6 sm:p-8 flex flex-wrap items-center gap-8">
+        <div className="card-base p-5 sm:p-8 flex flex-wrap items-center gap-6 sm:gap-8">
           <div
             className="w-36 h-36 rounded-full shrink-0 flex items-center justify-center mx-auto sm:mx-0"
             style={{ background: `conic-gradient(${resultColor} ${finalScore}%, var(--color-muted) 0)` }}
@@ -402,7 +402,7 @@ export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, p
             const correctOptions = q.options.filter((o) => correctIds.includes(o.id));
 
             return (
-              <li key={q.id} className="card-base p-5 flex gap-4 items-start">
+              <li key={q.id} className="card-base p-4 sm:p-5 flex gap-3 sm:gap-4 items-start">
                 <span
                   className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-white"
                   style={{ background: correct ? 'var(--color-success)' : 'var(--color-danger)' }}
@@ -536,7 +536,7 @@ export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, p
             <div id="quiz-question">
               <RichContent
                 html={current.question}
-                className="text-lg font-medium leading-relaxed whitespace-pre-wrap"
+                className="text-base sm:text-lg font-medium leading-relaxed whitespace-pre-wrap"
                 style={{ color: 'var(--color-foreground)' }}
               />
             </div>
@@ -681,7 +681,7 @@ export function QuizInterface({ questions, title = 'Practice Quiz', timeLimit, p
       {/* Submit confirmation */}
       {confirmOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-start justify-center px-4 pt-[15vh] bg-black/45 animate-fade-in"
+          className="fixed inset-0 z-50 flex items-start justify-center px-4 pt-[15vh] pb-4 overflow-y-auto bg-black/45 animate-fade-in"
           onClick={() => setConfirmOpen(false)}
         >
           <div

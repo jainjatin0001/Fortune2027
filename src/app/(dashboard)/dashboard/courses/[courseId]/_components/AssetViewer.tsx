@@ -164,7 +164,7 @@ function PDFViewer({ pdfUrl }: { pdfUrl: string }) {
 function ArticleViewer({ content }: { content: string }) {
   return (
     <div
-      className="rounded-xl p-6 border rich-content prose max-w-none"
+      className="rounded-xl p-4 sm:p-6 border rich-content prose max-w-none overflow-x-auto break-words"
       style={{ background: 'var(--color-card)', borderColor: 'var(--color-border)' }}
     >
       <div
@@ -283,7 +283,7 @@ export function AssetViewer({
     <div className="flex flex-col gap-5 pb-10">
       {/* Heading row */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
+        <div className="min-w-0 break-words">
           <h1 className="text-heading-3 leading-snug" style={{ color: 'var(--color-foreground)' }}>
             {asset.title}
           </h1>

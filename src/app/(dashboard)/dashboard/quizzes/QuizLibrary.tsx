@@ -84,7 +84,7 @@ export function QuizLibrary({ quizzes, subjects, showDrafts }: { quizzes: Quiz[]
             return (
               <Link key={quiz.id} href={`/dashboard/quizzes/${quiz.id}`} className="card-base p-5 flex flex-col gap-3 hover:opacity-80 transition-opacity group">
                 <div className="flex items-start justify-between gap-3">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: `${color}18`, color }}>
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${color}18`, color }}>
                     <QuizIcon className="h-6 w-6" />
                   </div>
                   <div className="flex items-center gap-2">
@@ -95,10 +95,10 @@ export function QuizLibrary({ quizzes, subjects, showDrafts }: { quizzes: Quiz[]
                 </div>
                 <div>
                   <p className="text-xs font-semibold mb-1" style={{ color }}>{quiz.subject?.name || 'General'}</p>
-                  <h2 className="font-bold text-sm" style={{ color: 'var(--color-foreground)' }}>{quiz.title}</h2>
+                  <h2 className="font-bold text-sm break-words" style={{ color: 'var(--color-foreground)' }}>{quiz.title}</h2>
                   <p className="text-xs mt-1 line-clamp-2" style={{ color: 'var(--color-muted-foreground)' }}>{plainText(quiz.description)}</p>
                 </div>
-                <div className="flex items-center gap-3 mt-auto pt-1 text-xs" style={{ color: 'var(--color-muted-foreground)' }}>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-auto pt-1 text-xs" style={{ color: 'var(--color-muted-foreground)' }}>
                   <span className="flex items-center gap-1"><BookOpen className="h-3 w-3" />{quiz._count.questions} questions</span>
                   <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{formatTime(quiz.timeLimit)}</span>
                 </div>
@@ -112,7 +112,7 @@ export function QuizLibrary({ quizzes, subjects, showDrafts }: { quizzes: Quiz[]
           })}
         </div>
       ) : (
-        <div className="card-base p-10 text-center">
+        <div className="card-base p-6 sm:p-10 text-center">
           <HelpCircle className="h-8 w-8 mx-auto mb-3" style={{ color: 'var(--color-muted-foreground)' }} />
           <h2 className="font-bold" style={{ color: 'var(--color-foreground)' }}>No quizzes found</h2>
           <p className="text-sm mt-1" style={{ color: 'var(--color-muted-foreground)' }}>Try another subject or check back soon for new quizzes.</p>

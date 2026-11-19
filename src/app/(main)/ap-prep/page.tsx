@@ -488,8 +488,8 @@ export default async function APPage() {
                 </div>
               </div>
 
-              {/* Progress card + trophy column */}
-              <div className="flex flex-col gap-3 shrink-0 w-36">
+              {/* Progress card + trophy column — hidden on phones so the question card gets the full width */}
+              <div className="hidden md:flex flex-col gap-3 shrink-0 w-36">
                 <div className="card-base p-4">
                   <p className="text-[10px] font-medium mb-1" style={{ color: 'var(--color-muted-foreground)' }}>
                     Your Progress

@@ -240,7 +240,7 @@ export function ReportView({ report }: { report: ReportData }) {
           </button>
         )}
         {report.detailed ? (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={printReport} className="gap-1.5">
               <Printer className="h-4 w-4" /> Print
             </Button>
@@ -250,7 +250,7 @@ export function ReportView({ report }: { report: ReportData }) {
           </div>
         ) : (
           // Printing and PDF download come with a course plan
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button asChild variant="outline" size="sm" className="gap-1.5" title="Available with a course plan">
               <Link href="/pricing"><Lock className="h-3.5 w-3.5" /> Print</Link>
             </Button>
@@ -272,7 +272,7 @@ export function ReportView({ report }: { report: ReportData }) {
               </span>
               <div className="min-w-0">
                 <p className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--color-muted-foreground)' }}>Score Report</p>
-                <h1 className="text-xl sm:text-2xl font-bold capitalize truncate" style={{ color: 'var(--color-foreground)' }}>{report.title}</h1>
+                <h1 className="text-xl sm:text-2xl font-bold capitalize break-words sm:truncate" style={{ color: 'var(--color-foreground)' }}>{report.title}</h1>
                 <p className="text-xs mt-0.5" style={{ color: 'var(--color-muted-foreground)' }}>
                   {report.studentName}{report.programName ? ` · ${report.programName}` : ''} · {dateLabel}
                 </p>
@@ -295,7 +295,7 @@ export function ReportView({ report }: { report: ReportData }) {
                 {scaled ? `Your ${examKind} ${scaled.total.label}` : 'Your Score'}
               </p>
               <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-6xl font-black tabular-nums leading-none" style={{ color: 'var(--color-foreground)' }}>
+                <span className="text-5xl sm:text-6xl font-black tabular-nums leading-none" style={{ color: 'var(--color-foreground)' }}>
                   {scaled ? scaled.total.score : `${report.percentage}%`}
                 </span>
                 {scaled && (
@@ -424,7 +424,7 @@ function LockedDetails({ color }: { color: string }) {
   return (
     <section className="card-base relative overflow-hidden print:hidden" aria-label="Detailed report (locked)">
       {/* Decorative preview of the locked analysis — fills the card behind the call to action */}
-      <div className="absolute inset-0 p-6 space-y-4 select-none blur-[5px] opacity-50 pointer-events-none" aria-hidden>
+      <div className="absolute inset-0 p-4 sm:p-6 space-y-4 select-none blur-[5px] opacity-50 pointer-events-none" aria-hidden>
         {Array.from({ length: 12 }).map((_, i) => (
           <div key={i} className="flex items-center gap-4">
             <div className="h-4 w-8 rounded" style={{ background: 'var(--chart-empty)' }} />

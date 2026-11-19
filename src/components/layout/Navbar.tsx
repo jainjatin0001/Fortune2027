@@ -72,13 +72,13 @@ export function Navbar() {
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden lg:flex items-center gap-1" aria-label="Main navigation">
+        <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1" aria-label="Main navigation">
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                'px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-150',
+                'px-2.5 xl:px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors duration-150',
                 pathname === item.href || pathname.startsWith(item.href + '/')
                   ? 'text-[var(--nav-text-hover)] bg-[var(--color-primary-light)]'
                   : 'text-[var(--nav-text)] hover:text-[var(--nav-text-hover)] hover:bg-[var(--color-muted)]'

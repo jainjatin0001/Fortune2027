@@ -484,15 +484,15 @@ export default async function ACTPage() {
                 background: 'var(--color-border)',
               }}
             />
-            <div className="flex flex-col lg:flex-row items-start justify-between gap-8 lg:gap-0">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:flex sm:flex-wrap sm:justify-center sm:gap-x-0 sm:gap-y-10 lg:flex-nowrap lg:items-start lg:justify-between lg:gap-0 [&>*:last-child:nth-child(odd)]:col-span-2">
               {steps.map((step, i) => (
                 <div
                   key={step.label}
-                  className="flex flex-col items-center text-center flex-1 px-2 relative z-10"
+                  className="flex flex-col items-center text-center px-2 relative z-10 sm:w-1/3 lg:w-auto lg:flex-1"
                 >
                   {/* Numbered circle */}
                   <div
-                    className="w-24 h-24 rounded-full relative flex items-center justify-center mb-4"
+                    className="w-20 h-20 sm:w-24 sm:h-24 rounded-full relative flex items-center justify-center mb-3 sm:mb-4"
                     style={{
                       background: step.bg,
                       border: `2.5px solid ${step.color}`,
@@ -504,13 +504,13 @@ export default async function ACTPage() {
                     >
                       {String(i + 1).padStart(2, '0')}
                     </span> */}
-                    <step.icon className="h-8 w-8 mt-2" style={{ color: step.color }} />
+                    <step.icon className="h-7 w-7 sm:h-8 sm:w-8 mt-2" style={{ color: step.color }} />
                   </div>
                   <p className="font-bold text-sm mb-1" style={{ color: 'var(--color-foreground)' }}>
                     {step.label}
                   </p>
                   <p
-                    className="text-xs leading-relaxed max-w-[130px]"
+                    className="text-xs leading-relaxed max-w-[160px] lg:max-w-[130px]"
                     style={{ color: 'var(--color-muted-foreground)' }}
                   >
                     {step.desc}
@@ -528,10 +528,10 @@ export default async function ACTPage() {
         style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #0284c7 120%)' }}
       >
         <div className="container-app">
-          <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
+          <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
 
             {/* Laptop mockup */}
-            <div className="hidden md:block flex-shrink-0">
+            <div className="hidden lg:block flex-shrink-0">
               <div className="relative w-52">
                 <div
                   className="w-52 h-32 rounded-t-xl border-2 flex flex-col overflow-hidden"
@@ -573,7 +573,7 @@ export default async function ACTPage() {
             </div>
 
             {/* Content */}
-            <div className="flex-1 text-center md:text-left">
+            <div className="flex-1 text-center lg:text-left">
               <span
                 className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold mb-3"
                 style={{ background: '#0891b2', color: 'white' }}
@@ -586,7 +586,7 @@ export default async function ACTPage() {
               <p className="text-base mb-5" style={{ color: 'rgba(203,213,225,0.85)' }}>
                 Practice like the real exam with our official-style ACT test environment.
               </p>
-              <div className="flex flex-wrap gap-x-5 gap-y-2 justify-center md:justify-start">
+              <div className="flex flex-wrap gap-x-5 gap-y-2 justify-center lg:justify-start">
                 {[
                   'Real Exam Interface',
                   'Timed Section Tests',

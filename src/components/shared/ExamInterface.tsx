@@ -404,7 +404,7 @@ export function ExamInterface({
     return (
       <div className="rounded-2xl overflow-hidden border" style={{ background: 'white', borderColor: LINE }}>
         <div className="h-1.5" style={{ background: accentColor }} />
-        <div className="px-6 md:px-10 py-7 border-b flex items-center gap-4" style={{ borderColor: SOFT }}>
+        <div className="px-4 sm:px-6 md:px-10 py-5 sm:py-7 border-b flex items-center gap-3 sm:gap-4" style={{ borderColor: SOFT }}>
           <div
             className="w-14 h-14 rounded-xl flex items-center justify-center text-sm font-black shrink-0 text-white"
             style={{ background: accentColor }}
@@ -412,7 +412,7 @@ export function ExamInterface({
             {examCode}
           </div>
           <div className="min-w-0">
-            <h2 className="text-2xl font-bold truncate" style={{ color: INK }}>{examName}</h2>
+            <h2 className="text-xl sm:text-2xl font-bold truncate" style={{ color: INK }}>{examName}</h2>
             <p className="text-sm mt-0.5" style={{ color: MUTED }}>
               {subtitle ?? `${sections.length} sections · ${totalQuestions} questions · ${formatDuration(totalTime)}`}
             </p>
@@ -421,7 +421,7 @@ export function ExamInterface({
 
         <div className="grid lg:grid-cols-5 gap-0">
           {/* Sections */}
-          <div className="lg:col-span-3 p-6 md:p-8 lg:border-r" style={{ borderColor: SOFT }}>
+          <div className="lg:col-span-3 p-4 sm:p-6 md:p-8 lg:border-r" style={{ borderColor: SOFT }}>
             <h3 className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: MUTED }}>Test structure</h3>
             <div className="rounded-xl border overflow-hidden" style={{ borderColor: LINE }}>
               {sections.map((s, i) => (
@@ -464,7 +464,7 @@ export function ExamInterface({
           </div>
 
           {/* Before you begin */}
-          <div className="lg:col-span-2 p-6 md:p-8 flex flex-col gap-5" style={{ background: '#fafafa' }}>
+          <div className="lg:col-span-2 p-4 sm:p-6 md:p-8 flex flex-col gap-5" style={{ background: '#fafafa' }}>
             {instructions ? (
               <div>
                 <h3 className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: MUTED }}>Instructions</h3>
@@ -510,10 +510,10 @@ export function ExamInterface({
     const passed = finalPercent >= 70;
     return (
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center p-6"
+        className="fixed inset-0 z-50 flex overflow-y-auto p-4 sm:p-6"
         style={{ background: '#f8fafc' }}
       >
-        <div className="w-full max-w-lg">
+        <div className="w-full max-w-lg m-auto">
           <div className="text-center mb-8">
             <div
               className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6"
@@ -525,14 +525,14 @@ export function ExamInterface({
                 <XCircle className="h-12 w-12" style={{ color: '#dc2626' }} />
               )}
             </div>
-            <h2 className="text-4xl font-black mb-2" style={{ color: '#0f172a' }}>
+            <h2 className="text-3xl sm:text-4xl font-black mb-2" style={{ color: '#0f172a' }}>
               {passed ? 'Great Work!' : 'Keep Practicing!'}
             </h2>
             <p style={{ color: '#64748b' }}>
               {totalCorrect} of {totalQuestions} correct
             </p>
             <div
-              className="text-6xl font-black mt-4"
+              className="text-5xl sm:text-6xl font-black mt-4"
               style={{ color: passed ? '#16a34a' : '#dc2626' }}
             >
               {finalPercent}%
@@ -646,7 +646,7 @@ export function ExamInterface({
               <>
                 <div className="fixed inset-0 z-20" onClick={() => setShowNavigator(false)} />
                 <div
-                  className="absolute bottom-[calc(100%+10px)] left-1/2 -translate-x-1/2 z-30 w-[min(92vw,560px)] rounded-xl border bg-white shadow-2xl p-5"
+                  className="absolute bottom-[calc(100%+10px)] left-1/2 -translate-x-1/2 z-30 w-[min(92vw,560px)] rounded-xl border bg-white shadow-2xl p-4 sm:p-5"
                   style={{ borderColor: LINE, color: INK }}
                 >
                   <div className="flex items-center justify-between mb-4">
@@ -680,7 +680,7 @@ export function ExamInterface({
           <div className="flex-1 flex flex-col items-center justify-center p-6 text-center" style={{ background: NAVY, color: 'white' }}>
             <Coffee className="h-10 w-10 mb-4 opacity-80" />
             <p className="text-sm uppercase tracking-widest opacity-70 mb-2">Remaining break time</p>
-            <div className="text-6xl md:text-7xl font-bold tabular-nums mb-6">{formatTime(breakLeft)}</div>
+            <div className="text-5xl sm:text-6xl md:text-7xl font-bold tabular-nums mb-6">{formatTime(breakLeft)}</div>
             <p className="max-w-md text-sm opacity-80 mb-8">
               You can take a short break. Keep this window open — testing resumes automatically when the timer ends.
               {nextSection && <> Next up: <strong>{nextSection.name}</strong>.</>}
@@ -697,7 +697,7 @@ export function ExamInterface({
         ) : (
           // ── Section transition ──
           <div className="flex-1 flex items-center justify-center p-6" style={{ background: '#f9fafb' }}>
-            <div className="w-full max-w-md rounded-2xl border bg-white p-8 text-center shadow-sm" style={{ borderColor: LINE }}>
+            <div className="w-full max-w-md rounded-2xl border bg-white p-6 sm:p-8 text-center shadow-sm" style={{ borderColor: LINE }}>
               <CheckCircle2 className="h-12 w-12 mx-auto mb-3" style={{ color: '#16a34a' }} />
               <h2 className="text-xl font-bold mb-1">{currentSection.name} submitted</h2>
               <p className="text-sm mb-6" style={{ color: MUTED }}>
@@ -863,7 +863,7 @@ export function ExamInterface({
           {showDirections && (
             <div className={cn('absolute left-0 right-0 z-30 flex justify-center px-4', isACT ? 'top-24' : 'top-16')} onClick={() => setShowDirections(false)}>
               <div
-                className="w-full max-w-3xl mt-2 rounded-xl border bg-white shadow-2xl p-6 max-h-[60vh] overflow-y-auto"
+                className="w-full max-w-3xl mt-2 rounded-xl border bg-white shadow-2xl p-4 sm:p-6 max-h-[60vh] overflow-y-auto"
                 style={{ borderColor: LINE }}
                 onClick={(e) => e.stopPropagation()}
               >
@@ -895,7 +895,7 @@ export function ExamInterface({
           {/* ── Body ── */}
           {view === 'review' ? (
             <main className="flex-1 overflow-y-auto" style={{ background: '#f9fafb' }}>
-              <div className="max-w-3xl mx-auto px-4 py-10 text-center">
+              <div className="max-w-3xl mx-auto px-4 py-6 sm:py-10 text-center">
                 <h2 className="text-2xl md:text-3xl font-bold mb-2">{isACT ? 'Review Your Answers' : 'Check Your Work'}</h2>
                 <p className="text-sm mb-1" style={{ color: MUTED }}>
                   On test day you won&apos;t be able to move on to the next section until time expires — here you can submit when you&apos;re ready.
@@ -903,7 +903,7 @@ export function ExamInterface({
                 <p className="text-sm mb-8" style={{ color: MUTED }}>
                   Select any question to go back to it.
                 </p>
-                <div className="rounded-2xl border bg-white p-6 text-left shadow-sm" style={{ borderColor: LINE }}>
+                <div className="rounded-2xl border bg-white p-4 sm:p-6 text-left shadow-sm" style={{ borderColor: LINE }}>
                   <div className="flex items-center justify-between flex-wrap gap-2 pb-4 mb-5" style={{ borderBottom: `1px solid ${SOFT}` }}>
                     <span className="font-bold">{currentSection.name}</span>
                     <span className="text-xs" style={{ color: MUTED }}>
@@ -922,7 +922,7 @@ export function ExamInterface({
             >
               {/* Passage pane */}
               {hasPassage && paneFocus !== 'question' && (
-                <section className="relative min-h-0 overflow-y-auto px-6 md:px-10 py-8 md:border-r-4" style={{ borderColor: SOFT }}>
+                <section className="relative min-h-0 overflow-y-auto px-4 sm:px-6 md:px-10 py-5 sm:py-8 border-b-4 md:border-b-0 md:border-r-4" style={{ borderColor: SOFT }}>
                   <button
                     onClick={() => setPaneFocus(paneFocus === 'passage' ? 'both' : 'passage')}
                     className="hidden md:flex absolute top-2 right-2 p-1 rounded hover:bg-gray-100"
@@ -940,7 +940,7 @@ export function ExamInterface({
 
               {/* Question pane */}
               {(!hasPassage || paneFocus !== 'passage') && currentQuestion && (
-                <section className="relative min-h-0 overflow-y-auto px-6 md:px-10 py-6">
+                <section className="relative min-h-0 overflow-y-auto px-4 sm:px-6 md:px-10 py-5 sm:py-6">
                   {hasPassage && (
                     <button
                       onClick={() => setPaneFocus(paneFocus === 'question' ? 'both' : 'question')}
@@ -1111,21 +1111,22 @@ export function ExamInterface({
               <button
                 onClick={() => (view === 'review' ? goToQuestion(Math.max(0, sectionQuestionCount - 1)) : goToQuestion(questionIdx - 1))}
                 disabled={view === 'question' && questionIdx === 0}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-semibold border border-white/40 hover:bg-white/10 disabled:opacity-40"
+                className="flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-md text-sm font-semibold border border-white/40 hover:bg-white/10 disabled:opacity-40"
+                aria-label="Previous"
               >
-                <ChevronLeft className="h-4 w-4" /> Previous
+                <ChevronLeft className="h-4 w-4" /> <span className="hidden sm:inline">Previous</span>
               </button>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 <button
                   onClick={() => (view === 'review' ? goToQuestion(questionIdx) : setShowNavigator((v) => !v))}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-semibold border border-white/40 hover:bg-white/10"
+                  className="flex items-center gap-1 px-2 sm:px-3 py-1.5 whitespace-nowrap rounded-md text-sm font-semibold border border-white/40 hover:bg-white/10"
                   aria-expanded={showNavigator}
                 >
                   Nav {view === 'question' && <span className="tabular-nums opacity-80">· {questionIdx + 1}/{sectionQuestionCount}</span>}
                   {showNavigator ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
                 </button>
                 {view === 'question' && (
-                  <button onClick={openReview} className="px-3 py-1.5 rounded-md text-sm font-semibold border border-white/40 hover:bg-white/10">
+                  <button onClick={openReview} className="px-2 sm:px-3 py-1.5 rounded-md text-sm font-semibold border border-white/40 hover:bg-white/10">
                     Review
                   </button>
                 )}
@@ -1133,7 +1134,7 @@ export function ExamInterface({
               {view === 'review' ? (
                 <button
                   onClick={() => setShowConfirm(true)}
-                  className="px-4 py-1.5 rounded-md text-sm font-bold"
+                  className="px-3 sm:px-4 py-1.5 rounded-md text-sm font-bold whitespace-nowrap"
                   style={{ background: 'white', color: ACT_BAR }}
                 >
                   {isLastSection ? 'End Test' : 'End Section'}
@@ -1141,7 +1142,7 @@ export function ExamInterface({
               ) : (
                 <button
                   onClick={() => (isLastQuestion ? openReview() : goToQuestion(questionIdx + 1))}
-                  className="flex items-center gap-1 px-4 py-1.5 rounded-md text-sm font-bold"
+                  className="flex items-center gap-1 px-3 sm:px-4 py-1.5 rounded-md text-sm font-bold"
                   style={{ background: 'white', color: ACT_BAR }}
                 >
                   Next <ChevronRight className="h-4 w-4" />
@@ -1152,10 +1153,10 @@ export function ExamInterface({
           ) : (
             <>
           <footer
-            className="relative grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 md:px-6 h-16 shrink-0"
+            className="relative grid grid-cols-[auto_1fr] sm:grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-3 px-3 sm:px-4 md:px-6 h-16 shrink-0"
             style={{ borderTop: `2px dashed ${LINE}`, background: '#fafafa' }}
           >
-            <div className="text-xs md:text-sm font-medium truncate" style={{ color: MUTED }}>
+            <div className="hidden sm:block text-xs md:text-sm font-medium truncate" style={{ color: MUTED }}>
               {examName}
             </div>
 
@@ -1163,11 +1164,12 @@ export function ExamInterface({
               {view === 'question' ? (
                 <button
                   onClick={() => setShowNavigator((v) => !v)}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white"
+                  className="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg text-sm font-semibold text-white whitespace-nowrap"
                   style={{ background: INK }}
                   aria-expanded={showNavigator}
                 >
-                  Question {questionIdx + 1} of {sectionQuestionCount}
+                  <span className="sm:hidden tabular-nums">Q {questionIdx + 1}/{sectionQuestionCount}</span>
+                  <span className="hidden sm:inline">Question {questionIdx + 1} of {sectionQuestionCount}</span>
                   {showNavigator ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
                 </button>
               ) : (
@@ -1181,7 +1183,7 @@ export function ExamInterface({
               {(view === 'review' || questionIdx > 0) && (
                 <Button
                   onClick={() => (view === 'review' ? goToQuestion(Math.max(0, sectionQuestionCount - 1)) : goToQuestion(questionIdx - 1))}
-                  className="rounded-full px-5 font-semibold text-white"
+                  className="rounded-full px-4 sm:px-5 font-semibold text-white"
                   style={{ background: accentColor, border: 'none' }}
                 >
                   Back
@@ -1190,7 +1192,7 @@ export function ExamInterface({
               {view === 'review' ? (
                 <Button
                   onClick={() => setShowConfirm(true)}
-                  className="rounded-full px-5 font-semibold text-white"
+                  className="rounded-full px-4 sm:px-5 font-semibold text-white"
                   style={{ background: accentColor, border: 'none' }}
                 >
                   {isLastSection ? 'Submit Test' : 'Next Section'}
@@ -1198,7 +1200,7 @@ export function ExamInterface({
               ) : (
                 <Button
                   onClick={() => (isLastQuestion ? openReview() : goToQuestion(questionIdx + 1))}
-                  className="rounded-full px-5 font-semibold text-white"
+                  className="rounded-full px-4 sm:px-5 font-semibold text-white"
                   style={{ background: accentColor, border: 'none' }}
                 >
                   Next
@@ -1223,7 +1225,7 @@ export function ExamInterface({
           {/* Confirm submit */}
           {showConfirm && (
             <div className="absolute inset-0 z-40 flex items-center justify-center" style={{ background: 'rgba(15,23,42,0.45)' }}>
-              <div className="p-8 rounded-2xl max-w-sm w-full mx-4 text-center shadow-xl border bg-white" style={{ borderColor: LINE }}>
+              <div className="p-6 sm:p-8 rounded-2xl max-w-sm w-full mx-4 text-center shadow-xl border bg-white" style={{ borderColor: LINE }}>
                 <AlertTriangle className="h-11 w-11 mx-auto mb-4" style={{ color: '#f59e0b' }} />
                 <h3 className="text-xl font-bold mb-2">
                   Submit {isLastSection ? 'Test' : 'Section'}?
@@ -1301,7 +1303,7 @@ function ToolButton({
       onClick={onClick}
       title={label}
       aria-pressed={active}
-      className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-md transition-colors hover:bg-gray-100"
+      className="flex flex-col items-center justify-center gap-0.5 min-w-9 min-h-9 px-2 py-1 rounded-md transition-colors hover:bg-gray-100"
       style={{ color: INK, background: active ? SOFT : undefined }}
     >
       {icon}

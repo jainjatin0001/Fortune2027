@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { PanelLeftClose, PanelLeftOpen, ChevronLeft, BookOpen } from 'lucide-react';
+import { PanelLeftClose, PanelLeftOpen, ChevronLeft, BookOpen, ListTree } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { AssetSidebar, type SidebarModule } from './AssetSidebar';
 import { AssetViewer, type AssetData } from './AssetViewer';
 
@@ -47,6 +48,8 @@ export function CoursePlayerClient({
   });
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Below lg the course outline opens as a slide-in drawer
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   // Optimistic local completion list — avoids a server re-fetch on mark complete
   const [localCompleted, setLocalCompleted] = useState(completedAssetIds);
@@ -103,10 +106,42 @@ export function CoursePlayerClient({
   // ── Render ───────────────────────────────────────────────────
 
   return (
-    <div
-      className="-m-6 flex overflow-hidden"
-      style={{ height: 'calc(100vh - 4rem)' }}
-    >
+    <div className="-m-4 sm:-m-6 flex overflow-hidden h-[calc(100dvh-4rem)]">
+      {/* ── Mobile / tablet course outline drawer ─────────────── */}
+      <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+        <SheetContent
+          side="left"
+          className="lg:hidden p-0 w-[85vw] max-w-xs sm:max-w-xs flex flex-col"
+          style={{ background: 'var(--color-card)' }}
+        >
+          <div
+            className="flex items-center px-4 h-12 border-b shrink-0"
+            style={{ borderColor: 'var(--color-border)' }}
+          >
+            <SheetTitle
+              className="text-[10px] font-bold uppercase tracking-widest"
+              style={{ color: 'var(--color-muted-foreground)' }}
+            >
+              Course Content
+            </SheetTitle>
+          </div>
+          <div className="flex-1 min-h-0">
+            <AssetSidebar
+              courseTitle={courseTitle}
+              courseId={courseId}
+              modules={sidebarModules}
+              completedAssetIds={localCompleted}
+              activeAssetId={activeAssetId}
+              onNavigate={(id) => { navigateTo(id); setMobileNavOpen(false); }}
+              color={color}
+              progressPct={progressPct}
+              completedCount={completedCount}
+              totalCount={totalCount}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
+
       {/* ── Course content sidebar ─────────────────────────────── */}
       {sidebarOpen && (
         <aside
@@ -208,7 +243,7 @@ export function CoursePlayerClient({
               /
             </span>
             <span
-              className="truncate shrink-0 max-w-[140px] sm:max-w-[200px]"
+              className="truncate shrink-0 max-w-[110px] sm:max-w-[200px]"
               style={{ color: 'var(--color-muted-foreground)' }}
               title={courseTitle}
             >
@@ -227,6 +262,18 @@ export function CoursePlayerClient({
               </>
             )}
           </nav>
+
+          {/* Mobile / tablet: open course outline */}
+          <Button
+            size="sm"
+            variant="ghost"
+            className="lg:hidden h-8 px-2 gap-1.5 text-xs shrink-0"
+            onClick={() => setMobileNavOpen(true)}
+            aria-label="Open course content"
+          >
+            <ListTree className="h-4 w-4" />
+            <span className="hidden min-[400px]:inline">Contents</span>
+          </Button>
 
           {/* Mini progress pill */}
           {totalCount > 0 && (
@@ -264,7 +311,7 @@ export function CoursePlayerClient({
 
         {/* Scrollable content area */}
         <div className="flex-1 overflow-y-auto">
-          <div className="p-6 max-w-4xl mx-auto w-full">
+          <div className="p-4 sm:p-6 max-w-4xl mx-auto w-full">
             {activeAsset ? (
               /**
                * key={activeAsset.id} remounts AssetViewer on asset change —

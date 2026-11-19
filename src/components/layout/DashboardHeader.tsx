@@ -1,6 +1,7 @@
 'use client';
 
-import { Bell, Moon, Sun, Search, PanelLeft } from 'lucide-react';
+import Link from 'next/link';
+import { Bell, Moon, Sun, Search, PanelLeft, Menu } from 'lucide-react';
 import { SignUpButton, UserButton } from '@clerk/nextjs';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
@@ -9,18 +10,32 @@ import { useSidebar } from './DashboardSidebarProvider';
 
 export function DashboardHeader({ isSignedIn = true }: { isSignedIn?: boolean }) {
   const { theme, setTheme } = useTheme();
-  const { toggle } = useSidebar();
+  const { toggle, setMobileOpen } = useSidebar();
 
   return (
     <header
-      className="sticky top-0 z-10 h-16 flex items-center justify-between px-6 border-b print:hidden"
+      className="sticky top-0 z-10 h-16 flex items-center justify-between gap-2 px-3 sm:px-6 border-b print:hidden"
       style={{
         background: 'var(--color-background)',
         borderColor: 'var(--color-border)',
       }}
     >
       {/* Left: sidebar toggle + search */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 min-w-0">
+        {/* Phone/tablet: open the navigation drawer */}
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="lg:hidden flex items-center justify-center w-10 h-10 rounded-lg transition-colors hover:bg-[var(--color-muted)]"
+          style={{ color: 'var(--color-foreground)' }}
+          aria-label="Open menu"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+        <Link href="/" className="lg:hidden shrink-0" aria-label="Delta Tutors home">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/logos/logo_5.png" alt="Delta Tutors" className="h-8 w-auto object-contain" />
+        </Link>
+
         <button
           onClick={toggle}
           className="hidden lg:flex p-2 rounded-lg transition-colors hover:bg-[var(--color-muted)]"
@@ -31,7 +46,7 @@ export function DashboardHeader({ isSignedIn = true }: { isSignedIn?: boolean })
           <PanelLeft className="h-4 w-4" />
         </button>
 
-        <div className="relative hidden sm:block w-64">
+        <div className="relative hidden md:block w-56 lg:w-64">
           <Search
             className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4"
             style={{ color: 'var(--color-muted-foreground)' }}
@@ -45,7 +60,7 @@ export function DashboardHeader({ isSignedIn = true }: { isSignedIn?: boolean })
       </div>
 
       {/* Right: theme + notifications + user */}
-      <div className="flex items-center gap-3 ml-auto">
+      <div className="flex items-center gap-1.5 sm:gap-3 ml-auto shrink-0">
         <button
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
           className="p-2 rounded-lg transition-colors hover:bg-[var(--color-muted)]"

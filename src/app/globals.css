@@ -893,6 +893,17 @@ body {
 /* ─────────────────────────────────────────────
    RESPONSIVE TYPOGRAPHY
    ───────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .text-hero {
+    font-size: var(--text-5xl);
+  }
+
+  .section-padding {
+    padding-block: 4rem;
+  }
+}
+
+/* Phone rules come after the tablet block so they win the cascade */
 @media (max-width: 640px) {
   .text-hero {
     font-size: var(--text-4xl);
@@ -919,14 +930,21 @@ body {
   }
 }
 
+/* Rich content (blog posts, lessons, questions): keep wide tables and long
+   words inside the screen on small devices */
 @media (max-width: 768px) {
-  .text-hero {
-    font-size: var(--text-5xl);
+  .rich-content table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
-
-  .section-padding {
-    padding-block: 4rem;
+  .rich-content th,
+  .rich-content td {
+    padding: 0.5rem;
   }
+}
+.rich-content {
+  overflow-wrap: break-word;
 }
 
 /* ─────────────────────────────────────────────

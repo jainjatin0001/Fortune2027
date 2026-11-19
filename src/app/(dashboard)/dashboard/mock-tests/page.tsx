@@ -81,7 +81,7 @@ export default async function MockTestsPage({
       </div>
 
       {tests.length === 0 ? (
-        <div className="card-base p-10 text-center">
+        <div className="card-base p-6 sm:p-10 text-center">
           <FileText className="h-8 w-8 mx-auto mb-3" style={{ color: 'var(--color-muted-foreground)' }} />
           <p className="font-semibold" style={{ color: 'var(--color-foreground)' }}>No mock tests yet</p>
           <p className="text-sm mt-1" style={{ color: 'var(--color-muted-foreground)' }}>
@@ -158,7 +158,7 @@ function TestCard({ test, index }: { test: DemoMockTestSummary; index: number })
         <span className="text-lg">{index}</span>
       </div>
       <div className="flex-1 min-w-0">
-        <h3 className="font-bold text-base capitalize" style={{ color: 'var(--color-foreground)' }}>{test.title}</h3>
+        <h3 className="font-bold text-base capitalize break-words" style={{ color: 'var(--color-foreground)' }}>{test.title}</h3>
         {description && (
           <p className="text-sm mt-0.5" style={{ color: 'var(--color-muted-foreground)' }}>{description}</p>
         )}
@@ -179,7 +179,7 @@ function TestCard({ test, index }: { test: DemoMockTestSummary; index: number })
           )}
         </div>
       </div>
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex flex-wrap items-center gap-2 shrink-0">
         {last && (
           <Link
             href={`/dashboard/mock-test/${last.id}/report`}

@@ -91,7 +91,7 @@ export default async function DemoPage() {
         <h2 className="font-bold mb-4" style={{ color: 'var(--color-foreground)' }}>
           Free Practice Quizzes
         </h2>
-        <div className="grid sm:grid-cols-3 gap-4">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {DEMO_QUIZZES.map((quiz, idx) => (
             <Link
               key={quiz.id}

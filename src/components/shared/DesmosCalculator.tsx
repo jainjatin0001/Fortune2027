@@ -50,7 +50,7 @@ export function DesmosCalculator({ apiKey, onClose }: DesmosCalculatorProps) {
 
   return (
     <div
-      className="absolute bottom-6 right-6 z-20 flex flex-col overflow-hidden rounded-2xl border bg-white shadow-2xl w-[min(42rem,calc(100vw-3rem))] h-[min(38rem,calc(100vh-7rem))]"
+      className="absolute inset-x-2 top-16 bottom-16 sm:inset-x-auto sm:top-auto sm:bottom-6 sm:right-6 z-20 flex flex-col overflow-hidden rounded-2xl border bg-white shadow-2xl sm:w-[min(42rem,calc(100vw-3rem))] sm:h-[min(38rem,calc(100dvh-7rem))]"
       style={{ borderColor: '#cbd5e1' }}
       role="dialog"
       aria-label="Desmos graphing calculator"
@@ -65,7 +65,7 @@ export function DesmosCalculator({ apiKey, onClose }: DesmosCalculatorProps) {
         <span className="text-sm font-semibold" style={{ color: '#334155' }}>Desmos Graphing Calculator</span>
         <button
           onClick={onClose}
-          className="rounded-md p-1 transition-colors hover:bg-slate-100"
+          className="rounded-md p-2 sm:p-1 transition-colors hover:bg-slate-100"
           style={{ color: '#64748b' }}
           aria-label="Close calculator"
         >

@@ -19,7 +19,7 @@ export function StatCard({ value, label, icon, className }: StatCardProps) {
         </div>
       )}
       <div
-        className="text-4xl font-black mb-1"
+        className="text-3xl sm:text-4xl font-black mb-1"
         style={{ color: 'var(--color-primary)' }}
       >
         {value}

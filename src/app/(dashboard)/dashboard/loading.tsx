@@ -4,7 +4,7 @@ export default function DashboardLoading() {
       {/* Page title skeleton */}
       <div className="space-y-2">
         <div className="h-7 w-48 rounded-lg" style={{ background: 'var(--color-muted)' }} />
-        <div className="h-4 w-80 rounded-lg" style={{ background: 'var(--color-muted)' }} />
+        <div className="h-4 w-80 max-w-full rounded-lg" style={{ background: 'var(--color-muted)' }} />
       </div>
 
       {/* Cards row */}

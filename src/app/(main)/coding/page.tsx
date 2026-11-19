@@ -211,7 +211,7 @@ export default async function CodingPage() {
           {stats.map(({ icon: Icon, value, label }, i) => (
             <div
               key={label}
-              className="flex items-center gap-4 px-6 py-6"
+              className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 px-4 py-4 sm:px-6 sm:py-6"
               style={{
                 borderRight: i < 3 ? '1px solid var(--color-border)' : undefined,
               }}
@@ -223,7 +223,7 @@ export default async function CodingPage() {
                 <Icon className="h-5 w-5" />
               </div>
               <div>
-                <div className="text-xl font-black" style={{ color: 'var(--color-foreground)' }}>{value}</div>
+                <div className="text-lg sm:text-xl font-black whitespace-nowrap" style={{ color: 'var(--color-foreground)' }}>{value}</div>
                 <div className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>{label}</div>
               </div>
             </div>
