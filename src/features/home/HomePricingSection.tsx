@@ -38,7 +38,7 @@ export function HomePricingSection() {
   const [modalOpen, setModalOpen] = useState(false);
 
   return (
-    <section className="section-padding" style={{ background: '#f0f4ff' }}>
+    <section className="section-padding" style={{ background: 'var(--color-background-alt)' }}>
       <div className="container-app">
         <SectionHeader
           eyebrow="Flexible Learning Options"
@@ -46,28 +46,28 @@ export function HomePricingSection() {
           subtitle="Choose a structured program for consistent support or pay only when you need expert help."
         />
 
-        {modalOpen && <ContactModal onClose={() => setModalOpen(false)} />}
+        <ContactModal open={modalOpen} onOpenChange={setModalOpen} />
 
         {/* Two-panel card */}
         <div
           className="rounded-2xl overflow-hidden mb-4 relative"
-          style={{ border: '1px solid #e2e8f0', background: '#ffffff', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}
+          style={{ border: '1px solid var(--color-border)', background: 'var(--color-card)', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}
         >
           <div className="grid lg:grid-cols-2">
 
             {/* Left — Structured Programs */}
-            <div className="p-8 lg:p-10" style={{ borderRight: '1px solid #e2e8f0' }}>
+            <div className="p-8 lg:p-10" style={{ borderRight: '1px solid var(--color-border)' }}>
               {/* Icon + heading */}
               <div className="flex items-start gap-4 mb-6">
                 <div className="w-14 h-14 rounded-full flex items-center justify-center shrink-0"
-                  style={{ background: '#eff6ff' }}>
-                  <CalendarDays className="h-7 w-7" style={{ color: '#2563eb' }} />
+                  style={{ background: 'var(--color-primary-light)' }}>
+                  <CalendarDays className="h-7 w-7" style={{ color: 'var(--color-accent)' }} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-extrabold mb-0.5" style={{ color: '#0f172a' }}>
+                  <h3 className="text-xl font-extrabold mb-0.5" style={{ color: 'var(--color-foreground)' }}>
                     Structured Programs
                   </h3>
-                  <p className="text-sm font-semibold" style={{ color: '#2563eb' }}>
+                  <p className="text-sm font-semibold" style={{ color: 'var(--color-accent)' }}>
                     Best for consistent progress &amp; higher scores
                   </p>
                 </div>
@@ -77,10 +77,10 @@ export function HomePricingSection() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 mb-8">
                 {structuredFeatures.map(({ title, sub }) => (
                   <div key={title} className="flex items-start gap-2.5">
-                    <CheckCircle className="h-4 w-4 shrink-0 mt-0.5" style={{ color: '#2563eb' }} />
+                    <CheckCircle className="h-4 w-4 shrink-0 mt-0.5" style={{ color: 'var(--color-accent)' }} />
                     <div>
-                      <div className="text-sm font-semibold" style={{ color: '#0f172a' }}>{title}</div>
-                      <div className="text-xs" style={{ color: '#64748b' }}>{sub}</div>
+                      <div className="text-sm font-semibold" style={{ color: 'var(--color-foreground)' }}>{title}</div>
+                      <div className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>{sub}</div>
                     </div>
                   </div>
                 ))}
@@ -88,14 +88,14 @@ export function HomePricingSection() {
 
               {/* Trust strip */}
               <div className="flex items-center gap-3 px-4 py-3 rounded-xl"
-                style={{ background: '#eff6ff' }}>
-                <Users className="h-5 w-5 shrink-0" style={{ color: '#2563eb' }} />
+                style={{ background: 'var(--color-primary-light)' }}>
+                <Users className="h-5 w-5 shrink-0" style={{ color: 'var(--color-accent)' }} />
                 <div>
-                  <span className="text-sm font-bold" style={{ color: '#0f172a' }}>
+                  <span className="text-sm font-bold" style={{ color: 'var(--color-foreground)' }}>
                     Trusted by{' '}
-                    <span style={{ color: '#2563eb' }}> Students &amp; Parents</span>
+                    <span style={{ color: 'var(--color-accent)' }}> Students &amp; Parents</span>
                   </span>
-                  <div className="text-xs" style={{ color: '#64748b' }}>Across the US &amp; Canada</div>
+                  <div className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>Across the US &amp; Canada</div>
                 </div>
               </div>
             </div>
@@ -105,14 +105,14 @@ export function HomePricingSection() {
               {/* Icon + heading */}
               <div className="flex items-start gap-4 mb-6">
                 <div className="w-14 h-14 rounded-full flex items-center justify-center shrink-0"
-                  style={{ background: '#fff7ed' }}>
-                  <Clock className="h-7 w-7" style={{ color: '#d97706' }} />
+                  style={{ background: 'var(--color-warning-light)' }}>
+                  <Clock className="h-7 w-7" style={{ color: 'var(--color-warning)' }} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-extrabold mb-0.5" style={{ color: '#0f172a' }}>
+                  <h3 className="text-xl font-extrabold mb-0.5" style={{ color: 'var(--color-foreground)' }}>
                     Pay-As-You-Go
                   </h3>
-                  <p className="text-sm font-semibold" style={{ color: '#d97706' }}>
+                  <p className="text-sm font-semibold" style={{ color: 'var(--color-warning)' }}>
                     Pay only for the help you need
                   </p>
                 </div>
@@ -120,31 +120,31 @@ export function HomePricingSection() {
 
               {/* Price */}
               <div className="flex items-end gap-1 mb-5">
-                <span className="text-5xl font-black" style={{ color: '#d97706' }}>
+                <span className="text-5xl font-black" style={{ color: 'var(--color-warning)' }}>
                   ${HOURLY_RATE}
                 </span>
-                <span className="text-base font-medium pb-1.5" style={{ color: '#94a3b8' }}>/hour</span>
+                <span className="text-base font-medium pb-1.5" style={{ color: 'var(--color-muted-foreground)' }}>/hour</span>
               </div>
 
               {/* Features */}
               <div className="space-y-3 mb-6">
                 {paygoFeatures.map((feat) => (
                   <div key={feat} className="flex items-center gap-2.5">
-                    <CheckCircle className="h-4 w-4 shrink-0" style={{ color: '#d97706' }} />
-                    <span className="text-sm" style={{ color: '#0f172a' }}>{feat}</span>
+                    <CheckCircle className="h-4 w-4 shrink-0" style={{ color: 'var(--color-warning)' }} />
+                    <span className="text-sm" style={{ color: 'var(--color-foreground)' }}>{feat}</span>
                   </div>
                 ))}
               </div>
 
               {/* Help box */}
               <div className="flex items-start gap-3 px-4 py-3 rounded-xl"
-                style={{ background: '#fff7ed' }}>
-                <MessageCircle className="h-5 w-5 shrink-0 mt-0.5" style={{ color: '#d97706' }} />
+                style={{ background: 'var(--color-warning-light)' }}>
+                <MessageCircle className="h-5 w-5 shrink-0 mt-0.5" style={{ color: 'var(--color-warning)' }} />
                 <div>
-                  <div className="text-sm font-semibold" style={{ color: '#0f172a' }}>
+                  <div className="text-sm font-semibold" style={{ color: 'var(--color-foreground)' }}>
                     Need help choosing the right option?
                   </div>
-                  <div className="text-xs" style={{ color: '#64748b' }}>
+                  <div className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>
                     Our academic advisors are here to help.
                   </div>
                 </div>
@@ -155,7 +155,7 @@ export function HomePricingSection() {
           {/* OR circle between panels — desktop only */}
           <div
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 hidden lg:flex items-center justify-center w-10 h-10 rounded-full font-bold text-sm z-10"
-            style={{ background: '#ffffff', border: '2px solid #e2e8f0', color: '#64748b', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+            style={{ background: 'var(--color-card)', border: '2px solid var(--color-border)', color: 'var(--color-muted-foreground)', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
           >
             OR
           </div>
@@ -164,17 +164,17 @@ export function HomePricingSection() {
         {/* Bottom advisor CTA */}
         <div
           className="rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-6"
-          style={{ background: '#ffffff', border: '1px solid #e2e8f0', boxShadow: '0 2px 12px rgba(0,0,0,0.05)' }}
+          style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', boxShadow: '0 2px 12px rgba(0,0,0,0.05)' }}
         >
           {/* Left info */}
           <div className="flex items-center gap-4 flex-1">
             <div className="w-14 h-14 rounded-full flex items-center justify-center shrink-0"
-              style={{ background: '#eff6ff' }}>
-              <Users className="h-7 w-7" style={{ color: '#2563eb' }} />
+              style={{ background: 'var(--color-primary-light)' }}>
+              <Users className="h-7 w-7" style={{ color: 'var(--color-accent)' }} />
             </div>
             <div>
-              <h4 className="font-extrabold text-base" style={{ color: '#0f172a' }}>Talk to an Advisor</h4>
-              <p className="text-sm" style={{ color: '#64748b' }}>
+              <h4 className="font-extrabold text-base" style={{ color: 'var(--color-foreground)' }}>Talk to an Advisor</h4>
+              <p className="text-sm" style={{ color: 'var(--color-muted-foreground)' }}>
                 Get personalized guidance and find the best plan for your child&apos;s success.
               </p>
             </div>
@@ -198,7 +198,7 @@ export function HomePricingSection() {
               <Button
                 variant="outline"
                 className="h-12 px-6 font-semibold gap-2"
-                style={{ borderColor: '#2563eb', color: '#2563eb' }}
+                style={{ borderColor: 'var(--color-accent)', color: 'var(--color-accent)' }}
               >
                 <Tag className="h-4 w-4" />
                 <div className="text-left">
@@ -215,12 +215,12 @@ export function HomePricingSection() {
           {trustBadges.map(({ icon: Icon, title, sub }) => (
             <div key={title} className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                style={{ background: '#eff6ff' }}>
-                <Icon className="h-5 w-5" style={{ color: '#2563eb' }} />
+                style={{ background: 'var(--color-primary-light)' }}>
+                <Icon className="h-5 w-5" style={{ color: 'var(--color-accent)' }} />
               </div>
               <div>
-                <div className="text-sm font-semibold" style={{ color: '#0f172a' }}>{title}</div>
-                <div className="text-xs" style={{ color: '#64748b' }}>{sub}</div>
+                <div className="text-sm font-semibold" style={{ color: 'var(--color-foreground)' }}>{title}</div>
+                <div className="text-xs" style={{ color: 'var(--color-muted-foreground)' }}>{sub}</div>
               </div>
             </div>
           ))}

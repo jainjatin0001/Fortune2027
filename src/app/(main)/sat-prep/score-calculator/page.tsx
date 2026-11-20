@@ -9,6 +9,9 @@ const PATH = '/sat-prep/score-calculator';
 const ESTIMATE_DISCLAIMER =
   "This is an estimate. The digital SAT adapts to you: your second module is easier or harder depending on how you did in the first, and harder questions can count for more. Two students with the same number right can get different scores. For an official practice score, use College Board's Bluebook app.";
 
+// The "More Free Help" cards show the next test date and a countdown: refresh daily.
+export const revalidate = 86400;
+
 export const metadata: Metadata = pageMetadata({
   title: 'SAT Score Calculator & Superscore Calculator',
   description:

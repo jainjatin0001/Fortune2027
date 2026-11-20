@@ -25,7 +25,7 @@ export function SectionHeader({
       {eyebrow && (
         <span
           className="font-bold inline-block mb-3 text-sm"
-          style={{ color: '#17356D', textTransform: 'none', letterSpacing: 'normal' }}
+          style={{ color: 'var(--color-brand-text, #17356D)', textTransform: 'none', letterSpacing: 'normal' }}
         >
           {eyebrow}
         </span>

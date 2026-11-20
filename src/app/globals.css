@@ -88,6 +88,9 @@
   --color-success-light: #dcfce7;
   --color-warning: #d97706;
   --color-warning-light: #fef3c7;
+  /* Readable text on the -light backgrounds (status badges, notes): AA contrast in both themes */
+  --color-success-text: #166534;
+  --color-warning-text: #92400e;
   --color-danger: #dc2626;
   --color-danger-light: #fee2e2;
   --color-info: #0284c7;
@@ -98,9 +101,10 @@
   --chart-grid: #e2e8f0;
   --chart-empty: #eef2f7;
 
-  /* Brand (logo) colours + warm background for the home "Free SAT & ACT Tools" hub */
+  /* Logo navy + warm background for the home "Free SAT & ACT Tools" hub */
   --color-brand-navy: #17356d;
-  --color-brand-gold: #c7a14b;
+  /* Logo wordmark + small section labels: navy on light, soft blue-white on dark */
+  --color-brand-text: #17356d;
   --color-hub-bg: #f8f5ee;
 
   /* Subject Category Colors */
@@ -199,6 +203,7 @@
    ───────────────────────────────────────────── */
 .dark {
   --color-hub-bg: #111a2e;
+  --color-brand-text: #dbe6fb;
   --color-background: #0f172a;
   --color-background-alt: #1e293b;
   --color-foreground: #f1f5f9;
@@ -229,6 +234,8 @@
   --color-success-light: #14532d;
   --color-warning: #fbbf24;
   --color-warning-light: #451a03;
+  --color-success-text: #86efac;
+  --color-warning-text: #fcd34d;
   --color-danger: #f87171;
   --color-danger-light: #450a0a;
   --color-info: #38bdf8;

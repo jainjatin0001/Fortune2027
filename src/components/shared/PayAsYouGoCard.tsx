@@ -42,7 +42,7 @@ export function PayAsYouGoCard({
           <CardCta label="Contact us" color={color} />
         </button>
       </div>
-      {open && <ContactModal defaultCourse={course} onClose={() => setOpen(false)} />}
+      <ContactModal open={open} onOpenChange={setOpen} defaultCourse={course} />
     </>
   );
 }

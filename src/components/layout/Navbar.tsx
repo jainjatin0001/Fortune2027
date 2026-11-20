@@ -4,10 +4,11 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { SignUpButton, UserButton, useUser } from '@clerk/nextjs';
-import { Menu, X, ChevronDown, BookOpen, GraduationCap, Code2, FlaskConical, Moon, Sun, LayoutDashboard, type LucideIcon } from 'lucide-react';
+import { Menu, X, BookOpen, GraduationCap, Code2, FlaskConical, Moon, Sun, LayoutDashboard, type LucideIcon } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { NavDropdown } from './NavDropdown';
 import { EXAM_TOOL_LINKS } from '@/constants';
 
 type NavItem = {
@@ -80,7 +81,7 @@ export function Navbar() {
           <div className="hidden sm:flex flex-col items-start justify-center gap-[2px]">
             <span
               className="text-[15px] font-bold leading-none"
-              style={{ color: '#17356D' }}
+              style={{ color: 'var(--color-brand-text, #17356D)' }}
             >
               Delta Tutors
             </span>
@@ -114,36 +115,17 @@ export function Navbar() {
                 </Link>
               );
             }
-            // Dropdown opens on hover and on keyboard focus (focus-within), no JS needed.
             return (
-              <div key={item.href} className="relative group">
-                <Link href={item.href} className={linkClass}>
-                  {item.label}
-                  <ChevronDown className="h-3.5 w-3.5 transition-transform group-hover:rotate-180 group-focus-within:rotate-180" aria-hidden />
-                </Link>
-                <div className="absolute left-0 top-full pt-2 invisible opacity-0 translate-y-1 transition-all duration-150 group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:visible group-focus-within:opacity-100 group-focus-within:translate-y-0">
-                  <ul
-                    className="min-w-64 rounded-xl border p-2 shadow-lg"
-                    style={{ background: 'var(--nav-bg)', borderColor: 'var(--nav-border)' }}
-                  >
-                    {item.children.map((child) => (
-                      <li key={child.href}>
-                        <Link
-                          href={child.href}
-                          className={cn(
-                            'block px-3 py-2 rounded-lg text-sm transition-colors',
-                            pathname === child.href
-                              ? 'text-[var(--nav-text-hover)] bg-[var(--color-primary-light)] font-medium'
-                              : 'text-[var(--nav-text)] hover:text-[var(--nav-text-hover)] hover:bg-[var(--color-muted)]'
-                          )}
-                        >
-                          {child.label}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
+              <NavDropdown
+                key={item.href}
+                label={item.label}
+                href={item.href}
+                items={item.children}
+                open={openDropdown === item.href}
+                onOpenChange={(open) => setOpenDropdown(open ? item.href : null)}
+                linkClassName={linkClass}
+                pathname={pathname}
+              />
             );
           })}
         </nav>

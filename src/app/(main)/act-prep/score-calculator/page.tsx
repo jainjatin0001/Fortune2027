@@ -9,6 +9,9 @@ const PATH = '/act-prep/score-calculator';
 const ESTIMATE_DISCLAIMER =
   "This is an estimate. Each ACT test form has its own conversion table, so the same number of correct answers can give a slightly different score on different tests. For an exact score on an official practice test, use the scoring table that comes with it.";
 
+// The "More Free Help" cards show the next test date and a countdown: refresh daily.
+export const revalidate = 86400;
+
 export const metadata: Metadata = pageMetadata({
   title: 'ACT Score Calculator & Superscore Calculator',
   description:

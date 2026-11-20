@@ -15,11 +15,12 @@ import {
 } from '@/lib/exams/dates';
 import { TOOL_THEME } from './theme';
 
+// Theme tokens (with light-mode fallbacks) so badges adapt to dark mode and keep AA contrast.
 const STATUS_STYLES: Record<DateStatus, { label: string; bg: string; color: string }> = {
-  open: { label: 'Registration open', bg: '#dcfce7', color: '#166534' },
-  late: { label: 'Late registration', bg: '#fef3c7', color: '#92400e' },
-  closed: { label: 'Registration closed', bg: '#e2e8f0', color: '#334155' },
-  past: { label: 'Test taken', bg: '#f1f5f9', color: '#475569' },
+  open: { label: 'Registration open', bg: 'var(--color-success-light, #dcfce7)', color: 'var(--color-success-text, #166534)' },
+  late: { label: 'Late registration', bg: 'var(--color-warning-light, #fef3c7)', color: 'var(--color-warning-text, #92400e)' },
+  closed: { label: 'Registration closed', bg: 'var(--color-muted)', color: 'var(--color-foreground)' },
+  past: { label: 'Test taken', bg: 'var(--color-muted)', color: 'var(--color-foreground)' },
 };
 
 export function StatusBadge({ status, lateFee }: { status: DateStatus; lateFee?: number }) {
@@ -239,7 +240,7 @@ export function StudyPlan({
         )}
 
         {isLate && (
-          <p className="text-sm mb-5 rounded-lg px-4 py-3" style={{ background: '#fef3c7', color: '#92400e' }}>
+          <p className="text-sm mb-5 rounded-lg px-4 py-3" style={{ background: 'var(--color-warning-light, #fef3c7)', color: 'var(--color-warning-text, #92400e)' }}>
             Fewer than {RECOMMENDED_PREP_WEEKS} weeks left? Take a diagnostic test this week, focus on your
             2–3 weakest skills, and fit in at least two full timed practice tests before test day.
           </p>

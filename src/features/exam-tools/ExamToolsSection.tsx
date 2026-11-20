@@ -1,18 +1,13 @@
-import { CalendarDays, Calculator, type LucideIcon } from 'lucide-react';
-import { EXAM_TOOL_LINKS, type ExamToolLink } from '@/constants';
+import { EXAM_TOOL_LINKS } from '@/constants';
 import { SectionHeader } from '@/components/shared/SectionHeader';
 import { LinkCard, type LinkCardProps } from '@/components/shared/LinkCard';
 import { PayAsYouGoCard } from '@/components/shared/PayAsYouGoCard';
 import { cn } from '@/lib/utils';
 import { EXAMS, type ExamKey } from '@/lib/exams';
 import { daysBetween, formatTestDate, getNextDate, relativeDays, todayIn } from '@/lib/exams/dates';
+import { TOOL_ICONS } from './icons';
 import { MockTestCard } from './MockTestCard';
 import { TOOL_THEME } from './theme';
-
-export const TOOL_ICONS: Record<ExamToolLink['kind'], LucideIcon> = {
-  dates: CalendarDays,
-  calculator: Calculator,
-};
 
 /** "Next ACT: Dec 12, 2026 · in 22 days" from the exam's first (primary) schedule. */
 function nextDateBadge(exam: ExamKey): string | undefined {

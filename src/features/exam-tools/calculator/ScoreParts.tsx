@@ -1,3 +1,5 @@
+'use client';
+
 import { useId } from 'react';
 import { Input } from '@/components/ui/input';
 import { TOOL_THEME } from '../theme';

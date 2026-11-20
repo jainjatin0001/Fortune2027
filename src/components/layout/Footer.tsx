@@ -47,7 +47,7 @@ export function Footer() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/images/logos/logo_5.png" alt="Delta Tutors" className="h-12 w-auto object-contain" />
               <div className="flex flex-col items-start gap-[3px]">
-                <span className="text-xl font-bold leading-none" style={{ color: '#17356D' }}>
+                <span className="text-xl font-bold leading-none" style={{ color: 'var(--color-brand-text, #17356D)' }}>
                   Delta Tutors
                 </span>
                 <div className="flex items-center w-full gap-1.5">

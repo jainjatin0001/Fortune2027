@@ -4,7 +4,7 @@ import { EXAM_TOOL_LINKS } from '@/constants';
 import { EXAMS, type ExamKey } from '@/lib/exams';
 import { formatTestDate, getNextDate, registrationLine, todayIn } from '@/lib/exams/dates';
 import { SCORING, totalRange } from '@/lib/exams/scoring';
-import { TOOL_ICONS } from './ExamToolsSection';
+import { TOOL_ICONS } from './icons';
 import { TOOL_THEME } from './theme';
 
 /** Short, factual subtitle under each exam's panel title. */
@@ -133,7 +133,7 @@ export function ExamToolsHub({ exams }: { exams: ExamKey[] }) {
           </p>
         </div>
 
-        <div className={`grid gap-6 mx-auto max-w-6xl ${exams.length > 1 ? 'lg:grid-cols-2' : 'max-w-2xl'}`}>
+        <div className={`grid gap-6 mx-auto ${exams.length > 1 ? 'max-w-6xl lg:grid-cols-2' : 'max-w-2xl'}`}>
           {exams.map((exam) => (
             <ExamPanel key={exam} exam={exam} />
           ))}
