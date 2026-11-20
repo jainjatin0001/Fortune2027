@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { prisma } from '@/lib/prisma';
 import { absoluteUrl } from '@/lib/seo';
+import { ALL_EXAM_TOOL_LINKS } from '@/constants';
 
 // Rebuild hourly so newly published courses/posts appear without a redeploy.
 export const revalidate = 3600;
@@ -10,6 +11,7 @@ type Entry = MetadataRoute.Sitemap[number];
 const STATIC_ROUTES: { path: string; priority: number; changeFrequency: Entry['changeFrequency'] }[] = [
   { path: '/', priority: 1, changeFrequency: 'weekly' },
   { path: '/sat-prep', priority: 0.9, changeFrequency: 'weekly' },
+  ...ALL_EXAM_TOOL_LINKS.map(({ href }) => ({ path: href, priority: 0.8, changeFrequency: 'monthly' as const })),
   { path: '/act-prep', priority: 0.9, changeFrequency: 'weekly' },
   { path: '/ap-prep', priority: 0.9, changeFrequency: 'weekly' },
   { path: '/coding', priority: 0.8, changeFrequency: 'weekly' },

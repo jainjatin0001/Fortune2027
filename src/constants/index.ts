@@ -39,6 +39,61 @@ export const NAV_LINKS = [
   { label: 'Pricing', href: '/pricing' },
 ] as const;
 
+export type ExamToolLink = {
+  kind: 'dates' | 'calculator';
+  label: string;
+  href: string;
+  description: string;
+  ctaLabel: string;
+  /** Line under the card title. Test dates cards show the live "Next SAT/ACT" countdown instead when available. */
+  tagline: string;
+};
+
+/**
+ * Free exam tool pages. Single source for the navbar dropdowns, footer,
+ * tool cards and sitemap: add a tool here and it shows up everywhere.
+ */
+export const EXAM_TOOL_LINKS: Record<'sat' | 'act', ExamToolLink[]> = {
+  sat: [
+    {
+      kind: 'dates',
+      label: 'SAT Test Dates 2026–27',
+      href: '/sat-prep/test-dates',
+      description: 'Every SAT date with registration deadlines, score release dates and a study plan for each.',
+      ctaLabel: 'See test dates',
+      tagline: 'Official College Board dates · 2026–27',
+    },
+    {
+      kind: 'calculator',
+      label: 'SAT Score Calculator',
+      href: '/sat-prep/score-calculator',
+      description: 'Superscore your attempts and estimate your score from your practice test results.',
+      ctaLabel: 'Try the calculator',
+      tagline: 'Instant results · Free, no sign-up',
+    },
+  ],
+  act: [
+    {
+      kind: 'dates',
+      label: 'ACT Test Dates 2026–27',
+      href: '/act-prep/test-dates',
+      description: 'US and Canadian ACT dates with registration deadlines, score release dates and a study plan for each.',
+      ctaLabel: 'See test dates',
+      tagline: 'Official ACT dates · US & Canada',
+    },
+    {
+      kind: 'calculator',
+      label: 'ACT Score Calculator',
+      href: '/act-prep/score-calculator',
+      description: 'Superscore your attempts and estimate your composite from your practice test results.',
+      ctaLabel: 'Try the calculator',
+      tagline: 'Instant results · Free, no sign-up',
+    },
+  ],
+};
+
+export const ALL_EXAM_TOOL_LINKS = [...EXAM_TOOL_LINKS.sat, ...EXAM_TOOL_LINKS.act];
+
 export const FOOTER_LINKS = {
   company: [
     { label: 'About Us', href: '/about' },
@@ -51,6 +106,7 @@ export const FOOTER_LINKS = {
     { label: 'ACT Preparation', href: '/act-prep' },
     { label: 'AP Exams', href: '/ap-prep' },
     { label: 'Practice Tests', href: '/dashboard' },
+    ...ALL_EXAM_TOOL_LINKS.map(({ label, href }) => ({ label, href })),
   ],
   coding: [
     { label: 'Python', href: '/coding' },

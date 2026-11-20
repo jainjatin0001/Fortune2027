@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SectionHeader } from '@/components/shared/SectionHeader';
+import { ExamToolsSection } from '@/features/exam-tools/ExamToolsSection';
 import { currentUser } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { formatPrice, getCategoryBadgeClass, getCategoryLabel } from '@/lib/utils';
@@ -526,6 +527,9 @@ export default async function SATPage() {
           </div>
         </div>
       </section>
+
+      {/* ── FREE SAT TOOLS (shared with home page) ───────────────── */}
+      <ExamToolsSection exams={['sat']} />
 
       {/* ── TRY FULL SAT PRACTICE BANNER ─────────────────────────── */}
       <section

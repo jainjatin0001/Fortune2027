@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SectionHeader } from '@/components/shared/SectionHeader';
+import { ExamToolsSection } from '@/features/exam-tools/ExamToolsSection';
 import { currentUser } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { formatPrice, getCategoryBadgeClass, getCategoryLabel } from '@/lib/utils';
@@ -518,6 +519,9 @@ export default async function ACTPage() {
           </div>
         </div>
       </section>
+
+      {/* ── FREE ACT TOOLS (shared with home page) ───────────────── */}
+      <ExamToolsSection exams={['act']} />
 
       {/* ── TRY FULL ACT PRACTICE BANNER ─────────────────────────── */}
       <section

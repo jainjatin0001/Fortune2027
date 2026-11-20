@@ -4,10 +4,44 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { SignUpButton, UserButton, useUser } from '@clerk/nextjs';
-import { Menu, X, ChevronDown, BookOpen, GraduationCap, Code2, FlaskConical, Moon, Sun, LayoutDashboard } from 'lucide-react';
+import { Menu, X, ChevronDown, BookOpen, GraduationCap, Code2, FlaskConical, Moon, Sun, LayoutDashboard, type LucideIcon } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { EXAM_TOOL_LINKS } from '@/constants';
+
+type NavItem = {
+  label: string;
+  href: string;
+  icon: LucideIcon | null;
+  /** Dropdown links (desktop) / indented sub-links (mobile). */
+  children?: { label: string; href: string }[];
+};
+
+const NAV_ITEMS: NavItem[] = [
+  {
+    label: 'SAT Prep',
+    href: '/sat-prep',
+    icon: BookOpen,
+    children: [
+      { label: 'SAT Prep Overview', href: '/sat-prep' },
+      ...EXAM_TOOL_LINKS.sat.map(({ label, href }) => ({ label, href })),
+    ],
+  },
+  {
+    label: 'ACT Prep',
+    href: '/act-prep',
+    icon: GraduationCap,
+    children: [
+      { label: 'ACT Prep Overview', href: '/act-prep' },
+      ...EXAM_TOOL_LINKS.act.map(({ label, href }) => ({ label, href })),
+    ],
+  },
+  { label: 'AP Exams', href: '/ap-prep', icon: FlaskConical },
+  { label: 'Coding', href: '/coding', icon: Code2 },
+  { label: 'Blog', href: '/blog', icon: null },
+  { label: 'Pricing', href: '/pricing', icon: null },
+];
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -28,14 +62,7 @@ export function Navbar() {
     setOpenDropdown(null);
   }, [pathname]);
 
-  const navItems = [
-    { label: 'SAT Prep', href: '/sat-prep', icon: BookOpen },
-    { label: 'ACT Prep', href: '/act-prep', icon: GraduationCap },
-    { label: 'AP Exams', href: '/ap-prep', icon: FlaskConical },
-    { label: 'Coding', href: '/coding', icon: Code2 },
-    { label: 'Blog', href: '/blog', icon: null },
-    { label: 'Pricing', href: '/pricing', icon: null },
-  ];
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
 
   return (
     <header
@@ -73,20 +100,52 @@ export function Navbar() {
 
         {/* Desktop Nav */}
         <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1" aria-label="Main navigation">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                'px-2.5 xl:px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors duration-150',
-                pathname === item.href || pathname.startsWith(item.href + '/')
-                  ? 'text-[var(--nav-text-hover)] bg-[var(--color-primary-light)]'
-                  : 'text-[var(--nav-text)] hover:text-[var(--nav-text-hover)] hover:bg-[var(--color-muted)]'
-              )}
-            >
-              {item.label}
-            </Link>
-          ))}
+          {NAV_ITEMS.map((item) => {
+            const linkClass = cn(
+              'inline-flex items-center gap-1 px-2.5 xl:px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors duration-150',
+              isActive(item.href)
+                ? 'text-[var(--nav-text-hover)] bg-[var(--color-primary-light)]'
+                : 'text-[var(--nav-text)] hover:text-[var(--nav-text-hover)] hover:bg-[var(--color-muted)]'
+            );
+            if (!item.children) {
+              return (
+                <Link key={item.href} href={item.href} className={linkClass}>
+                  {item.label}
+                </Link>
+              );
+            }
+            // Dropdown opens on hover and on keyboard focus (focus-within), no JS needed.
+            return (
+              <div key={item.href} className="relative group">
+                <Link href={item.href} className={linkClass}>
+                  {item.label}
+                  <ChevronDown className="h-3.5 w-3.5 transition-transform group-hover:rotate-180 group-focus-within:rotate-180" aria-hidden />
+                </Link>
+                <div className="absolute left-0 top-full pt-2 invisible opacity-0 translate-y-1 transition-all duration-150 group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:visible group-focus-within:opacity-100 group-focus-within:translate-y-0">
+                  <ul
+                    className="min-w-64 rounded-xl border p-2 shadow-lg"
+                    style={{ background: 'var(--nav-bg)', borderColor: 'var(--nav-border)' }}
+                  >
+                    {item.children.map((child) => (
+                      <li key={child.href}>
+                        <Link
+                          href={child.href}
+                          className={cn(
+                            'block px-3 py-2 rounded-lg text-sm transition-colors',
+                            pathname === child.href
+                              ? 'text-[var(--nav-text-hover)] bg-[var(--color-primary-light)] font-medium'
+                              : 'text-[var(--nav-text)] hover:text-[var(--nav-text-hover)] hover:bg-[var(--color-muted)]'
+                          )}
+                        >
+                          {child.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            );
+          })}
         </nav>
 
         {/* Right Actions */}
@@ -166,20 +225,37 @@ export function Navbar() {
           }}
         >
           <nav className="container-app py-4 flex flex-col gap-1" aria-label="Mobile navigation">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  'flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors',
-                  pathname === item.href
-                    ? 'text-[var(--color-accent)] bg-[var(--color-primary-light)]'
-                    : 'text-[var(--nav-text)] hover:bg-[var(--color-muted)]'
-                )}
-              >
-                {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
-                {item.label}
-              </Link>
+            {NAV_ITEMS.map((item) => (
+              <div key={item.href}>
+                <Link
+                  href={item.href}
+                  className={cn(
+                    'flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors',
+                    pathname === item.href
+                      ? 'text-[var(--color-accent)] bg-[var(--color-primary-light)]'
+                      : 'text-[var(--nav-text)] hover:bg-[var(--color-muted)]'
+                  )}
+                >
+                  {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
+                  {item.label}
+                </Link>
+                {item.children
+                  ?.filter((child) => child.href !== item.href)
+                  .map((child) => (
+                    <Link
+                      key={child.href}
+                      href={child.href}
+                      className={cn(
+                        'flex items-center pl-11 pr-4 py-2.5 rounded-lg text-sm transition-colors',
+                        pathname === child.href
+                          ? 'text-[var(--color-accent)] bg-[var(--color-primary-light)] font-medium'
+                          : 'text-[var(--nav-text-muted)] hover:bg-[var(--color-muted)]'
+                      )}
+                    >
+                      {child.label}
+                    </Link>
+                  ))}
+              </div>
             ))}
             {isLoaded && (
               <Link

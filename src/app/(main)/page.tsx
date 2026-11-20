@@ -9,7 +9,11 @@ import { PracticeTestBanner } from '@/features/home/PracticeTestBanner';
 import { TestimonialsSection } from '@/features/home/TestimonialsSection';
 import { HomePricingSection } from '@/features/home/HomePricingSection';
 import { CTASection } from '@/features/home/CTASection';
+import { ExamToolsSection } from '@/features/exam-tools/ExamToolsSection';
 import { APP_NAME } from '@/constants';
+
+// The SAT/ACT tools cards show the next SAT date and a countdown: refresh daily.
+export const revalidate = 86400;
 
 export const metadata: Metadata = pageMetadata({ title: `${APP_NAME} | ${SITE_TAGLINE}`, absoluteTitle: true, path: '/', description: 'Live 1:1 online tutoring and full-length digital SAT, ACT and AP practice tests for high school students in the United States and Canada. Plus Python and coding courses for teens.' });
 
@@ -20,6 +24,7 @@ export default function HomePage() {
       <TrustSection />
       <FeaturesSection />
       <CourseCategoriesSection />
+      <ExamToolsSection exams={['sat', 'act']} />
       {/* <FeaturedCoursesSection /> */}
       <PracticeTestBanner />
       <TestimonialsSection />
