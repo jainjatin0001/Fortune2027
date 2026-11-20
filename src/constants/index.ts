@@ -39,6 +39,10 @@ export const NAV_LINKS = [
   { label: 'Pricing', href: '/pricing' },
 ] as const;
 
+// School year labels come from the exam data files, so a yearly update is one file per exam.
+import { SAT_SCHOOL_YEAR } from '@/lib/exams/sat-dates';
+import { ACT_SCHOOL_YEAR } from '@/lib/exams/act-dates';
+
 export type ExamToolLink = {
   kind: 'dates' | 'calculator';
   label: string;
@@ -57,11 +61,11 @@ export const EXAM_TOOL_LINKS: Record<'sat' | 'act', ExamToolLink[]> = {
   sat: [
     {
       kind: 'dates',
-      label: 'SAT Test Dates 2026–27',
+      label: `SAT Test Dates ${SAT_SCHOOL_YEAR}`,
       href: '/sat-prep/test-dates',
       description: 'Every SAT date with registration deadlines, score release dates and a study plan for each.',
       ctaLabel: 'See test dates',
-      tagline: 'Official College Board dates · 2026–27',
+      tagline: `Official College Board dates · ${SAT_SCHOOL_YEAR}`,
     },
     {
       kind: 'calculator',
@@ -75,7 +79,7 @@ export const EXAM_TOOL_LINKS: Record<'sat' | 'act', ExamToolLink[]> = {
   act: [
     {
       kind: 'dates',
-      label: 'ACT Test Dates 2026–27',
+      label: `ACT Test Dates ${ACT_SCHOOL_YEAR}`,
       href: '/act-prep/test-dates',
       description: 'US and Canadian ACT dates with registration deadlines, score release dates and a study plan for each.',
       ctaLabel: 'See test dates',
@@ -106,7 +110,6 @@ export const FOOTER_LINKS = {
     { label: 'ACT Preparation', href: '/act-prep' },
     { label: 'AP Exams', href: '/ap-prep' },
     { label: 'Practice Tests', href: '/dashboard' },
-    ...ALL_EXAM_TOOL_LINKS.map(({ label, href }) => ({ label, href })),
   ],
   coding: [
     { label: 'Python', href: '/coding' },

@@ -98,6 +98,11 @@
   --chart-grid: #e2e8f0;
   --chart-empty: #eef2f7;
 
+  /* Brand (logo) colours + warm background for the home "Free SAT & ACT Tools" hub */
+  --color-brand-navy: #17356d;
+  --color-brand-gold: #c7a14b;
+  --color-hub-bg: #f8f5ee;
+
   /* Subject Category Colors */
   --color-sat: #7c3aed;
   --color-sat-light: #ede9fe;
@@ -193,6 +198,7 @@
    DARK MODE TOKENS
    ───────────────────────────────────────────── */
 .dark {
+  --color-hub-bg: #111a2e;
   --color-background: #0f172a;
   --color-background-alt: #1e293b;
   --color-foreground: #f1f5f9;

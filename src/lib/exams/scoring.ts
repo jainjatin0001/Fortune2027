@@ -162,3 +162,13 @@ export const SCORING: Record<ScoredExam, ScoringConfig> = {
     ],
   },
 };
+
+/** Score scale of the total/composite, e.g. "400–1600" (SAT) or "1–36" (ACT). */
+export function totalRange(config: ScoringConfig): string {
+  const required = config.sections.filter((s) => !s.optional);
+  if (config.totalMethod === 'average') {
+    return `${Math.min(...required.map((s) => s.min))}–${Math.max(...required.map((s) => s.max))}`;
+  }
+  const sum = (k: 'min' | 'max') => required.reduce((a, s) => a + s[k], 0);
+  return `${sum('min')}–${sum('max')}`;
+}

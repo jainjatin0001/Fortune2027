@@ -9,7 +9,7 @@ import { daysBetween, formatTestDate, getNextDate, relativeDays, todayIn } from 
 import { MockTestCard } from './MockTestCard';
 import { TOOL_THEME } from './theme';
 
-const TOOL_ICONS: Record<ExamToolLink['kind'], LucideIcon> = {
+export const TOOL_ICONS: Record<ExamToolLink['kind'], LucideIcon> = {
   dates: CalendarDays,
   calculator: Calculator,
 };

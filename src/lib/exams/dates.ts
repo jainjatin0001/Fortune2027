@@ -146,3 +146,17 @@ export const COMMON_STUDY_TASKS = {
   lightReview: 'Light review of your error log only. No new full tests after midweek.',
   sleep: 'Plan the route to your test center and get a full night of sleep.',
 } as const;
+
+/** One-line registration status for the next date, e.g. "Register by Nov 20" (used by compact tool rows). */
+export function registrationLine(date: ExamTestDate, today: string): string {
+  switch (getDateStatus(date, today)) {
+    case 'open':
+      return `Register by ${formatDate(date.registrationDeadline, 'short').replace(/, \d{4}$/, '')}`;
+    case 'late':
+      return `Late registration until ${formatDate(date.lateDeadline, 'short').replace(/, \d{4}$/, '')}`;
+    case 'closed':
+      return 'Registration closed';
+    default:
+      return 'Test taken';
+  }
+}

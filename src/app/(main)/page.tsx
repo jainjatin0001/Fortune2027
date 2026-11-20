@@ -9,7 +9,7 @@ import { PracticeTestBanner } from '@/features/home/PracticeTestBanner';
 import { TestimonialsSection } from '@/features/home/TestimonialsSection';
 import { HomePricingSection } from '@/features/home/HomePricingSection';
 import { CTASection } from '@/features/home/CTASection';
-import { ExamToolsSection } from '@/features/exam-tools/ExamToolsSection';
+import { ExamToolsHub } from '@/features/exam-tools/ExamToolsHub';
 import { APP_NAME } from '@/constants';
 
 // The SAT/ACT tools cards show the next SAT date and a countdown: refresh daily.
@@ -24,7 +24,7 @@ export default function HomePage() {
       <TrustSection />
       <FeaturesSection />
       <CourseCategoriesSection />
-      <ExamToolsSection exams={['sat', 'act']} />
+      <ExamToolsHub exams={['sat', 'act']} />
       {/* <FeaturedCoursesSection /> */}
       <PracticeTestBanner />
       <TestimonialsSection />
