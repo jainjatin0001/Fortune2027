@@ -1,11 +1,14 @@
-const exams = ['SAT®', 'ACT®', 'AP®', 'IB', 'PSAT', 'CLEP'];
+// CLEP removed: we don't offer prep for it.
+const exams = ['SAT®', 'ACT®', 'AP®', 'IB', 'PSAT'];
 
+// Removed unverified metrics: '98% Score Improvement', '500+ Practice Tests',
+// '4.9/5 Average Rating', '20+ Students with 5 AP Scores'.
 const stats = [
-  { value: '98%', label: 'Score Improvement' },
+  { value: '1:1', label: 'Live Tutoring' },
   { value: '4,000+', label: 'Practice Questions' },
-  { value: '20+', label: 'Students with 5 AP Scores' },
-  { value: '500+', label: 'Practice Tests' },
-  { value: '4.9/5', label: 'Average Rating' },
+  { value: '20+', label: 'Mock Tests' },
+  { value: '120+', label: 'Interactive Quizzes' },
+  { value: '24/7', label: 'Doubt Solving' },
 ];
 
 export function TrustSection() {

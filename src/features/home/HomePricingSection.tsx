@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import {
   CheckCircle, Clock, CalendarDays, Users, Shield,
-  Award, RefreshCw, Tag, MessageCircle,
+  Award, Tag, MessageCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SectionHeader } from '@/components/shared/SectionHeader';
@@ -30,7 +30,9 @@ const paygoFeatures = [
 const trustBadges = [
   { icon: Shield,     title: 'Secure & Safe',       sub: 'Your data is always protected' },
   { icon: Award,      title: 'Expert Instructors',   sub: 'From IITs & top institutes' },
-  { icon: RefreshCw,  title: '30-Day Refund',        sub: "Not satisfied? We've got you." },
+  // We don't offer refunds, so the 30-Day Refund badge is replaced by a free consultation.
+  // { icon: RefreshCw,  title: '30-Day Refund',        sub: "Not satisfied? We've got you." },
+  { icon: MessageCircle, title: 'Free Consultation', sub: 'Talk to an advisor before you enroll' },
   { icon: Tag,        title: 'No Hidden Fees',       sub: 'Transparent pricing always' },
 ];
 

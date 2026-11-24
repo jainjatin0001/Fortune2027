@@ -76,12 +76,6 @@ const COMPARISON_ROWS = [
     scholar: '1/mo',
     elite: '2/mo',
   },
-  {
-    label: 'Score guarantee',
-    foundation: null,
-    scholar: null,
-    elite: 'checked',
-  },
 ];
 
 const SELLING_POINTS = [
@@ -90,12 +84,12 @@ const SELLING_POINTS = [
     body: 'Students get stuck at 10 PM before an exam. "Anytime WhatsApp" is the feature parents remember and talk about.',
   },
   {
-    title: 'Easy scheduling reduces churn',
-    body: 'Scheduling friction is the #1 reason students drop tutors. A 24 hr confirmation promise removes that anxiety entirely.',
+    title: 'Scheduling that fits your week',
+    body: 'Book live 1:1 sessions around school, sports and activities, across time zones. Higher plans get priority booking, with Elite sessions confirmed within 24 hours.',
   },
   {
-    title: 'Risk reversal closes deals',
-    body: 'The score guarantee on Elite removes the biggest objection. Parents pay for certainty — not just hours.',
+    title: 'Progress you can see',
+    body: 'Regular progress reports and full-length mock tests show exactly where your score stands and what to work on next, so students and parents always know the plan is working.',
   },
 ];
 

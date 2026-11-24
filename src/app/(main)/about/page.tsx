@@ -39,11 +39,13 @@ const team = [
   { name: 'Jatin Jain',  role: 'Founder & CTO', school: 'IIT Dhanbad',  prev: 'AI &  Machine Learning Expert ',    initials: 'JJ', color: '#0f766e', linkedin: 'https://www.linkedin.com/in/jatin-jain-9a6907195/' },
 ];
 
+// Removed unverified: '220+ Average SAT Score Increase', '98% AP Pass Rate',
+// '5 Countries Served' (also listed Europe twice).
 const stats = [
-  { icon: BarChart2,value: '220+',     label: 'Average SAT Score Increase' },
-  { icon: Users,    value: '10+', label: 'Subjects Covered' },
-  { icon: BookOpen, value: '98%',      label: 'AP Pass Rate' },
-  { icon: Globe,    value: '5',        label: 'Countries Served US, Canada, Europe, Middle East & Europe' },
+  { icon: GraduationCap, value: 'Expert',      label: 'IIT & Subject Matter Expert Tutors' },
+  { icon: BookOpen,      value: '10+',         label: 'Subjects Covered' },
+  { icon: Users,         value: 'Grades 8–12', label: 'High School Focus' },
+  { icon: Globe,         value: 'Global',      label: 'Students Across Time Zones' },
 ];
 
 function LinkedInIcon({ className }: { className?: string }) {
@@ -271,12 +273,12 @@ export default function AboutPage() {
       {/* ── Stats ── */}
       <section style={{ background: '#17356D', paddingBlock: '3.5rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
         <div className="container-app">
-          <p className="text-center" style={{ color: 'rgba(255,255,255,0.5)', fontWeight: 600, fontSize: '0.75rem', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '2.5rem' }}>Our Impact So Far</p>
+          <p className="text-center" style={{ color: 'rgba(255,255,255,0.5)', fontWeight: 600, fontSize: '0.75rem', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '2.5rem' }}>Delta Tutors at a Glance</p>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {stats.map(({ icon: Icon, value, label }) => (
               <div key={label} className="text-center">
                 <Icon className="h-7 w-7 mx-auto" style={{ color: '#f59e0b', marginBottom: '0.75rem' }} />
-                <p style={{ color: '#ffffff', fontSize: '2rem', fontWeight: 800, lineHeight: 1 }}>{value}</p>
+                <p style={{ color: '#ffffff', fontSize: '1.8rem', fontWeight: 600, lineHeight: 1 }}>{value}</p>
                 <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.8rem', marginTop: '0.4rem' }}>{label}</p>
               </div>
             ))}

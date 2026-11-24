@@ -18,9 +18,10 @@ export const metadata: Metadata = pageMetadata({ title: 'Coding Classes for Teen
 
 const stats = [
   { icon: Users,    value: '1:1 Live',    label: 'Coding & Project Support' },
-  { icon: Code2,    value: '100+',  label: 'Projects Built' },
-  { icon: BookOpen, value: '2500+', label: 'Coding Question Bank' },
-  { icon: Trophy,   value: '95%',     label: 'Completion Rate' },
+  // Removed unverified: '100+ Projects Built', '2500+ Coding Question Bank', '95% Completion Rate'.
+  { icon: Code2,    value: 'Hands-On', label: 'Project-Based Learning' },
+  { icon: BookOpen, value: 'Python',   label: 'Beginner-Friendly Track' },
+  { icon: Trophy,   value: 'AI & ML',  label: 'Future-Ready Foundation' },
 ];
 
 const benefits = [
@@ -387,7 +388,7 @@ export default async function CodingPage() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
             <div>
               <h2 className="text-heading-2 text-white mb-1">Ready to start your coding journey?</h2>
-              <p style={{ color: 'rgba(219,234,254,0.85)' }}>Join hundreds of students and start building your future today.</p>
+              <p style={{ color: 'rgba(219,234,254,0.85)' }}>Learn Python, AI and more with live 1:1 mentoring, and start building your future today.</p>
             </div>
             <div className="shrink-0">
               <Link href={practiceHref}>

@@ -38,7 +38,7 @@ export function HeroSection() {
                 color: '#93c5fd',
               }}
             >
-              #1 All-in-One Academic Platform for US &amp; Canada Students
+              #1 All-in-One Academic Platform for US &amp; International Students
             </div>
 
             <h1 className="text-hero text-white mb-4 leading-[1.1]">

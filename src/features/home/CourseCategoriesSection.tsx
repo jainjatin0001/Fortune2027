@@ -30,13 +30,13 @@ const categories = [
   {
     icon: FlaskConical,
     label: 'AP Exams',
-    desc: '20+ AP subjects with full-length practice tests & detailed content.',
+    desc: 'Live 1:1 AP tutoring with unit-by-unit lessons and exam-style practice.',
     href: '/ap-prep',
     gradient: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
     color: 'var(--color-ap)',
     light: 'var(--color-ap-light)',
     stat1: { value: '5', label: 'Max Score' },
-    stat2: { value: '20+ Subjects', label: '' },
+    stat2: { value: 'MCQ + FRQ', label: '' },
     exploreLabel: 'Explore AP',
   },
   {

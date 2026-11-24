@@ -809,14 +809,15 @@ export default async function CourseDetailPage({
                     </Button> */}
                   </div>
 
-                  {/* Guarantee */}
-                  {/* <p
+                  {/* No refunds are offered, so the money-back line is replaced by secure checkout.
+                  <p ...><ShieldCheck /> 30-Day Money-Back Guarantee</p> */}
+                  <p
                     className="text-xs text-center mb-5 flex items-center justify-center gap-1.5"
                     style={{ color: 'var(--color-muted-foreground)' }}
                   >
                     <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
-                    30-Day Money-Back Guarantee
-                  </p> */}
+                    Secure checkout powered by Stripe
+                  </p>
 
                   {/* Divider */}
                   <div

@@ -27,7 +27,7 @@ const features = [
     number: '4',
     icon: BookOpen,
     title: 'AP Full-Length Tests',
-    desc: 'Full-length AP exam simulations for 20+ subjects with accurate scoring.',
+    desc: 'AP exam-style MCQ and FRQ practice with step-by-step explanations.',
     color: '#0891b2',
   },
   {

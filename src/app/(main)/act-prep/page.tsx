@@ -230,10 +230,12 @@ export default async function ACTPage() {
               </div>
               <div className="flex flex-wrap gap-x-6 gap-y-2">
                 {[
-                  '+6 Avg. Composite Improvement',
-                  '800+ Practice Questions',
-                  '8 Full-Length ACTs',
-                  'Trusted by Students',
+                  // Removed unverified: '+6 Avg. Composite Improvement', '800+ Practice Questions',
+                  // '8 Full-Length ACTs', 'Trusted by Students'. Add counts back once ACT content is in the bank.
+                  'Live 1:1 ACT Tutoring',
+                  'Section-by-Section Strategy',
+                  'Personalized Study Plan',
+                  'Timing & Pacing Drills',
                 ].map((stat) => (
                   <div
                     key={stat}

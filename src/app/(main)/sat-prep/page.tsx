@@ -152,7 +152,7 @@ export default async function SATPage() {
                 }}
               >
                 <Star className="h-3 w-3 fill-violet-400" />
-                #1 SAT PREP PLATFORM FOR US &amp; CANADA STUDENTS
+                DIGITAL SAT PREP FOR US &amp; INTERNATIONAL STUDENTS
               </div>
               <h1 className="text-hero text-white mb-4">
                 Conquer the SAT with{' '}
@@ -160,7 +160,7 @@ export default async function SATPage() {
               </h1>
               <p className="text-sm mb-6 leading-relaxed" style={{ color: 'rgba(203,213,225,0.85)' }}>
                 Comprehensive SAT preparation with 4,000+ practice questions,
-                10 full-length mock tests, and a personalized study plan
+                20+ full-length mock tests, and a personalized study plan
                 that helps you score higher.
               </p>
               <div className="flex flex-wrap gap-3 mb-8">
@@ -188,10 +188,10 @@ export default async function SATPage() {
               {/* Stats */}
               <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4 gap-x-6 gap-y-4">
                 {[
-                  { value: '+220', label: 'Avg Score Increase' },
+                  // Removed unverified: '+220 Avg Score Increase', '50+ Full-Length Tests'.
                   { value: '4,000+', label: 'Practice Questions' },
-                  { value: '50+', label: 'Full-Length Tests' },
-                  // { value: '50,000+', label: 'Students Trusted' },
+                  { value: '20+', label: 'Full-Length Mock Tests' },
+                  { value: '120+', label: 'Interactive Quizzes' },
                 ].map((stat) => (
                   <div key={stat.label}>
                     <div className="text-2xl font-extrabold text-white leading-none">{stat.value}</div>

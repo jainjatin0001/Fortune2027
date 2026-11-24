@@ -198,7 +198,6 @@ export const PRICING_PLANS = [
       { text: '1 free diagnostic session to start', included: true },
       { text: 'Priority scheduling', included: false },
       { text: 'Mock tests included', included: false },
-      { text: 'Score guarantee', included: false },
     ],
   },
   {
@@ -216,7 +215,6 @@ export const PRICING_PLANS = [
       { text: '1 full mock test per month', included: true },
       { text: 'Custom practice sets after every session', included: true },
       { text: 'Access to study resource library', included: true },
-      { text: 'Score guarantee', included: false },
     ],
   },
   {
@@ -233,7 +231,6 @@ export const PRICING_PLANS = [
       { text: '2 full mock tests per month + review', included: true },
       { text: 'Custom study roadmap (updated monthly)', included: true },
       { text: 'College application test strategy call', included: true },
-      { text: 'Score improvement guarantee', included: true, bold: true },
     ],
   },
 ];

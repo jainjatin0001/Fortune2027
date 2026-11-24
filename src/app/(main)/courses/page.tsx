@@ -3,9 +3,9 @@ import { pageMetadata } from '@/lib/seo';
 import type { ElementType } from 'react';
 import Link from 'next/link';
 import {
-  BookOpen, Users, Star, ShieldCheck, Search,
+  BookOpen, ShieldCheck, Search,
   GraduationCap, Target, Code2, Monitor, BarChart2, Headphones,
-  ChevronDown,
+  ChevronDown, Layers, Clock,
 } from 'lucide-react';
 import { getCategoryBadgeClass, getCategoryLabel, getDifficultyClass, getDifficultyLabel, formatPrice } from '@/lib/utils';
 import { prisma } from '@/lib/prisma';
@@ -67,7 +67,6 @@ async function getCoursesData(category?: string, q?: string) {
       category: programSlugToCategory(c.program.slug),
     }));
 
-    const totalEnrollments = all.reduce((sum, c) => sum + c._count.enrollments, 0);
     const totalCourses = all.length;
 
     let filtered = category ? all.filter((c) => c.category === category) : all;
@@ -78,9 +77,9 @@ async function getCoursesData(category?: string, q?: string) {
       );
     }
 
-    return { courses: filtered, totalCourses, totalEnrollments };
+    return { courses: filtered, totalCourses };
   } catch {
-    return { courses: [], totalCourses: 0, totalEnrollments: 0 };
+    return { courses: [], totalCourses: 0 };
   }
 }
 
@@ -90,14 +89,7 @@ export default async function CoursesPage({
   searchParams: Promise<{ category?: string; q?: string }>;
 }) {
   const { category = '', q = '' } = await searchParams;
-  const { courses, totalCourses, totalEnrollments } = await getCoursesData(category || undefined, q || undefined);
-
-  const enrollDisplay =
-    totalEnrollments >= 1000
-      ? `${Math.round(totalEnrollments / 1000)}K+`
-      : totalEnrollments > 0
-        ? `${totalEnrollments}+`
-        : '250K+';
+  const { courses, totalCourses } = await getCoursesData(category || undefined, q || undefined);
 
   return (
     <div style={{ background: 'var(--color-background)' }}>
@@ -184,15 +176,17 @@ export default async function CoursesPage({
           {/* Stats + Search row */}
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '1.5rem' }}>
             <div className="grid grid-cols-2 gap-4 sm:flex sm:flex-wrap sm:items-center sm:gap-7" style={{ flex: 1, minWidth: 0 }}>
+              {/* Removed: 'Students Enrolled' (showed the real count, 2+, with a fake 250K+ fallback)
+                  and the made-up '4.8/5 Average Rating'. The course count is hidden when it's 0. */}
               {[
-                { icon: BookOpen,    value: String(totalCourses || '9'), label: 'Courses' },
-                { icon: Users,       value: enrollDisplay,                label: 'Students Enrolled' },
-                { icon: ShieldCheck, value: 'Expert',                    label: 'IIT Educators' },
-                { icon: Star,        value: '4.8/5',                     label: 'Average Rating', gold: true },
-              ].map(({ icon: Icon, value, label, gold }) => (
+                ...(totalCourses > 0 ? [{ icon: BookOpen, value: String(totalCourses), label: 'Courses' }] : []),
+                { icon: Layers,      value: '5',        label: 'Subject Areas' },
+                { icon: ShieldCheck, value: 'Expert',   label: 'IIT Educators' },
+                { icon: Clock,       value: 'Flexible', label: 'Scheduling' },
+              ].map(({ icon: Icon, value, label }) => (
                 <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
                   <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Icon style={{ width: 16, height: 16, color: (gold as boolean | undefined) ? '#fbbf24' : 'white', fill: (gold as boolean | undefined) ? '#fbbf24' : 'none' }} />
+                    <Icon style={{ width: 16, height: 16, color: 'white' }} />
                   </div>
                   <div>
                     <div style={{ color: '#fff', fontWeight: 700, fontSize: '1rem', lineHeight: 1.2 }}>{value}</div>
@@ -379,10 +373,7 @@ export default async function CoursesPage({
                           >
                             {getDifficultyLabel(course.difficulty)}
                           </span>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', fontSize: '0.75rem', color: 'var(--color-muted-foreground)' }}>
-                            <Star style={{ width: 11, height: 11, fill: '#fbbf24', color: '#fbbf24' }} />
-                            4.8
-                          </span>
+                          {/* Hard-coded 4.8 star rating removed: there are no real reviews behind it. */}
                         </div>
 
                         {/* Enrolled + price */}
@@ -418,7 +409,7 @@ export default async function CoursesPage({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" style={{ gap: '2rem' }}>
             {[
               { icon: GraduationCap, color: '#7c3aed', title: 'Expert Instructors',  desc: 'Learn from IIT graduates and subject matter experts.' },
-              { icon: BarChart2,     color: '#0891b2', title: 'Proven Results',      desc: '250K+ students with 220+ average score improvement.' },
+              { icon: BarChart2,     color: '#0891b2', title: 'Track Your Progress', desc: 'Detailed performance reports after every quiz and mock test.' },
               { icon: Monitor,       color: '#059669', title: 'Smart Learning',      desc: 'AI-powered analytics and personalized learning paths.' },
               { icon: Headphones,    color: '#d97706', title: 'Always Here',         desc: 'Doubt support via chat, email & WhatsApp.' },
             ].map(({ icon: Icon, color, title, desc }) => (

@@ -59,7 +59,8 @@ const testimonials = [
 ];
 
 const practiceFeatures = [
-  { icon: CheckCircle, text: '1000+ Practice Questions' },
+  // '1000+ Practice Questions' removed: no AP questions in the bank yet.
+  { icon: CheckCircle, text: 'Exam-Style MCQs & FRQs' },
   { icon: CheckCircle, text: 'Topic-wise & Exam-based'  },
   { icon: Clock,       text: 'Timed Practice Mode'      },
   { icon: FileText,    text: 'Detailed Explanations'    },
@@ -132,7 +133,8 @@ export default async function APPage() {
               </h1>
 
               <p className="text-body-lg mb-8" style={{ color: 'var(--color-muted-foreground)' }}>
-                Expert-designed AP preparation for 20+ subjects. Our students achieve a 98% pass rate and a 67% rate of scoring a 5.
+                {/* Removed unverified: "20+ subjects", "98% pass rate", "67% rate of scoring a 5". */}
+                Expert-led AP preparation with live 1:1 tutoring, unit-by-unit lessons and exam-style MCQ &amp; FRQ practice, built to help you aim for a 5.
               </p>
 
               {/* CTAs */}
@@ -149,7 +151,7 @@ export default async function APPage() {
               </div>
 
               <div className="flex flex-wrap gap-6">
-                {['20+ AP Subjects', '98% Pass Rate', '67% Score a 5'].map((text) => (
+                {['Live 1:1 AP Tutoring', 'Unit-by-Unit Curriculum', 'Flexible Scheduling'].map((text) => (
                   <div key={text} className="flex items-center gap-2 text-sm font-medium"
                     style={{ color: 'var(--color-muted-foreground)' }}>
                     <CheckCircle className="h-4 w-4 shrink-0" style={{ color: 'var(--color-success)' }} />
