@@ -16,6 +16,13 @@ const PRESETS = {
     description: 'Free consultation, no commitment.',
     subjectPrefix: 'Advisor Enquiry',
     success: 'Our advisors will contact you within 24 hours to help you choose the right plan.',
+    successTitle: "We'll be in touch!",
+    courseLabel: 'Course / Subject',
+    coursePlaceholder: 'e.g. SAT Prep, AP Calc BC, Coding',
+    messagePlaceholder: 'Tell us about your goals and current level...',
+    fallbackMessage: 'Looking for guidance on',
+    submitLabel: 'Send Message',
+    messageRows: 3,
   },
   /** Pricing page "Get Started" for custom rates. */
   pricing: {
@@ -23,16 +30,38 @@ const PRESETS = {
     description: "Tell us about your needs and we'll get back to you with accurate pricing.",
     subjectPrefix: 'Rate/Pricing Query',
     success: 'Thanks for reaching out. Our team will contact you within 24 hours.',
+    successTitle: "We'll be in touch!",
+    courseLabel: 'Course / Subject',
+    coursePlaceholder: 'e.g. SAT Prep, AP Calc BC, Coding',
+    messagePlaceholder: 'Tell us about your goals and current level...',
+    fallbackMessage: 'Looking for guidance on',
+    submitLabel: 'Send Message',
+    messageRows: 3,
+  },
+  /** Careers page applications. */
+  careers: {
+    title: 'Apply to Delta Tutors',
+    description: 'Tell us about yourself. We review every application.',
+    subjectPrefix: 'Career Application',
+    success: 'Thanks for applying. If your profile is a fit, our team will reach out by email within 5 working days.',
+    successTitle: 'Application received!',
+    courseLabel: 'Role',
+    coursePlaceholder: 'e.g. SAT Math Tutor, Video Editor',
+    messagePlaceholder: 'Your experience, subjects or skills, time zone, and a link to your LinkedIn, CV or portfolio...',
+    fallbackMessage: 'Applying for',
+    submitLabel: 'Submit Application',
+    messageRows: 5,
   },
 } as const;
 
-type Preset = keyof typeof PRESETS;
+export type ContactPreset = keyof typeof PRESETS;
+type Preset = ContactPreset;
 type Status = 'idle' | 'loading' | 'success' | 'error';
 
 type ContactModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Pre-fills "Course / Subject", e.g. "SAT Prep". */
+  /** Pre-fills the "Course / Subject" (or "Role") field, e.g. "SAT Prep". */
   defaultCourse?: string;
   preset?: Preset;
 };
@@ -84,7 +113,7 @@ function ContactForm({
           name: form.name,
           email: form.email,
           subject: `${copy.subjectPrefix} — ${form.course || 'General'}`,
-          message: form.message || `Looking for guidance on: ${form.course || 'General'}`,
+          message: form.message || `${copy.fallbackMessage}: ${form.course || 'General'}`,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -110,7 +139,7 @@ function ContactForm({
           <CheckCircle className="h-7 w-7" style={{ color: 'var(--color-success, #16a34a)' }} aria-hidden />
         </div>
         <DialogTitle className="text-xl font-bold mb-2" style={{ color: 'var(--color-foreground)' }}>
-          We&apos;ll be in touch!
+          {copy.successTitle}
         </DialogTitle>
         <DialogDescription className="text-sm mb-6" style={{ color: 'var(--color-muted-foreground)' }}>
           {copy.success}
@@ -171,20 +200,20 @@ function ContactForm({
 
         <div className="space-y-1.5">
           <Label htmlFor={field('course')} className="text-xs font-semibold">
-            Course / Subject
+            {copy.courseLabel}
           </Label>
-          <Input id={field('course')} value={form.course} onChange={set('course')} disabled={loading} placeholder="e.g. SAT Prep, AP Calc BC, Coding" />
+          <Input id={field('course')} value={form.course} onChange={set('course')} disabled={loading} placeholder={copy.coursePlaceholder} />
         </div>
 
         <div className="space-y-1.5">
           <Label htmlFor={field('message')} className="text-xs font-semibold">
             Message
           </Label>
-          <Textarea id={field('message')} rows={3} value={form.message} onChange={set('message')} disabled={loading} placeholder="Tell us about your goals and current level..." className="resize-none" />
+          <Textarea id={field('message')} rows={copy.messageRows} value={form.message} onChange={set('message')} disabled={loading} placeholder={copy.messagePlaceholder} className="resize-none" />
         </div>
 
         <Button type="submit" disabled={loading} className="w-full h-11 font-semibold text-sm text-white" style={{ background: 'var(--gradient-primary)' }}>
-          {loading ? 'Sending…' : 'Send Message'}
+          {loading ? 'Sending…' : copy.submitLabel}
         </Button>
       </form>
     </>

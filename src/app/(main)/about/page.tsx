@@ -35,7 +35,7 @@ const values = [
 ];
 
 const team = [
-  { name: 'Divyansh Jain', role: 'Founder & CEO', school: 'Dalhousie University , Canada ', prev: 'AP & High School Expert',        initials: 'DJ', color: '#1e3a8a', linkedin: 'https://www.linkedin.com/in/divyanshjain10/' },
+  { name: 'Divyansh Jain', role: 'Founder & CEO', school: 'Dalhousie University , Canada ', prev: 'AP & SAT Expert',        initials: 'DJ', color: '#1e3a8a', linkedin: 'https://www.linkedin.com/in/divyanshjain10/' },
   { name: 'Jatin Jain',  role: 'Founder & CTO', school: 'IIT Dhanbad',  prev: 'AI &  Machine Learning Expert ',    initials: 'JJ', color: '#0f766e', linkedin: 'https://www.linkedin.com/in/jatin-jain-9a6907195/' },
 ];
 
@@ -236,14 +236,16 @@ export default function AboutPage() {
 
             {/* Right — team cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              {team.map(({ name, role, school, prev, initials, color, linkedin }) => (
+              {team.map(({ name, school, prev, initials, color, linkedin }) => (
                 <div key={name} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '16px', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   {/* Avatar */}
                   <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: '1.4rem', border: '3px solid rgba(255,255,255,0.2)', flexShrink: 0 }}>
                     {initials}
                   </div>
                   <div>
+                    {/* Role hidden for now — re-enable by uncommenting and adding `role` back to the destructure above
                     <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '0.25rem' }}>{role}</p>
+                    */}
                     <h3 style={{ color: '#ffffff', fontWeight: 700, fontSize: '1rem', marginBottom: '0.25rem' }}>{name}</h3>
                     <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '0.78rem' }}>{school}</p>
                     <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem', marginTop: '0.25rem' }}>{prev}</p>
