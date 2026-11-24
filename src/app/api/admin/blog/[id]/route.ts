@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, unauthorized, forbidden, badRequest } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { pingIndexNow } from '@/lib/indexnow';
 
 async function withAdmin() {
   try {
@@ -43,6 +44,8 @@ export async function PATCH(
     }
 
     const post = await prisma.blogPost.update({ where: { id }, data });
+    // Also ping on unpublish, so the search engine recrawls and drops the URL.
+    if (post.isPublished || 'isPublished' in data) pingIndexNow(`/blog/${post.slug}`, '/blog');
     return NextResponse.json({ post });
   } catch (e) {
     return authError(e) ?? NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -58,7 +61,8 @@ export async function DELETE(
     const { id } = await params;
     if (!id) return badRequest('id is required');
 
-    await prisma.blogPost.delete({ where: { id } });
+    const post = await prisma.blogPost.delete({ where: { id } });
+    if (post.isPublished) pingIndexNow(`/blog/${post.slug}`, '/blog');
     return NextResponse.json({ deleted: true });
   } catch (e) {
     return authError(e) ?? NextResponse.json({ error: 'Internal server error' }, { status: 500 });

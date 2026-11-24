@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, unauthorized, forbidden, badRequest } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { slugify } from '@/lib/utils';
+import { pingIndexNow } from '@/lib/indexnow';
 
 async function withAdmin() {
   try {
@@ -127,6 +128,9 @@ export async function PATCH(req: NextRequest) {
         });
       }
     }
+
+    // Also ping on unpublish, so the search engine recrawls and drops the URL.
+    if (course.isPublished || 'isPublished' in data) pingIndexNow(`/courses/${course.slug}`, '/courses');
 
     return NextResponse.json({ course });
   } catch (e) {

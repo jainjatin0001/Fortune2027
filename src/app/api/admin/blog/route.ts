@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, unauthorized, forbidden, badRequest } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { slugify } from '@/lib/utils';
+import { pingIndexNow } from '@/lib/indexnow';
 
 async function withAdmin() {
   try {
@@ -85,6 +86,8 @@ export async function POST(req: NextRequest) {
         publishedAt: isPublished ? new Date() : null,
       },
     });
+
+    if (post.isPublished) pingIndexNow(`/blog/${post.slug}`, '/blog');
 
     return NextResponse.json({ post }, { status: 201 });
   } catch (e) {

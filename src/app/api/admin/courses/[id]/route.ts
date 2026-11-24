@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, unauthorized, forbidden, badRequest } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { pingIndexNow } from '@/lib/indexnow';
 
 async function withAdmin() {
   try {
@@ -30,7 +31,8 @@ export async function DELETE(
     const { id } = await params;
     if (!id) return badRequest('id is required');
 
-    await prisma.course.delete({ where: { id } });
+    const course = await prisma.course.delete({ where: { id } });
+    if (course.isPublished) pingIndexNow(`/courses/${course.slug}`, '/courses');
     return NextResponse.json({ deleted: true });
   } catch (e) {
     return authError(e) ?? NextResponse.json({ error: 'Internal server error' }, { status: 500 });
