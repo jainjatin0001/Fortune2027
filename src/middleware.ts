@@ -24,6 +24,8 @@ const isPublicRoute = createRouteMatcher([
   '/api/questions',
   '/sitemap.xml',
   '/robots.txt',
+  // IndexNow ownership key (must match INDEXNOW_KEY in src/lib/indexnow.ts)
+  '/ffb7e806bba84c119a4ba31421a3eed7.txt',
   // Generated social-preview images and icons must be fetchable by crawlers
   '/opengraph-image(.*)',
   '/twitter-image(.*)',
