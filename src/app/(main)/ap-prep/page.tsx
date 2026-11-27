@@ -6,7 +6,6 @@ import {
   GraduationCap, Target, Brain, TrendingUp, Award,
   Clock, FileText,
 } from 'lucide-react';
-import { currentUser } from '@clerk/nextjs/server';
 import { Button } from '@/components/ui/button';
 import { SectionHeader } from '@/components/shared/SectionHeader';
 import { prisma } from '@/lib/prisma';
@@ -18,6 +17,10 @@ const AP_AMBER_DARK = '#b45309';
 const AP_AMBER_LIGHT = '#fef3c7';
 
 export const metadata: Metadata = pageMetadata({ title: 'AP Exam Prep & Online AP Tutoring', path: '/ap-prep', description: 'Online AP exam preparation with live 1:1 tutors for AP Calculus, Physics, Chemistry, Computer Science and more. Built for students in the US and Canada.' });
+
+// Render per request so the AP course list stays current (the page no longer reads the signed-in user,
+// which is what used to make it dynamic)
+export const dynamic = 'force-dynamic';
 
 const whyReasons = [
   { icon: Award,        title: 'Earn College Credit',     desc: 'Get credit for college courses and save thousands in tuition.' },
@@ -96,9 +99,9 @@ async function getAPCourses() {
 }
 
 export default async function APPage() {
-  const [user, apCourses] = await Promise.all([currentUser(), getAPCourses()]);
-  const isSignedIn = !!user;
-  const practiceHref = isSignedIn ? '/dashboard' : '/sign-up?redirect_url=/dashboard';
+  const apCourses = await getAPCourses();
+  // Everyone lands on the dashboard; signed-out visitors see it locked, with a sign-up prompt on top
+  const practiceHref = '/dashboard';
 
   return (
     <div style={{ background: 'var(--color-background)' }}>
@@ -163,7 +166,12 @@ export default async function APPage() {
 
             {/* ── Right  —  floating score card ── */}
             <div className="flex items-center justify-center lg:justify-end">
-              <div className="relative w-full max-w-md">
+              {/* The whole card opens the dashboard, same as the "Try Free Practice" button */}
+              <Link
+                href={practiceHref}
+                aria-label="Try free AP practice"
+                className="relative block w-full max-w-md rounded-2xl cursor-pointer transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-400/60"
+              >
 
                 {/* Graduation cap — TODO: replace with proper 3D asset */}
                 {/* <div className="absolute pointer-events-none z-20" style={{ top: '-4.5rem', right: '-1.5rem' }}>
@@ -233,7 +241,7 @@ export default async function APPage() {
                 >
                   <Trophy className="h-7 w-7 text-white" />
                 </div>
-              </div>
+              </Link>
             </div>
 
           </div>

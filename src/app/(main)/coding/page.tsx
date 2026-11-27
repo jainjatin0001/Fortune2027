@@ -8,13 +8,16 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SectionHeader } from '@/components/shared/SectionHeader';
-import { currentUser } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { formatPrice, getCategoryBadgeClass, getCategoryLabel } from '@/lib/utils';
 
 const codingGradient = 'linear-gradient(135deg, #059669 0%, #047857 100%)';
 
 export const metadata: Metadata = pageMetadata({ title: 'Coding Classes for Teens: Python, AI & Web Development', path: '/coding', description: 'Online coding classes for high school students: Python, machine learning, data science and web development with live 1:1 mentors. For teens in the US and Canada.' });
+
+// Render per request so the coding course list stays current (the page no longer reads the signed-in user,
+// which is what used to make it dynamic)
+export const dynamic = 'force-dynamic';
 
 const stats = [
   { icon: Users,    value: '1:1 Live',    label: 'Coding & Project Support' },
@@ -115,8 +118,9 @@ async function getCodingCourses() {
 }
 
 export default async function CodingPage() {
-  const [user, codingCourses] = await Promise.all([currentUser(), getCodingCourses()]);
-  const practiceHref = user ? '/dashboard' : '/sign-up?redirect_url=/dashboard';
+  const codingCourses = await getCodingCourses();
+  // Everyone lands on the dashboard; signed-out visitors see it locked, with a sign-up prompt on top
+  const practiceHref = '/dashboard';
 
   return (
     <div style={{ background: 'var(--color-background)' }}>
