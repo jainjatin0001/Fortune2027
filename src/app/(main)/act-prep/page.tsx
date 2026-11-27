@@ -176,6 +176,8 @@ async function getACTCourses() {
 export default async function ACTPage() {
   const [user, actCourses] = await Promise.all([currentUser(), getACTCourses()]);
   const isSignedIn = !!user;
+  // Signed out: the locked dashboard preview with its sign-up prompt (practice tests need an account)
+  const practiceHref = isSignedIn ? '/dashboard/act-exam' : '/dashboard';
 
   return (
     <div style={{ background: 'var(--color-background)' }}>
@@ -208,7 +210,7 @@ export default async function ACTPage() {
                 Improve your score and open doors to top universities.
               </p>
               <div className="flex flex-wrap gap-3 mb-8">
-                <Link href={isSignedIn ? '/dashboard/act-exam' : '/sign-up?redirect_url=/dashboard/act-exam'}>
+                <Link href={practiceHref}>
                   <Button
                     size="lg"
                     className="font-bold"
@@ -250,8 +252,11 @@ export default async function ACTPage() {
             </div>
 
             {/* Center: target illustration with floating subject icons */}
-            <div
-              className="hidden lg:flex flex-shrink-0 relative items-center justify-center"
+            {/* The whole illustration opens the practice tests, same as the "Start ACT Prep Free" button */}
+            <Link
+              href={practiceHref}
+              aria-label="Start ACT practice"
+              className="hidden lg:flex flex-shrink-0 relative items-center justify-center rounded-full cursor-pointer transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-400/60"
               style={{ width: '350px', height: '350px' }}
             >
               {/* Ring 1 — outermost */}
@@ -333,7 +338,7 @@ export default async function ACTPage() {
                 </div>
                 <span className="text-[11px] font-semibold text-white">Science</span>
               </div>
-            </div>
+            </Link>
 
             {/* Right: score report card */}
             {/* <div className="flex-shrink-0">
@@ -610,7 +615,7 @@ export default async function ACTPage() {
 
             {/* CTA */}
             <div className="flex-shrink-0">
-              <Link href={isSignedIn ? '/dashboard/act-exam' : '/sign-up?redirect_url=/dashboard/act-exam'}>
+              <Link href={practiceHref}>
                 <Button
                   size="lg"
                   className="font-semibold text-white whitespace-nowrap"

@@ -132,6 +132,8 @@ async function getSATCourses() {
 export default async function SATPage() {
   const [user, satCourses] = await Promise.all([currentUser(), getSATCourses()]);
   const isSignedIn = !!user;
+  // Signed out: the locked dashboard preview with its sign-up prompt (practice tests need an account)
+  const practiceHref = isSignedIn ? '/dashboard/sat-exam' : '/dashboard';
 
   return (
     <div style={{ background: 'var(--color-background)' }}>
@@ -164,7 +166,7 @@ export default async function SATPage() {
                 that helps you score higher.
               </p>
               <div className="flex flex-wrap gap-3 mb-8">
-                <Link href={isSignedIn ? '/dashboard/sat-exam' : '/sign-up?redirect_url=/dashboard/sat-exam'}>
+                <Link href={practiceHref}>
                   <Button
                     size="lg"
                     className="font-bold text-white"
@@ -202,7 +204,12 @@ export default async function SATPage() {
             </div>
 
             {/* Right: large SAT interface mockup */}
-            <div className="hidden lg:block">
+            {/* The whole mockup opens the practice tests, same as the "Start SAT Prep Free" button */}
+            <Link
+              href={practiceHref}
+              aria-label="Start SAT practice"
+              className="hidden lg:block cursor-pointer rounded-xl transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-violet-400/60"
+            >
               {/* Laptop outer shell */}
               <div className="relative w-full">
                 {/* Screen bezel */}
@@ -394,7 +401,7 @@ export default async function SATPage() {
                 />
                 <div className="h-1.5 rounded-b w-32 mx-auto" style={{ background: '#334155' }} />
               </div>
-            </div>
+            </Link>
 
             {/* Right: score predictor card */}
             {/* <div className="flex-none lg:w-[220px] xl:w-[240px]">
@@ -616,7 +623,7 @@ export default async function SATPage() {
 
             {/* CTA */}
             <div className="flex-shrink-0">
-              <Link href={isSignedIn ? '/dashboard/sat-exam' : '/sign-up?redirect_url=/dashboard/sat-exam'}>
+              <Link href={practiceHref}>
                 <Button
                   size="lg"
                   className="font-semibold text-white whitespace-nowrap"
