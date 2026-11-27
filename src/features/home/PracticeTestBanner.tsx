@@ -14,7 +14,8 @@ const badges = [
 
 export function PracticeTestBanner() {
   const { isSignedIn } = useAuth();
-  const ctaHref = isSignedIn ? '/dashboard/sat-exam' : '/sign-up';
+  // Signed out: the locked dashboard preview with its sign-up prompt (practice tests need an account)
+  const ctaHref = isSignedIn ? '/dashboard/sat-exam' : '/dashboard';
 
   return (
     <section

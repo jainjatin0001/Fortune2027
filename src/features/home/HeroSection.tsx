@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowRight, CheckCircle, Bell, User } from 'lucide-react';
-import { useAuth } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
 
 const trustBadges = [
@@ -15,8 +14,8 @@ const trustBadges = [
 
 
 export function HeroSection() {
-  const { isSignedIn } = useAuth();
-  const ctaHref = isSignedIn ? '/dashboard' : '/sign-up';
+  // Always the dashboard: signed-out visitors see it locked, with a sign-up prompt on top
+  const ctaHref = '/dashboard';
 
   return (
     <section className="hero-bg flex items-center py-14">
@@ -96,8 +95,11 @@ export function HeroSection() {
             transition={{ duration: 0.7, delay: 0.2, ease: 'easeOut' }}
             className="relative hidden lg:block"
           >
-            <div
-              className="rounded-2xl overflow-hidden"
+            {/* The whole mockup opens the dashboard, same as the "Start Learning Free" button */}
+            <Link
+              href={ctaHref}
+              aria-label="Open your dashboard"
+              className="block rounded-2xl overflow-hidden cursor-pointer transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-400/60"
               style={{
                 background: '#ffffff',
                 border: '1px solid #e2e8f0',
@@ -237,7 +239,7 @@ export function HeroSection() {
                   </div>
                 </div>
               </div>
-            </div>
+            </Link>
           </motion.div>
 
         </div>

@@ -1,11 +1,10 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { getDbUser } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
 import {
   getDifficultyBreakdown, getMistakes, getPacing, getQuizAccuracyByDay, getUpNext,
 } from '@/lib/progress/queries';
-import { DashboardGuest } from './_components/DashboardGuest';
+import { GuestDashboardLock } from './_components/GuestDashboardLock';
 import { SectionSkeleton } from './_components/SectionCard';
 import { ExamCountdown, GoalCard, StreakCard } from './_components/TodayCard';
 import { DailyQuestionCard } from './_components/DailyQuestionCard';
@@ -139,60 +138,67 @@ async function ActivitySection({ userId }: { userId: string }) {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default async function DashboardPage() {
-  const user = await getDbUser();
-  if (!user) {
-    const [questionCount, quizCount, mockTestCount] = await Promise.all([
-      prisma.question.count({ where: { isActive: true } }),
-      prisma.quiz.count({ where: { isPublished: true } }),
-      prisma.mockTest.count({ where: { isPublished: true } }),
-    ]);
-    return <DashboardGuest questionCount={questionCount} quizCount={quizCount} mockTestCount={mockTestCount} />;
-  }
-
+/** The full dashboard for one student. Used for signed-in users and (with an empty account) the guest preview. */
+function DashboardContent({ userId, firstName }: { userId: string; firstName?: string | null }) {
   return (
     <div className="space-y-6 max-w-[1400px]">
       <header>
         <h1 className="text-heading-2" style={{ color: 'var(--color-foreground)' }}>
-          Welcome back, {user.firstName}!
+          {firstName ? `Welcome back, ${firstName}!` : 'Welcome!'}
         </h1>
         <p className="text-body mt-1" style={{ color: 'var(--color-muted-foreground)' }}>
           Your progress across quizzes, mock tests and daily practice.
         </p>
         <div className="mt-3 empty:hidden">
           <Suspense fallback={null}>
-            <ExamCountdownSlot userId={user.id} />
+            <ExamCountdownSlot userId={userId} />
           </Suspense>
         </div>
       </header>
 
       <Suspense fallback={<div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">{[0, 1, 2, 3].map(i => <SectionSkeleton key={i} height={236} />)}</div>}>
-        <TodaySection userId={user.id} />
+        <TodaySection userId={userId} />
       </Suspense>
 
       <Suspense fallback={<SectionSkeleton height={230} />}>
-        <UpNextSection userId={user.id} />
+        <UpNextSection userId={userId} />
       </Suspense>
 
       <Suspense fallback={<div className="grid gap-4 grid-cols-2 xl:grid-cols-4">{[0, 1, 2, 3].map(i => <SectionSkeleton key={i} height={128} />)}</div>}>
-        <StatsSection userId={user.id} />
+        <StatsSection userId={userId} />
       </Suspense>
 
       <Suspense fallback={<div className="grid gap-4 lg:grid-cols-3"><SectionSkeleton className="lg:col-span-2" height={438} /><SectionSkeleton height={438} /></div>}>
-        <PerformanceSection userId={user.id} />
+        <PerformanceSection userId={userId} />
       </Suspense>
 
       <Suspense fallback={<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{[0, 1, 2].map(i => <SectionSkeleton key={i} height={340} />)}</div>}>
-        <SkillsSection userId={user.id} />
+        <SkillsSection userId={userId} />
       </Suspense>
 
       <Suspense fallback={<div className="grid gap-4 lg:grid-cols-2"><SectionSkeleton height={480} /><SectionSkeleton height={480} /></div>}>
-        <ResultsSection userId={user.id} />
+        <ResultsSection userId={userId} />
       </Suspense>
 
       <Suspense fallback={<SectionSkeleton height={330} />}>
-        <ActivitySection userId={user.id} />
+        <ActivitySection userId={userId} />
       </Suspense>
     </div>
   );
+}
+
+// No student has this ID, so every section renders exactly what a brand-new account sees
+const GUEST_PREVIEW_ID = '00000000-0000-0000-0000-000000000000';
+
+export default async function DashboardPage() {
+  const user = await getDbUser();
+  if (!user) {
+    return (
+      <GuestDashboardLock>
+        <DashboardContent userId={GUEST_PREVIEW_ID} />
+      </GuestDashboardLock>
+    );
+  }
+
+  return <DashboardContent userId={user.id} firstName={user.firstName} />;
 }
